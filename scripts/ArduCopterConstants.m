@@ -66,11 +66,11 @@ ArduCopter.POSCONTROL_ACCEL_FILTER_HZ = 2;
 ArduCopter.POSCONTROL_FXY_MAX = 14.0871;
 ArduCopter.POSCONTROL_FXY_P = 0.0; % Translational gain based on position error
 ArduCopter.VELCONTROL_FXY_P = 10; % Translational gain based on velocity error
-ArduCopter.POSCONTROL_ACCEL_TO_FXY = M;
+ArduCopter.POSCONTROL_ACCEL_TO_FXY = Uav.M;
 
 % AC_PosControl::pos_to_rate_z
 ArduCopter.ALT_HOLD_P = 1;
-ArduCopter.POS_Z_P = ALT_HOLD_P;
+ArduCopter.POS_Z_P = ArduCopter.ALT_HOLD_P;
 
 % AC_PosControl::rate_to_accel_z
 % Velocity (vertical) gains [config.h]
@@ -116,10 +116,12 @@ ArduCopter.AP_MOTORS_MAX_NUM_MOTORS = length(Uav.BETA);
 ArduCopter.THROTTLE_RADIO_LIM = [1100;1900];
 
 % PWM scaling
-ArduCopter.throttle_pwm_scalar = (THROTTLE_RADIO_LIM(2)-THROTTLE_RADIO_LIM(1))/THR_MAX_DEFAULT;
-ArduCopter.rpy_pwm_scalar = (1900-1100-130)/9000;
-ArduCopter.fxy_pwm_scalar = (1900-1100-130)/9000;
-ArduCopter.hover_throttle_pwm = throttle_hover*throttle_pwm_scalar+THROTTLE_RADIO_LIM(1);
+ArduCopter.THROTTLE_PWM_SCALAR = ( ArduCopter.THROTTLE_RADIO_LIM(2) - ...
+    ArduCopter.THROTTLE_RADIO_LIM(1) ) / ArduCopter.THR_MAX_DEFAULT;
+ArduCopter.RPY_PWM_SCALAR = (1900-1100-130) / 9000;
+ArduCopter.FXY_PWM_SCALAR = (1900-1100-130) / 9000;
+ArduCopter.HOVER_THROTTLE_PWM = Uav.THROTTLE_HOVER * ...
+    ArduCopter.THROTTLE_PWM_SCALAR + ArduCopter.THROTTLE_RADIO_LIM(1);
 
 % AP_MotorsMulticopter::apply_thrust_curve_and_volt_scaling
 ArduCopter.AP_MOTORS_THST_MAX_DEFAULT = 1.0; % Throttle which produces the maximum thrust. (i.e. 0-1 ) of the full throttle range (Default 0.95)

@@ -17,7 +17,11 @@ clear variables; clc;
 %% GLOBAL
 % Gravitational vector
 GRAVITY = 9.80665; % [m/s^2]
-Uav.G   = Uav.M * [0;0;-GRAVITY]; % [N]
+
+% Call right components
+MotorRcTimerMt2610
+UavQuadcopter460mm
+
 
 %% ROTOR/MOTOR DYNAMICS
 % Single motor thrust required for hover [N]
@@ -28,7 +32,10 @@ Uav.W_HOVER = sqrt(Uav.THRUST_HOVER/Motor.K);
 % Estimated throttle required to maintain hover
 Uav.THROTTLE_HOVER = 1000 * ( Motor.K_E*Uav.W_HOVER + ...
     (Motor.B*Motor.R/Motor.K_T) * Uav.W_HOVER^2 ) / ...
-    UAV.NOMINAL_BATTERY_VOLTAGE;
+    Uav.NOMINAL_BATTERY_VOLTAGE;
+
+% Load controller constants
+ArduCopterConstants
 
 %% INITIAL CONDITIONS
 Initial.XI   = [0; 0; 0];            % Initial position in inertial frame

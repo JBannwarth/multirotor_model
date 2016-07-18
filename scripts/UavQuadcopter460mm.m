@@ -5,16 +5,10 @@ Uav.BETA = deg2rad(45:90:315)'; % Arm angles [rad]
 
 %% MASS/INERTIA
 % Component masses [kg]
-Uav.M_M = 0.054; % Motor
-Uav.M_P = 0.011; % Propeller
 Uav.M   = 1.480; % Frame
 
-% Motor inertia [kgm^2]
-Uav.R_M = 0.016;
-Uav.H_M = 0.0193;
-Uav.I_M = Uav.M_M * diag( [(1/12) * (3*Uav.R_M^2 + Uav.H_M^2), ...
-                           (1/12) * (3*Uav.R_M^2 + Uav.H_M^2), ...
-                           (1/2)  * Uav.R_M^2] );
+% Gravity vector
+Uav.G   = Uav.M * [0;0;-GRAVITY]; % [N]
 
 % Frame inertia (from trifilar pendulum tests) [kgm^2]
 Uav.I = diag( [0.0176, 0.0176, 0.0362] );
