@@ -19,7 +19,8 @@ Uav.I_M = Uav.M_M * diag( [(1/12) * (3*Uav.R_M^2 + Uav.H_M^2), ...
 % Frame inertia (from trifilar pendulum tests) [kgm^2]
 Uav.I = diag( [0.0176, 0.0176, 0.0362] );
 
-Uav.NOMINAL_BATTERY_VOLTAGE = 11.1;   % nominal battery voltage (3S LiPo) [Volts]
+% Nominal battery voltage (3S LiPo) [Volts]
+Uav.NOMINAL_BATTERY_VOLTAGE = 11.1;   
 
 %% AERODYNAMICS
 % Frame drag coefficients (includes reference area)
