@@ -5,16 +5,27 @@ function CompileMex()
     cd(sourceFolder);
 
     sourceFiles = dir('*.cpp');
-
-    for fileToCompile = sourceFiles'
-        mex(fileToCompile.name);
+    
+    try
+        % Compile mex files
+        for fileToCompile = sourceFiles'
+            mex(fileToCompile.name);
+        end
+    catch ME
+        % Clean up folder if there's a compiler error
+        mexFiles = dir('*.mexw64');
+        for filetoMove = mexFiles'
+            movefile(filetoMove.name, '../work');
+        end
+        
+        cd(currentFolder);
+        rethrow(ME)
     end
-
+    
     mexFiles = dir('*.mexw64');
-
     for filetoMove = mexFiles'
         movefile(filetoMove.name, '../work');
     end
-    
+
     cd(currentFolder);
 end

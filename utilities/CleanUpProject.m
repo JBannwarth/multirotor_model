@@ -6,6 +6,12 @@ function clean_up_project()
 
 %   Copyright 2011-2014 The MathWorks, Inc.
 
+% Remove folders from path
+project = simulinkproject;
+projectRoot = project.RootFolder;
+rmpath(fullfile(projectRoot, 'scripts'))
+rmpath(fullfile(projectRoot, 'ccode'))
+
 % Reset the location where generated code and other temporary files are
 % created (slprj) to the default:
 Simulink.fileGenControl('reset');

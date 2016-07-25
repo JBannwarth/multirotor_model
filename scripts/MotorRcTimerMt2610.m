@@ -23,8 +23,8 @@ Motor.M_P = 0.011; % Propeller
 Motor.R_M = 0.016;
 Motor.H_M = 0.0193;
 Motor.I_M = Motor.M_M * diag( [(1/12) * (3*Motor.R_M^2 + Motor.H_M^2), ...
-                           (1/12) * (3*Motor.R_M^2 + Motor.H_M^2), ...
-                           (1/2)  * Motor.R_M^2] );
+                               (1/12) * (3*Motor.R_M^2 + Motor.H_M^2), ...
+                               (1/2)  * Motor.R_M^2] );
 
 % Propeller inertia (only model inertia in z-axis) [kgm^s]
 Motor.R_P = 10 * 0.0254 / 2; % 13*0.0254/2;

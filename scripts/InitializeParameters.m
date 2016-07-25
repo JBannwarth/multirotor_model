@@ -38,11 +38,11 @@ Uav.THROTTLE_HOVER = 1000 * ( Motor.K_E*Uav.W_HOVER + ...
 ArduCopterConstants
 
 %% INITIAL CONDITIONS
-Initial.XI   = [0; 0; 0];            % Initial position in inertial frame
-Initial.XI_D = [0; 0; 0];            % Initial velocity in inertial frame
-Initial.ETA  = rad2deg( [0; 0; 0] ); % Initial orientation (roll, pitch, yaw)
-Initial.NU_B = [0; 0; 0];            % Initial angular velocity in body frame
-Initial.W = Uav.THROTTLE_HOVER;      % Initial rotor speed
+Initial.XI      = [0; 0; 0];            % Initial position in inertial frame
+Initial.XI_DOT  = [0; 0; 0];            % Initial velocity in inertial frame
+Initial.ETA     = rad2deg( [0; 0; 0] ); % Initial orientation (roll, pitch, yaw)
+Initial.NU_BODY = [0; 0; 0];            % Initial angular velocity in body frame
+Initial.OMEGA   = Uav.THROTTLE_HOVER;  % Initial rotor speed
 
 %% SIMULATION PARAMETERS
 Simulation.T_S = 0.01; % Timestep for logging
