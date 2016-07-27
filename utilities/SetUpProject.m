@@ -21,6 +21,7 @@ Simulink.fileGenControl('set', 'CacheFolder', myCacheFolder, ...
 % Add subfolders to path
 addpath(fullfile(projectRoot, 'scripts'))
 addpath(fullfile(projectRoot, 'ccode'))
+addpath(fullfile(projectRoot, 'libraries'))
 
 % Change working folder to the "work" folder:
 cd(myCacheFolder);

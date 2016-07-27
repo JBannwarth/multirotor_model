@@ -30,28 +30,23 @@ static void mdlInitializeSampleTimes(SimStruct *S)
 }
 static void mdlOutputs(SimStruct *S, int_T tid)
 {
-    int_T i;
     InputRealPtrsType quat1 = ssGetInputPortRealSignalPtrs(S,0);
     InputRealPtrsType quat2 = ssGetInputPortRealSignalPtrs(S,0);
     real_T *y = ssGetOutputPortRealSignal(S,0);
     
-     
+     double q1_0 = *quat1[0];
+     double q1_1 = *quat1[1];
+     double q1_2 = *quat1[2];
+     double q1_3 = *quat1[3];
+     double q2_0 = *quat2[0];
+     double q2_1 = *quat2[1];
+     double q2_2 = *quat2[2];
+     double q2_3 = *quat2[3];
     
-    double roll  = *uPtrs[0];
-    double pitch = *uPtrs[1];
-    double yaw   = *uPtrs[2];
-    
-    double cosPhi_2   = cos(roll / 2.0);
-    double sinPhi_2   = sin(roll / 2.0);
-    double cosTheta_2 = cos(pitch / 2.0);
-    double sinTheta_2 = sin(pitch / 2.0);
-    double cosPsi_2   = cos(yaw / 2.0);
-    double sinPsi_2   = sin(yaw / 2.0);
-    
-    y[0] = data[0] * q.data[0] - data[1] * q.data[1] - data[2] * q.data[2] - data[3] * q.data[3];
-    y[1] = data[0] * q.data[1] + data[1] * q.data[0] + data[2] * q.data[3] - data[3] * q.data[2];
-    y[2] = data[0] * q.data[2] - data[1] * q.data[3] + data[2] * q.data[0] + data[3] * q.data[1];
-    y[3] = data[0] * q.data[3] + data[1] * q.data[2] - data[2] * q.data[1] + data[3] * q.data[0];
+    y[0] = q1_0 * q2_0 - q1_1 * q2_1 - q1_2 * q2_2 - q1_3 * q2_3;
+    y[1] = q1_0 * q2_1 + q1_1 * q2_0 + q1_2 * q2_3 - q1_3 * q2_2;
+    y[2] = q1_0 * q2_2 - q1_1 * q2_3 + q1_2 * q2_0 + q1_3 * q2_1;
+    y[3] = q1_0 * q2_3 + q1_1 * q2_2 - q1_2 * q2_1 + q1_3 * q2_0;
 }
 static void mdlTerminate(SimStruct *S){}
 

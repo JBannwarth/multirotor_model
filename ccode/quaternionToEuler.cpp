@@ -34,12 +34,11 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     real_T *y = ssGetOutputPortRealSignal(S,0);
     int_T width = ssGetOutputPortWidth(S,0);
 
-    
-    y[0] = atan2(2.0f * (*uPtrs[0] * *uPtrs[1] + *uPtrs[2] * *uPtrs[3]),
-            1.0f - 2.0f * (*uPtrs[1] * *uPtrs[1] + *uPtrs[2] * *uPtrs[2]));
-	y[1] = sin(2.0f * (*uPtrs[0] * *uPtrs[2] - *uPtrs[3] * *uPtrs[1]));
-	y[2] = atan2(2.0f * (*uPtrs[0] * *uPtrs[3] + *uPtrs[1] * *uPtrs[2]),
-            1.0f - 2.0f * (*uPtrs[2] * *uPtrs[2] + *uPtrs[3] * *uPtrs[3]));
+    y[0] = atan2(2.0 * (*uPtrs[0] * *uPtrs[1] + *uPtrs[2] * *uPtrs[3]),
+            1.0 - 2.0 * (*uPtrs[1] * *uPtrs[1] + *uPtrs[2] * *uPtrs[2]));
+	y[1] = asin(2.0 * (*uPtrs[0] * *uPtrs[2] - *uPtrs[3] * *uPtrs[1]));
+	y[2] = atan2(2.0 * (*uPtrs[0] * *uPtrs[3] + *uPtrs[1] * *uPtrs[2]),
+            1.0 - 2.0 * (*uPtrs[2] * *uPtrs[2] + *uPtrs[3] * *uPtrs[3]));
 }
 static void mdlTerminate(SimStruct *S){}
 

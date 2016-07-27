@@ -8,6 +8,7 @@ function CompileMex()
     
     try
         % Compile mex files
+        clear functions
         for fileToCompile = sourceFiles'
             mex(fileToCompile.name);
         end
