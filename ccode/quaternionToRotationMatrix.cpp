@@ -41,13 +41,13 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     double dSq = *uPtrs[3] * *uPtrs[3];
     
     y[0] = aSq + bSq - cSq - dSq;
-    y[1] = 2.0 * (*uPtrs[1] * *uPtrs[2] - *uPtrs[0] * *uPtrs[3]);
-    y[2] = 2.0 * (*uPtrs[0] * *uPtrs[2] + *uPtrs[1] * *uPtrs[3]);
-    y[3] = 2.0 * (*uPtrs[1] * *uPtrs[2] + *uPtrs[0] * *uPtrs[3]);
+    y[3] = 2.0 * (*uPtrs[1] * *uPtrs[2] - *uPtrs[0] * *uPtrs[3]);
+    y[6] = 2.0 * (*uPtrs[0] * *uPtrs[2] + *uPtrs[1] * *uPtrs[3]);
+    y[1] = 2.0 * (*uPtrs[1] * *uPtrs[2] + *uPtrs[0] * *uPtrs[3]);
     y[4] = aSq - bSq + cSq - dSq;
-    y[5] = 2.0 * (*uPtrs[2] * *uPtrs[3] - *uPtrs[0] * *uPtrs[1]);
-    y[6] = 2.0 * (*uPtrs[1] * *uPtrs[3] - *uPtrs[0] * *uPtrs[2]);
-    y[7] = 2.0 * (*uPtrs[0] * *uPtrs[1] + *uPtrs[2] * *uPtrs[3]);
+    y[7] = 2.0 * (*uPtrs[2] * *uPtrs[3] - *uPtrs[0] * *uPtrs[1]);
+    y[2] = 2.0 * (*uPtrs[1] * *uPtrs[3] - *uPtrs[0] * *uPtrs[2]);
+    y[5] = 2.0 * (*uPtrs[0] * *uPtrs[1] + *uPtrs[2] * *uPtrs[3]);
     y[8] = aSq - bSq - cSq + dSq;
 }
 static void mdlTerminate(SimStruct *S){}

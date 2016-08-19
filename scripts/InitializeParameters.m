@@ -51,5 +51,5 @@ Initial.OMEGA   = Uav.OMEGA_HOVER;  % Initial rotor speed
 
 %% SIMULATION PARAMETERS
 Simulation.T_S   = 0.01; % Timestep for logging
-Simulation.T_END = 10; 
+Simulation.T_END = 100; 
 Simulation.T_SIM = (0:Simulation.T_S:Simulation.T_END)';
