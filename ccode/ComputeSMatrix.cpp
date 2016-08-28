@@ -1,4 +1,4 @@
-#define S_FUNCTION_NAME eulerToQuaternion /* Defines and Includes */
+#define S_FUNCTION_NAME ComputeSMatrix /* Defines and Includes */
 #define S_FUNCTION_LEVEL 2
 
 #include <math.h>
@@ -11,11 +11,11 @@ static void mdlInitializeSizes(SimStruct *S)
     }
 
     if (!ssSetNumInputPorts(S, 1)) return;
-    ssSetInputPortWidth(S, 0, 3);
+    ssSetInputPortWidth(S, 0, 4);
     ssSetInputPortDirectFeedThrough(S, 0, 1);
 
     if (!ssSetNumOutputPorts(S,1)) return;
-    ssSetOutputPortWidth(S, 0, 4);
+    ssSetOutputPortMatrixDimensions(S,0,4,3);
 
     ssSetNumSampleTimes(S, 1);
 
@@ -29,29 +29,21 @@ static void mdlInitializeSampleTimes(SimStruct *S)
 }
 static void mdlOutputs(SimStruct *S, int_T tid)
 {
-    int_T i;
     InputRealPtrsType uPtrs = ssGetInputPortRealSignalPtrs(S,0);
     real_T *y = ssGetOutputPortRealSignal(S,0);
-    int_T width = ssGetOutputPortWidth(S,0);
     
-    double roll  = *uPtrs[0];
-    double pitch = *uPtrs[1];
-    double yaw   = *uPtrs[2];
-    
-    double cosPhi_2   = cos(roll / 2.0);
-    double sinPhi_2   = sin(roll / 2.0);
-    double cosTheta_2 = cos(pitch / 2.0);
-    double sinTheta_2 = sin(pitch / 2.0);
-    double cosPsi_2   = cos(yaw / 2.0);
-    double sinPsi_2   = sin(yaw / 2.0);
-
-    /* operations executed in double to avoid loss of precision through
-     * consecutive multiplications. Result stored as float.
-     */
-    y[0] = cosPhi_2 * cosTheta_2 * cosPsi_2 + sinPhi_2 * sinTheta_2 * sinPsi_2;
-    y[1] = sinPhi_2 * cosTheta_2 * cosPsi_2 - cosPhi_2 * sinTheta_2 * sinPsi_2;
-    y[2] = cosPhi_2 * sinTheta_2 * cosPsi_2 + sinPhi_2 * cosTheta_2 * sinPsi_2;
-    y[3] = cosPhi_2 * cosTheta_2 * sinPsi_2 - sinPhi_2 * sinTheta_2 * cosPsi_2;
+    y[0]  = -*uPtrs[1] * 0.5;
+    y[4]  = -*uPtrs[2] * 0.5;
+    y[8]  = -*uPtrs[3] * 0.5;
+    y[1]  =  *uPtrs[0] * 0.5;
+    y[5]  = -*uPtrs[3] * 0.5;
+    y[9]  =  *uPtrs[2] * 0.5;
+    y[2]  =  *uPtrs[3] * 0.5;
+    y[6]  =  *uPtrs[0] * 0.5;
+    y[10] = -*uPtrs[1] * 0.5;
+    y[3]  = -*uPtrs[2] * 0.5;
+    y[7]  =  *uPtrs[1] * 0.5;
+    y[11] =  *uPtrs[0] * 0.5;
 }
 static void mdlTerminate(SimStruct *S){}
 

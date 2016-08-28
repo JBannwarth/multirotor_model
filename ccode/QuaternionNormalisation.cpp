@@ -1,4 +1,4 @@
-#define S_FUNCTION_NAME computeSMatrix /* Defines and Includes */
+#define S_FUNCTION_NAME QuaternionNormalisation /* Defines and Includes */
 #define S_FUNCTION_LEVEL 2
 
 #include <math.h>
@@ -15,7 +15,7 @@ static void mdlInitializeSizes(SimStruct *S)
     ssSetInputPortDirectFeedThrough(S, 0, 1);
 
     if (!ssSetNumOutputPorts(S,1)) return;
-    ssSetOutputPortMatrixDimensions(S,0,4,3);
+    ssSetOutputPortWidth(S, 0, 4);
 
     ssSetNumSampleTimes(S, 1);
 
@@ -29,21 +29,32 @@ static void mdlInitializeSampleTimes(SimStruct *S)
 }
 static void mdlOutputs(SimStruct *S, int_T tid)
 {
-    InputRealPtrsType uPtrs = ssGetInputPortRealSignalPtrs(S,0);
+    InputRealPtrsType quat = ssGetInputPortRealSignalPtrs(S,0);
     real_T *y = ssGetOutputPortRealSignal(S,0);
     
-    y[0]  = -*uPtrs[1] * 0.5;
-    y[4]  = -*uPtrs[2] * 0.5;
-    y[8]  = -*uPtrs[3] * 0.5;
-    y[1]  =  *uPtrs[0] * 0.5;
-    y[5]  = -*uPtrs[3] * 0.5;
-    y[9]  =  *uPtrs[2] * 0.5;
-    y[2]  =  *uPtrs[3] * 0.5;
-    y[6]  =  *uPtrs[0] * 0.5;
-    y[10] = -*uPtrs[1] * 0.5;
-    y[3]  = -*uPtrs[2] * 0.5;
-    y[7]  =  *uPtrs[1] * 0.5;
-    y[11] =  *uPtrs[0] * 0.5;
+    double norm = 0;
+    
+    for(int i = 0; i < 4; i++)
+    {
+        norm += (double)(*quat[i]) * (double)(*quat[i]);
+    }
+    
+    norm = sqrt(norm);
+    
+    if (norm == 0)
+    {
+        for(int i = 0; i < 4; i++)
+        {
+            y[i] = 0;
+        }
+    }
+    else
+    {
+        for(int i = 0; i < 4; i++)
+        {
+            y[i] = (double)(*quat[i]) / norm;
+        }
+    }
 }
 static void mdlTerminate(SimStruct *S){}
 

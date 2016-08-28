@@ -1,4 +1,4 @@
-#define S_FUNCTION_NAME quaternionMultiplication /* Defines and Includes */
+#define S_FUNCTION_NAME QuaternionMultiplication /* Defines and Includes */
 #define S_FUNCTION_LEVEL 2
 
 #include <math.h>
