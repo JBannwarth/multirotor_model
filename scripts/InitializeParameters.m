@@ -12,7 +12,7 @@
 % Last modified 10/08/2016 by JB
 
 % Clean up
-%clear variables; clc;
+% clear variables; clc;
 
 %% GLOBAL
 % Gravitational vector
@@ -45,11 +45,11 @@ ArduCopterConstants
 Initial.XI      = [0; 0; 0];            % Initial position in inertial frame
 Initial.XI_DOT  = [0; 0; 0];            % Initial velocity in inertial frame
 Initial.ETA     = rad2deg( [0; 0; 0] ); % Initial orientation (roll, pitch, yaw)
-Initial.Q       = [1; 0; 0; 0];         % Initial orientation (quaternion)
+% Initial.Q       = [1; 0; 0; 0];         % Initial orientation (quaternion)
 Initial.NU_BODY = [0; 0; 0];            % Initial angular velocity in body frame
 Initial.OMEGA   = Uav.OMEGA_HOVER;  % Initial rotor speed
 
 %% SIMULATION PARAMETERS
 Simulation.T_S   = 0.01; % Timestep for logging
-Simulation.T_END = 100; 
-Simulation.T_SIM = (0:Simulation.T_S:Simulation.T_END)';
+%Simulation.T_END = 100; 
+%Simulation.T_SIM = (0:Simulation.T_S:Simulation.T_END)';
