@@ -24,7 +24,7 @@ simoutOld = sim(modelOld, 'SimulationMode', 'normal');
 clearvars -except Input simoutOld Simulation init_eta
 
 %% 2) New model
-Initial.Q = EulerToQuaternion(init_eta);
+Initial.Q = EulerToQuaternionM(init_eta);
 modelNew = 'MultirotorSimulation';
 
 if bdIsLoaded(modelNew)

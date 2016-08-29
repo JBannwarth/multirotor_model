@@ -1,4 +1,4 @@
-#define S_FUNCTION_NAME quaternionToEuler /* Defines and Includes */
+#define S_FUNCTION_NAME QuaternionToEuler /* Defines and Includes */
 #define S_FUNCTION_LEVEL 2
 
 #include <math.h>

@@ -1,4 +1,4 @@
-#define S_FUNCTION_NAME quaternionToRotationMatrix /* Defines and Includes */
+#define S_FUNCTION_NAME QuaternionToRotationMatrix /* Defines and Includes */
 #define S_FUNCTION_LEVEL 2
 
 #include <math.h>
