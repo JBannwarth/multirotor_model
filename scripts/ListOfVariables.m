@@ -1,3 +1,10 @@
+%% Custom
+% self.
+%{
+  init
+  last_run
+%}
+
 %% control attitude
 % self.
 %{
@@ -45,9 +52,9 @@ x params.rate_p
 x params.rate_i
 x params.rate_d
 x params.rate_int_lim
-  params.tpa_breakpoint_p
-  params.tpa_breakpoint_i
-  params.tpa_breakpoint_d
+x params.tpa_breakpoint_p
+x params.tpa_breakpoint_i
+x params.tpa_breakpoint_d
 x params.rate_ff
   rates_sp
   rates_int
