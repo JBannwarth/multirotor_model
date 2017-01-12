@@ -9,19 +9,20 @@ signalsToPlot = { ...
     {'xi'},        'x',         true,       1;
     {'xi'},        'y',         true,       2;
     {'xi'},        'z',         true,       3;
-    {'xiDot'},     xyzLegend,   false,      0;
-    {'xiDDot'},    xyzLegend,   false,      0;
-    {'omega'},     motorLegend, false,      0;
+%     {'xiDot'},     xyzLegend,   false,      0;
+%     {'xiDDot'},    xyzLegend,   false,      0;
+%     {'omega'},     motorLegend, false,      0;
     {'eta'},       rpyLegend,   true,       0;
-    {'etaDot'},    rpyLegend,   true,       0;
-    {'etaDDot'},   rpyLegend,   true,       0;
-    {'nuBody'},    xyzLegend,   false,      0;
-    {'nuBodyDot'}, xyzLegend,   false,      0;
-    {'VBody'},     xyzLegend,   false,      0;
-    {'VBodyDot'},  xyzLegend,   false,      0;
     {'pwm'},       motorLegend, false,      0;
-    {'TBody'},     motorLegend, false,      0;
-    {'tauBody'},   motorLegend, false,      0
+%     {'etaDot'},    rpyLegend,   true,       0;
+%     {'etaDDot'},   rpyLegend,   true,       0;
+%     {'nuBody'},    xyzLegend,   false,      0;
+%     {'nuBodyDot'}, xyzLegend,   false,      0;
+%     {'VBody'},     xyzLegend,   false,      0;
+%     {'VBodyDot'},  xyzLegend,   false,      0;
+%     {'pwm'},       motorLegend, false,      0;
+%     {'TBody'},     motorLegend, false,      0;
+%     {'tauBody'},   motorLegend, false,      0
 };
 columnHeadings = {'signalName', 'legend', 'isToBeLabelled', 'columnsToPlot'};
 signalsToPlot = cell2struct(signalsToPlot, columnHeadings, 2);
