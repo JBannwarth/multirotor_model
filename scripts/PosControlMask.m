@@ -1,0 +1,40 @@
+% Get mask
+maskObj = Simulink.Mask.get('Px4Library/mc_pos_control');
+
+maskObj.removeAllParameters();
+
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_THR_MIN', 'Name', 'MPC_THR_MIN', 'Range', [0.05 1.0], 'Value', '0.12');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_THR_HOVER', 'Name', 'MPC_THR_HOVER', 'Range', [0.2 0.8], 'Value', '0.5');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_ALTCTL_DZ', 'Name', 'MPC_ALTCTL_DZ', 'Range', [0.0 0.2], 'Value', '0.1');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_ALTCTL_DY', 'Name', 'MPC_ALTCTL_DY', 'Range', [0.0 0.2], 'Value', '0.0');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_THR_MAX', 'Name', 'MPC_THR_MAX', 'Range', [0.0 0.95], 'Value', '0.9');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_MANTHR_MIN', 'Name', 'MPC_MANTHR_MIN', 'Range', [0.0 1.0], 'Value', '0.08');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_MANTHR_MAX', 'Name', 'MPC_MANTHR_MAX', 'Range', [0.0 1.0], 'Value', '0.9');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_Z_P', 'Name', 'MPC_Z_P', 'Range', [0.0 1.5], 'Value', '1.0');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_Z_VEL_P', 'Name', 'MPC_Z_VEL_P', 'Range', [0.1 0.4], 'Value', '0.2');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_Z_VEL_I', 'Name', 'MPC_Z_VEL_I', 'Range', [0.01 0.1], 'Value', '0.02');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_Z_VEL_D', 'Name', 'MPC_Z_VEL_D', 'Range', [0.0 0.1], 'Value', '0.0');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_Z_VEL_MAX_UP', 'Name', 'MPC_Z_VEL_MAX_UP', 'Range', [0.5 8.0], 'Value', '3.0');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_Z_VEL_MAX', 'Name', 'MPC_Z_VEL_MAX', 'Range', [0.5 4.0], 'Value', '1.0');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_Z_VEL_MAX_DN', 'Name', 'MPC_Z_VEL_MAX_DN', 'Range', [0.5 4.0], 'Value', '1.0');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_Z_FF', 'Name', 'MPC_Z_FF', 'Range', [0.0 1.0], 'Value', '0.5');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_XY_P', 'Name', 'MPC_XY_P', 'Range', [0.0 2.0], 'Value', '0.95');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_XY_VEL_P', 'Name', 'MPC_XY_VEL_P', 'Range', [0.06 0.15], 'Value', '0.09');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_XY_VEL_I', 'Name', 'MPC_XY_VEL_I', 'Range', [0.0 0.1], 'Value', '0.02');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_XY_VEL_D', 'Name', 'MPC_XY_VEL_D', 'Range', [0.005 0.1], 'Value', '0.01');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_XY_CRUISE', 'Name', 'MPC_XY_CRUISE', 'Range', [3.0 20.0], 'Value', '5.0');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_XY_VEL_MAX', 'Name', 'MPC_XY_VEL_MAX', 'Range', [0.0 20.0], 'Value', '8.0');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_XY_FF', 'Name', 'MPC_XY_FF', 'Range', [0.0 1.0], 'Value', '0.5');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_TILTMAX_AIR', 'Name', 'MPC_TILTMAX_AIR', 'Range', [0.0 90.0], 'Value', '45.0');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_TILTMAX_LND', 'Name', 'MPC_TILTMAX_LND', 'Range', [0.0 90.0], 'Value', '12.0');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_LAND_SPEED', 'Name', 'MPC_LAND_SPEED', 'Range', [0.2 50], 'Value', '0.5');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_TKO_SPEED', 'Name', 'MPC_TKO_SPEED', 'Range', [1.0 5.0], 'Value', '1.5');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_MAN_R_MAX', 'Name', 'MPC_MAN_R_MAX', 'Range', [0.0 90.0], 'Value', '35.0');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_MAN_P_MAX', 'Name', 'MPC_MAN_P_MAX', 'Range', [0.0 90.0], 'Value', '35.0');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_MAN_Y_MAX', 'Name', 'MPC_MAN_Y_MAX', 'Range', [0.0 400.0], 'Value', '200.0');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_HOLD_XY_DZ', 'Name', 'MPC_HOLD_XY_DZ', 'Range', [0.0 1.0], 'Value', '0.1');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_HOLD_MAX_XY', 'Name', 'MPC_HOLD_MAX_XY', 'Range', [0.0 3.0], 'Value', '0.8');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_HOLD_MAX_Z', 'Name', 'MPC_HOLD_MAX_Z', 'Range', [0.0 3.0], 'Value', '0.6');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_VELD_LP', 'Name', 'MPC_VELD_LP', 'Range', [0.0 10], 'Value', '5.0');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_ACC_HOR_MAX', 'Name', 'MPC_ACC_HOR_MAX', 'Range', [2.0 15.0], 'Value', '5.0');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_ALT_MODE', 'Name', 'MPC_ALT_MODE', 'Range', [0 1], 'Value', '0');
