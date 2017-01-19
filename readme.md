@@ -1,5 +1,11 @@
 # New Multirotor Model - Project Requirements
-By: J. X. J. Bannwarth, 30/06/16
+Created:      30/06/2016, by J. X. J. Bannwarth
+Last updated: 18/01/2017, by J. X. J. Bannwarth
+
+## To-Do
+
+- [ ] Rewrite the requirements
+- [x] Add section on colour coding
 
 ## List of Requirements
 
@@ -28,3 +34,18 @@ Code must:
 	- Add comment blocks to explain what is happening
 - Be well organised in folders
 - Be backed up on GitHub and kept up to date
+
+## Color Coding
+
+| Color      | Meaning                            |
+| ---------- | ---------------------------------- |
+| Grey       | Matlab Functions                   |
+| Yellow     | Goto/from                          |
+| Cyan       | Inports/outports                   |
+| Green      | Source blocks                      |
+| Orange     | Model references                   |
+| Light blue | Subsystems                         |
+| Pink       | Quaternion library blocks          |
+| Purple     | PX4 library blocks                 |
+| Dark green | Integrators/differentiators/delays |
+| White      | Normal blocks                      |

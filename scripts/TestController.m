@@ -13,6 +13,7 @@ clearvars -except Input Simulation init_eta Initial
 
 Px4Bus;
 selfBus;
+mpc_self;
 
 %% Load model
 model = 'MultirotorSimulationController';

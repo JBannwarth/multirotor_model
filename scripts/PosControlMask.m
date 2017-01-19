@@ -3,6 +3,7 @@ maskObj = Simulink.Mask.get('Px4Library/mc_pos_control');
 
 maskObj.removeAllParameters();
 
+maskObj.addParameter('Type', 'edit',   'Prompt', 'MPC_SAMPLING_PERIOD', 'Name', 'MPC_SAMPLING_PERIOD', 'Range', [0 1], 'Value', '0.02');
 maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_THR_MIN', 'Name', 'MPC_THR_MIN', 'Range', [0.05 1.0], 'Value', '0.12');
 maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_THR_HOVER', 'Name', 'MPC_THR_HOVER', 'Range', [0.2 0.8], 'Value', '0.5');
 maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_ALTCTL_DZ', 'Name', 'MPC_ALTCTL_DZ', 'Range', [0.0 0.2], 'Value', '0.1');
@@ -38,3 +39,6 @@ maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_HOLD_MAX_Z', 'Name', 'MPC_
 maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_VELD_LP', 'Name', 'MPC_VELD_LP', 'Range', [0.0 10], 'Value', '5.0');
 maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_ACC_HOR_MAX', 'Name', 'MPC_ACC_HOR_MAX', 'Range', [2.0 15.0], 'Value', '5.0');
 maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_ALT_MODE', 'Name', 'MPC_ALT_MODE', 'Range', [0 1], 'Value', '0');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MC_YAWRATE_MAX', 'Name', 'MC_YAWRATE_MAX', 'Range', [0 360], 'Value', '200.0');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'MC_YAW_P', 'Name', 'MC_YAW_P', 'Range', [0 5], 'Value', '2.8');
+maskObj.addParameter('Type', 'slider', 'Prompt', 'VT_OPT_RECOV_EN', 'Name', 'VT_OPT_RECOV_EN', 'Range', [0 1], 'Value', '0');
