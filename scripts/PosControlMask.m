@@ -3,6 +3,7 @@ maskObj = Simulink.Mask.get('Px4Library/mc_pos_control');
 
 maskObj.removeAllParameters();
 
+maskObj.addParameter('Type', 'edit',   'Prompt', 'THROTTLE_HOVER', 'Name', 'THROTTLE_HOVER', 'Range', [0 1], 'Value', '0.61703684833922');
 maskObj.addParameter('Type', 'edit',   'Prompt', 'MPC_SAMPLING_PERIOD', 'Name', 'MPC_SAMPLING_PERIOD', 'Range', [0 1], 'Value', '0.02');
 maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_THR_MIN', 'Name', 'MPC_THR_MIN', 'Range', [0.05 1.0], 'Value', '0.12');
 maskObj.addParameter('Type', 'slider', 'Prompt', 'MPC_THR_HOVER', 'Name', 'MPC_THR_HOVER', 'Range', [0.2 0.8], 'Value', '0.5');
