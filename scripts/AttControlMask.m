@@ -37,19 +37,24 @@ limits = { ...
 'MC_TPA_BREAK_D',     '1.0',   0.0,    1.0;
 'MC_TPA_RATE_P',      '0.0',   0.0,    1.0;
 'MC_TPA_RATE_I',      '0.0',   0.0,    1.0;
-'MC_TPA_RATE_D',      '0.0',   0.0,    1.0 ...
+'MC_TPA_RATE_D',      '0.0',   0.0,    1.0;
+'VT_TYPE',            '2.0',   0.0,    2.0;
+'MC_TPA_BREAK',       '1.0',   0.0,    1.0;
+'MC_TPA_SLOPE',       '1.0',   0.0,    1.0;
+'VT_OPT_RECOV_EN',    '0.0',   0.0,    1.0;
+'VT_WV_YAWR_SCL',     '0.15',  0.0,    1.0 ...
 };
 
 for i = 1:length(maskObj.Parameters)
     val = maskObj.Parameters(i).Value;
     name = maskObj.Parameters(i).Name;
-    % maskObj.Parameters(i).Type  = 'slider';
-    % maskObj.Parameters(i).Value = val;
     
     for j = 1:length(limits)
-        if stcmp(name, limits{j, 1})
-            % maskObj.Parameters(i).Range = [ limits{j, 3}, limits{j, 4} ];
-            % maskObj.Parameters(i).Value = limits{j,2};
+        if strcmp(name, limits{j, 1})
+            maskObj.Parameters(i).Type  = 'slider';
+            maskObj.Parameters(i).Value = val;
+            maskObj.Parameters(i).Range = [ limits{j, 3}, limits{j, 4} ];
+            maskObj.Parameters(i).Value = limits{j,2};
         end
         
     end
