@@ -10,7 +10,7 @@ Motor.K_T = Motor.K_E * (3/2); % effective motor torque constant [Nm/A] (3/2 fac
 thrust = 0.96;  % kg
 voltage = 11.1; % V
 current = 15.2; % A
-Motor.K = (thrust*GRAVITY) / ( (voltage - current*Motor.R) / Motor.K_E )^2;
+Motor.K = 1.125770894557940e-05;%9.556410042213521e-06;%(thrust*GRAVITY) / ( (voltage - current*Motor.R) / Motor.K_E )^2;
 
 % Rotor drag coefficient
 Motor.B = 4.4335282346e-7;

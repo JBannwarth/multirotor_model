@@ -16,7 +16,7 @@ Uav.R_MOTOR_TO_BODY(:,:,3) = eye(3);
 Uav.R_MOTOR_TO_BODY(:,:,4) = eye(3);
 
 %% MASS/INERTIA
-Uav.M   = 1.480; % Frame [kg]
+Uav.M   = 1.480 - 0.064; % Frame [kg]
 
 % Gravity vector
 Uav.G   = Uav.M * [0; 0; -GRAVITY]; % [N]
