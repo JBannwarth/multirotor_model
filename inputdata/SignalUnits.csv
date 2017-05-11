@@ -18,3 +18,7 @@ omega,rad/s
 TBody,N
 tauBody,Nm
 pwm,-
+qDes,-
+thrustDes,N
+yawRateDes,tocheck
+windInput,m/s

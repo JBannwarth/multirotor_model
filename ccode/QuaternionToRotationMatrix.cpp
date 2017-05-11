@@ -40,6 +40,9 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     double cSq = *uPtrs[2] * *uPtrs[2];
     double dSq = *uPtrs[3] * *uPtrs[3];
     
+    // 0 3 6
+    // 1 4 7
+    // 2 5 8
     y[0] = aSq + bSq - cSq - dSq;
     y[3] = 2.0 * (*uPtrs[1] * *uPtrs[2] - *uPtrs[0] * *uPtrs[3]);
     y[6] = 2.0 * (*uPtrs[0] * *uPtrs[2] + *uPtrs[1] * *uPtrs[3]);

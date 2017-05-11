@@ -18,7 +18,7 @@ end
 pitchSS = zeros( length(windSpeedX), 1 );
 for i = 1:length(windSpeedX)
     
-    set_param( [model '/Constant wind'], 'value', windVelString{i} );
+    set_param( [model '/Wind input'], 'value', windVelString{i} );
     output = sim(model, 'SimulationMode', 'normal');
     pitch = output.get('pitch');
     pitchSS(i) = pitch(end);
@@ -29,4 +29,4 @@ end
 CompareSteadyStateHoverAngles;
 
 %% 5) Clean up
-close_system(model, 0);
+% close_system(model, 0);

@@ -37,15 +37,16 @@ Code must:
 
 ## Color Coding
 
-| Color      | Meaning                            |
-| ---------- | ---------------------------------- |
-| Grey       | Matlab Functions                   |
-| Yellow     | Goto/from                          |
-| Cyan       | Inports/outports                   |
-| Green      | Source blocks                      |
-| Orange     | Model references                   |
-| Light blue | Subsystems                         |
-| Pink       | Quaternion library blocks          |
-| Purple     | PX4 library blocks                 |
-| Dark green | Integrators/differentiators/delays |
-| White      | Normal blocks                      |
+| Color       | Meaning                            |
+| ----------- | ---------------------------------- |
+| Grey        | Matlab Functions                   |
+| Yellow      | Goto/from                          |
+| Cyan        | Inports/outports                   |
+| Green       | Source blocks                      |
+| Light green | Sinks                              |
+| Orange      | Model references                   |
+| Light blue  | Subsystems                         |
+| Pink        | Quaternion library blocks          |
+| Purple      | PX4 library blocks                 |
+| Dark green  | Integrators/differentiators/delays |
+| White       | Normal blocks                      |
