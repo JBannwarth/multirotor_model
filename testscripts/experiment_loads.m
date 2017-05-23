@@ -3,7 +3,7 @@ close all
 clc
 
 %% TUNNEL SETTING
-U = 12; 
+U = 6.8; 
 rhoAir = 1.225;
 
 %% PARAMETERS
@@ -82,6 +82,13 @@ h = surf(thetaMat*180/pi,wMat,FL); set(h,'FaceColor','none','EdgeColor','interp'
 xlabel('$\theta$ [$^\circ$]','Interpreter','latex')
 ylabel('$\omega$ [rad/s]','Interpreter','latex')
 zlabel('$F_L$ [N]','Interpreter','latex')
+set(gca,'TickLabelInterpreter','latex')
+
+figure('color',[1,1,1],'name','k')
+hold on; grid on; box on
+h = plot(thetaDegVect', k(1,:));
+xlabel('$\theta$ [deg]','Interpreter','latex')
+ylabel('$k$ [rad/s]','Interpreter','latex')
 set(gca,'TickLabelInterpreter','latex')
 
 figure('color',[1,1,1],'name','T')

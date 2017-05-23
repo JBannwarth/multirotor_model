@@ -7,7 +7,7 @@ fontSize = 12;
 set(0,'defaultlinelinewidth',1)
 
 outputFolder = 'work/';
-saveFigures = true;
+saveFigures = false;
 
 %% Analyse data
 % Get timeseries from logs
