@@ -2,6 +2,11 @@ clear all
 close all
 clc
 
+outFolder = '../journal_paper_1/fig';
+fontSize  = 9;
+outSize   = [8.85684 5];
+printResults = true;
+
 %% TUNNEL SETTING
 U = 6.8; 
 rhoAir = 1.225;
@@ -75,6 +80,15 @@ xlabel('$\theta$ [$^\circ$]','Interpreter','latex')
 ylabel('$\omega$ [rad/s]','Interpreter','latex')
 zlabel('$F_D$ [N]','Interpreter','latex')
 set(gca,'TickLabelInterpreter','latex')
+view(45,45)
+xlim( [-inf inf] )
+ylim( [-inf inf] )
+zlim( [-inf inf] )
+if ( printResults )
+    fileName = [ outFolder '/' 'StaticTest-' 'FD-omega-theta'];
+    SetFigProp( outSize , fontSize );
+    MatlabToLatexEps( fileName, [], false );
+end
 
 figure('color',[1,1,1],'name','FL')
 hold on; grid on; box on
@@ -83,6 +97,7 @@ xlabel('$\theta$ [$^\circ$]','Interpreter','latex')
 ylabel('$\omega$ [rad/s]','Interpreter','latex')
 zlabel('$F_L$ [N]','Interpreter','latex')
 set(gca,'TickLabelInterpreter','latex')
+view(45,45)
 
 figure('color',[1,1,1],'name','k')
 hold on; grid on; box on
@@ -91,13 +106,22 @@ xlabel('$\theta$ [deg]','Interpreter','latex')
 ylabel('$k$ [rad/s]','Interpreter','latex')
 set(gca,'TickLabelInterpreter','latex')
 
-figure('color',[1,1,1],'name','T')
+figure('color',[1,1,1],'name','T - omega')
 hold on; grid on; box on
 h = surf(thetaMat*180/pi,wMat,T); set(h,'FaceColor','none','EdgeColor','interp')
 xlabel('$\theta$ [$^\circ$]','Interpreter','latex')
 ylabel('$\omega$ [rad/s]','Interpreter','latex')
 zlabel('$T$ [N]','Interpreter','latex')
 set(gca,'TickLabelInterpreter','latex')
+view(45,45)
+xlim( [-inf inf] )
+ylim( [-inf inf] )
+zlim( [-inf inf] )
+if ( printResults )
+    fileName = [ outFolder '/' 'StaticTest-' 'thrust-omega-theta'];
+    SetFigProp( outSize , fontSize );
+    MatlabToLatexEps( fileName, [], false );
+end
 
 figure('color',[1,1,1],'name','T')
 hold on; grid on; box on
@@ -106,6 +130,7 @@ xlabel('$\theta$ [$^\circ$]','Interpreter','latex')
 ylabel('PWM [--]','Interpreter','latex')
 zlabel('$T$ [N]','Interpreter','latex')
 set(gca,'TickLabelInterpreter','latex')
+view(45,45)
 
 %% FORCES/MOMENTS ON JR3
 Fx = m1*g*sin(thetaMat)+mUAV*g*sin(thetaMat)-FL.*sin(thetaMat)-FD.*cos(thetaMat);
@@ -122,6 +147,11 @@ xlabel('$\theta$ [$^\circ$]','Interpreter','latex')
 ylabel('$\omega$ [rad/s]','Interpreter','latex')
 zlabel('$F_x$ [N]','Interpreter','latex')
 set(gca,'TickLabelInterpreter','latex')
+xlim( [-inf inf] )
+ylim( [-inf inf] )
+zlim( [-inf inf] )
+view(45,45)
+
 
 figure('color',[1,1,1],'name','Fy')
 hold on; grid on; box on
@@ -130,6 +160,7 @@ xlabel('$\theta$ [$^\circ$]','Interpreter','latex')
 ylabel('$\omega$ [rad/s]','Interpreter','latex')
 zlabel('$F_z$ [N]','Interpreter','latex')
 set(gca,'TickLabelInterpreter','latex')
+view(45,45)
 
 figure('color',[1,1,1],'name','My')
 hold on; grid on; box on
@@ -138,6 +169,7 @@ xlabel('$\theta$ [$^\circ$]','Interpreter','latex')
 ylabel('$\omega$ [rad/s]','Interpreter','latex')
 zlabel('$M_y$ [Nm]','Interpreter','latex')
 set(gca,'TickLabelInterpreter','latex')
+view(45,45)
 
 %% OVERLOADS
 % Multi-axis
@@ -151,6 +183,7 @@ xlabel('$\theta$ [$^\circ$]','Interpreter','latex')
 ylabel('PWM [--]','Interpreter','latex')
 zlabel('Overload coeff. 1 [--]','Interpreter','latex')
 set(gca,'TickLabelInterpreter','latex')
+view(45,45)
 
 figure('color',[1,1,1],'name','Multi-axis overload 2')
 hold on; grid on; box on
@@ -159,3 +192,4 @@ xlabel('$\theta$ [$^\circ$]','Interpreter','latex')
 ylabel('PWM [--]','Interpreter','latex')
 zlabel('Overload coeff. 2 [--]','Interpreter','latex')
 set(gca,'TickLabelInterpreter','latex')
+view(45,45)

@@ -8,7 +8,13 @@ model = 'MultirotorSimulationController';
 load_system(model);
 
 %% 2) Set up the iterations that we want to compute
-windSpeedX = [0;2.55999837265402;3.45522298273824;4.40686338715537;5.17829923510479;6.09013240228385;6.79493302374613];
+windSpeedX = [0; 
+              2.55999837265402;
+              3.45522298273824;
+              4.40686338715537;
+              5.17829923510479;
+              6.09013240228385;
+              6.79493302374613];
 windVelString = cell( size(windSpeedX) );
 
 for i = 1:length(windSpeedX)

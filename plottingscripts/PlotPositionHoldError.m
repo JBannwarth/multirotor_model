@@ -1,3 +1,8 @@
+outFolder = '../journal_paper_1/fig';
+fontSize  = 9;
+outSize   = [8.85684 5];
+printResults = true;
+
 % Compute statistics
 dt = str2double( get_param( 'MultirotorSimulationController/To Workspace errX', 'SampleTime') );
 windSpeedX = [0;2.55999837265402;3.45522298273824;4.40686338715537;5.17829923510479;6.09013240228385;6.79493302374613];
@@ -16,15 +21,24 @@ for i = 1:length( output )
 end
 
 figure( 'Name', 'Simulation error statistics' )
-subplot(2,1,1); hold on; grid on; box on
-plot( windSpeedX, meanX, 'o' )
-ylabel('Mean $x$-axis error (m)', 'Interpreter', 'LaTeX')
-xlabel('Wind speed (m/s)', 'Interpreter', 'LaTeX')
-set( gca, 'TickLabelInterpreter', 'latex' )
-
-subplot(2,1,2); hold on; grid on; box on
+% subplot(2,1,1); hold on; grid on; box on
+% plot( windSpeedX, meanX, 'o' )
+% ylabel('Mean $x$-axis error (m)', 'Interpreter', 'LaTeX')
+% xlabel('Wind speed (m/s)', 'Interpreter', 'LaTeX')
+% set( gca, 'TickLabelInterpreter', 'latex' )
+% 
+% subplot(2,1,2);
+hold on; grid on; box on
 plot( windSpeedX, stdX, 'o', windSpeedX, expStdX, '+' )
 ylabel('Stdev $x$-axis error (m)', 'Interpreter', 'LaTeX')
 xlabel('Wind speed (m/s)', 'Interpreter', 'LaTeX')
 set( gca, 'TickLabelInterpreter', 'latex' )
-legend( { 'sim', 'exp' }, 'Interpreter', 'LaTeX')
+legend( { 'sim', 'exp' }, 'Interpreter', 'LaTeX', 'Orientation', 'Horizontal')
+
+if ( printResults )
+    for ax = ['x', 'y', 'z']
+        fileName = [ outFolder '/' 'UavErrorMean-' ax '-simvexp'];
+        SetFigProp( outSize , fontSize );
+        MatlabToLatexEps( fileName, [], false );
+    end
+end
