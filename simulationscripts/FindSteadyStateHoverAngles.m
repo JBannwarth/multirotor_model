@@ -29,7 +29,7 @@ for i = 1:length(windSpeedX)
     set_param( [model '/Fixed wind input'], 'value', windVelString{i} );
     output = sim(model, 'SimulationMode', 'normal');
     pitch = output.get('pitch');
-    pitchSS(i) = pitch(end);
+    pitchSS(i) = pitch(end,1);
     
 end
 

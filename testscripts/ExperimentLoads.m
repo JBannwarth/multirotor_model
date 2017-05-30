@@ -1,3 +1,6 @@
+%EXPERIMENTLOADS Calculate loads applied on JR3 and find parameters
+%   Written by:       J.X.J. Bannwarth, 08/05/2017
+%   Last modified by: J.X.J. Bannwarth, 10/05/2017
 clear all
 close all
 clc
@@ -13,10 +16,10 @@ rhoAir = 1.225;
 
 %% PARAMETERS
 % JR3 parameters
-jr3ElecLoadMax = [80;80;160;12.5;12.5;12.5];
-jr3SensorLoadMax = [445;445;890;50.8;50.8;50.8];
+jr3ElecLoadMax         = [80;80;160;12.5;12.5;12.5];
+jr3SensorLoadMax       = [445;445;890;50.8;50.8;50.8];
 jr3SingleOverloadCoeff = [2450;2450;9800;340;340;290]; % Fx/Fy/Fz/Mx/My/Mz
-jr3MultiOverloadCoeff = [2450;4600;9800;340;290]; % a/b/c/d/e
+jr3MultiOverloadCoeff  = [2450;4600;9800;340;290];     % a/b/c/d/e
 % Mass parameters
 g = 9.81;
 mUAV = 1.552;
@@ -32,11 +35,11 @@ L2 = (L_JR3tool-L_JR3tool_com)+L_UAV_com;
 
 %% INDEPENDENT VARIABLES
 thetaDegVect = (0:1:45)';
-thetaVect = thetaDegVect*pi/180;
-pwmVect = (1000:50:2000)';
+thetaVect    = thetaDegVect*pi/180;
+pwmVect      = (1000:50:2000)';
 % wVect = 9.246754e-1*pwmVect-8.059232e2; wVect(1) = 0; % Linear fit to pwm-omega curve
-wVect = 1.108538e3*log(pwmVect)-7.553361e3; wVect(1) = 0; % Logarithmic fit to pwm-omega curve
-wRpmVect = wVect/(2*pi)*60;
+wVect    = 1.108538e3*log(pwmVect)-7.553361e3; wVect(1) = 0; % Logarithmic fit to pwm-omega curve
+wRpmVect = wVect / (2*pi)*60;
 
 figure('color',[1,1,1],'name','pwm, w')
 hold on; grid on; box on
@@ -139,6 +142,7 @@ Fz = m1*g*cos(thetaMat)+mUAV*g*cos(thetaMat)-FL.*cos(thetaMat)+FD.*sin(thetaMat)
 Mx = zeros(length(wVect),length(thetaVect));
 My = -m1*g*L1*sin(thetaMat)-mUAV*g*(L1+L2)*sin(thetaMat)+FL*(L1+L2).*sin(thetaMat)+FD*(L1+L2).*cos(thetaMat);
 Mz = zeros(length(wVect),length(thetaVect));
+
 % Plot results
 figure('color',[1,1,1],'name','Fx')
 hold on; grid on; box on
@@ -151,7 +155,6 @@ xlim( [-inf inf] )
 ylim( [-inf inf] )
 zlim( [-inf inf] )
 view(45,45)
-
 
 figure('color',[1,1,1],'name','Fy')
 hold on; grid on; box on
