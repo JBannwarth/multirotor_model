@@ -7,11 +7,11 @@ clc
 
 outFolder = '../journal_paper_1/fig';
 fontSize  = 9;
-outSize   = [8.85684 5];
+outSize   = [8.85684 6];
 printResults = true;
 
 %% TUNNEL SETTING
-U = 6.8; 
+U = 6.8;
 rhoAir = 1.225;
 
 %% PARAMETERS
@@ -34,12 +34,13 @@ L1 = L_JR3origin_matingsurf+L_JR3tool_com;
 L2 = (L_JR3tool-L_JR3tool_com)+L_UAV_com;
 
 %% INDEPENDENT VARIABLES
-thetaDegVect = (0:1:45)';
+thetaDegVect = (0:5:45)';
 thetaVect    = thetaDegVect*pi/180;
-pwmVect      = (1000:50:2000)';
+pwmVect      = (1000:500:2000)';
 % wVect = 9.246754e-1*pwmVect-8.059232e2; wVect(1) = 0; % Linear fit to pwm-omega curve
 wVect    = 1.108538e3*log(pwmVect)-7.553361e3; wVect(1) = 0; % Logarithmic fit to pwm-omega curve
 wRpmVect = wVect / (2*pi)*60;
+uVect = [ 2.6 5.2 6.8 ]';
 
 figure('color',[1,1,1],'name','pwm, w')
 hold on; grid on; box on
@@ -50,6 +51,7 @@ set(gca,'TickLabelInterpreter','latex')
 
 [thetaMat,wMat] = meshgrid(thetaVect,wVect);
 [~,pwmMat] = meshgrid(thetaVect,pwmVect);
+[thetaMat2,uMat] = meshgrid(thetaVect,uVect);
 
 %% FORCES ON UAV
 % Drag coefficients
@@ -69,6 +71,12 @@ k = 9.20186997424055e-06+...
     -8.78213951736416e-06*thetaMat.^2+...
     -1.77642149547229e-06*thetaMat*U+...
     -1.52971221787416e-09*U^2;
+kMat = 9.20186997424055e-06+...
+    4.85267548640599e-06*thetaMat2+...
+    5.76685430140641e-07.*uMat+...
+    -8.78213951736416e-06*thetaMat2.^2+...
+    -1.77642149547229e-06*thetaMat2.*uMat+...
+    -1.52971221787416e-09.*uMat.^2;
 % Forces
 FD = 0.5*rhoAir*a*U^2+0.5*rhoAir*b.*wMat*U;
 % FL = 0.5*rhoAir*(-6.668918e-2*thetaMat+1.263077e-2)*U^2;
@@ -83,7 +91,7 @@ xlabel('$\theta$ [$^\circ$]','Interpreter','latex')
 ylabel('$\omega$ [rad/s]','Interpreter','latex')
 zlabel('$F_D$ [N]','Interpreter','latex')
 set(gca,'TickLabelInterpreter','latex')
-view(45,45)
+view(0,90)
 xlim( [-inf inf] )
 ylim( [-inf inf] )
 zlim( [-inf inf] )
@@ -134,6 +142,85 @@ ylabel('PWM [--]','Interpreter','latex')
 zlabel('$T$ [N]','Interpreter','latex')
 set(gca,'TickLabelInterpreter','latex')
 view(45,45)
+
+%% Plot coefficients
+figure('color',[1,1,1],'name','A')
+hold on; grid on; box on
+% h = surf(thetaMat*180/pi,wMat,a); set(h,'FaceColor','none','EdgeColor','interp')
+h = plot(thetaVect,a'); %set(h,'FaceColor','none','EdgeColor','interp')
+%xlabel('$\alpha$ ($^\circ$)','Interpreter','latex')
+xlabel('$\alpha$ (rad)','Interpreter','latex')
+ylabel('$A$ (m$^2$)','Interpreter','latex')
+set(gca,'TickLabelInterpreter','latex')
+for i = 1:length(wVect)
+    legendStr{i} = sprintf( '$%2.0f$ rad/s', wVect(i));
+end
+hL = legend(legendStr, 'Interpreter', 'latex', 'location', 'northwest');
+% hlt = text(...
+%     'Parent', hL.DecorationContainer, ...
+%     'String', '$\omega_\mathrm{mean}$', ...
+%     'Interpreter', 'latex', ...
+%     'HorizontalAlignment', 'center', ...
+%     'VerticalAlignment', 'bottom', ...
+%     'Position', [0.5, 1.05, 0], ...
+%     'Units', 'normalized');
+%view(90,0)
+xlim( [-inf inf] )
+ylim( [-inf inf] )
+%zlim( [-inf inf] )
+if ( printResults )
+    fileName = [ outFolder '/' 'StaticTest-' 'A-' num2str(round(U)) 'mps'];
+    SetFigProp( outSize , fontSize );
+    MatlabToLatexEps( fileName, [], false );
+end
+
+figure('color',[1,1,1],'name','B')
+hold on; grid on; box on
+% h = surf(thetaMat*180/pi,wMat,b); set(h,'FaceColor','none','EdgeColor','interp')
+h = plot(rad2deg(wVect), b(:,1)); %set(h,'FaceColor','none','EdgeColor','interp')
+%xlabel('$\alpha$ ($^\circ$)','Interpreter','latex')
+xlabel('$\omega$ (rad/s)','Interpreter','latex')
+ylabel('$B$ (m$^3$/rad)','Interpreter','latex')
+set(gca,'TickLabelInterpreter','latex')
+%view(90,0)
+xlim( [-inf inf] )
+ylim( [-inf inf] )
+%zlim( [-inf inf] )
+if ( printResults )
+    fileName = [ outFolder '/' 'StaticTest-' 'B-' num2str(round(U)) 'mps'];
+    SetFigProp( outSize , fontSize );
+    MatlabToLatexEps( fileName, [], false );
+end
+
+figure('color',[1,1,1],'name','K')
+hold on; grid on; box on
+h = plot(rad2deg(thetaVect),kMat'); %set(h,'FaceColor','none','EdgeColor','interp')
+xlabel('$\alpha$ ($^\circ$)','Interpreter','latex')
+%xlabel('$U$ (m/s)','Interpreter','latex')
+ylabel('$k$ (check unit)','Interpreter','latex')
+set(gca,'TickLabelInterpreter','latex')
+for i = 1:length(uVect)
+    legendStr{i} = ['$' num2str(uVect(i)) '$ m/s'];
+end
+hL = legend(legendStr, 'Interpreter', 'latex', 'location', 'southwest');
+hlt = text(...
+    'Parent', hL.DecorationContainer, ...
+    'String', '$U_\mathrm{app}$', ...
+    'Interpreter', 'latex', ...
+    'HorizontalAlignment', 'center', ...
+    'VerticalAlignment', 'bottom', ...
+    'Position', [0.5, 1.05, 0], ...
+    'Units', 'normalized');
+%set( get(hL, 'Title'), 'string', 'U_\mathrm{app}')
+%view(90,0)
+xlim( [-inf inf] )
+ylim( [-inf inf] )
+%zlim( [-inf inf] )
+if ( printResults )
+    fileName = [ outFolder '/' 'StaticTest-' 'k-' num2str(round(U)) 'mps'];
+    SetFigProp( outSize , fontSize );
+    MatlabToLatexEps( fileName, [], false );
+end
 
 %% FORCES/MOMENTS ON JR3
 Fx = m1*g*sin(thetaMat)+mUAV*g*sin(thetaMat)-FL.*sin(thetaMat)-FD.*cos(thetaMat);
