@@ -53,6 +53,13 @@ set(gca,'TickLabelInterpreter','latex')
 [~,pwmMat] = meshgrid(thetaVect,pwmVect);
 [thetaMat2,uMat] = meshgrid(thetaVect,uVect);
 
+pwmVect3      = (1000:100:2000)';
+wVect3    = 1.108538e3*log(pwmVect3)-7.553361e3; wVect3(1) = 0;
+[thetaMat3,wMat3] = meshgrid(thetaVect,wVect3);
+b3 = 2.26155855608694e-05+...
+    2.61717004305892e-05*thetaMat3+...
+    2.25793855676601e-06*wMat3;
+
 %% FORCES ON UAV
 % Drag coefficients
 a = 0.0381169670063285+...
@@ -144,10 +151,23 @@ set(gca,'TickLabelInterpreter','latex')
 view(45,45)
 
 %% Plot coefficients
+% Generate random data
+aExp = a + (rand(size(a))-0.5) * 0.2 * mean(mean(a));
+
 figure('color',[1,1,1],'name','A')
 hold on; grid on; box on
+
+colors = get(gca,'colororder');
+
 % h = surf(thetaMat*180/pi,wMat,a); set(h,'FaceColor','none','EdgeColor','interp')
-h = plot(thetaVect,a'); %set(h,'FaceColor','none','EdgeColor','interp')
+for i = 1:length(a(:,1))
+    h = plot(rad2deg(thetaVect),a(i,:),'color',colors(i,:)); %set(h,'FaceColor','none','EdgeColor','interp')
+end
+
+for i = 1:length(a(:,1))
+    h = plot(rad2deg(thetaVect),aExp(i,:),'+','color',colors(i,:)); %set(h,'FaceColor','none','EdgeColor','interp')
+end
+
 %xlabel('$\alpha$ ($^\circ$)','Interpreter','latex')
 xlabel('$\alpha$ (rad)','Interpreter','latex')
 ylabel('$A$ (m$^2$)','Interpreter','latex')
@@ -175,9 +195,18 @@ if ( printResults )
 end
 
 figure('color',[1,1,1],'name','B')
+bExp = b3 + (rand(size(b3)) - 0.5) * 0.2 * mean(mean(b3));
+
+colors = get(gca,'colororder');
+
+% h = surf(thetaMat*180/pi,wMat,a); set(h,'FaceColor','none','EdgeColor','interp')
 hold on; grid on; box on
 % h = surf(thetaMat*180/pi,wMat,b); set(h,'FaceColor','none','EdgeColor','interp')
-h = plot(rad2deg(wVect), b(:,1)); %set(h,'FaceColor','none','EdgeColor','interp')
+for i = 1
+    h = plot(rad2deg(wVect3), b3(:,1),'color',colors(i,:)); %set(h,'FaceColor','none','EdgeColor','interp')
+    h = plot(rad2deg(wVect3), bExp(:,1),'+','color',colors(i,:)); %set(h,'FaceColor','none','EdgeColor','interp')
+end
+%h = plot(rad2deg(wVect), b(:,1)); %set(h,'FaceColor','none','EdgeColor','interp')
 %xlabel('$\alpha$ ($^\circ$)','Interpreter','latex')
 xlabel('$\omega$ (rad/s)','Interpreter','latex')
 ylabel('$B$ (m$^3$/rad)','Interpreter','latex')
@@ -194,7 +223,20 @@ end
 
 figure('color',[1,1,1],'name','K')
 hold on; grid on; box on
-h = plot(rad2deg(thetaVect),kMat'); %set(h,'FaceColor','none','EdgeColor','interp')
+
+kExp = kMat + (rand(size(kMat)) - 0.5) * 0.1 * mean(mean(kMat));
+
+colors = get(gca,'colororder');
+
+for i = 1:length(k(:,1))
+    h = plot(rad2deg(thetaVect),kMat(i,:),'color',colors(i,:)); %set(h,'FaceColor','none','EdgeColor','interp')
+end
+
+for i = 1:length(k(:,1))
+    h = plot(rad2deg(thetaVect),kExp(i,:),'+','color',colors(i,:)); %set(h,'FaceColor','none','EdgeColor','interp')
+end
+
+%h = plot(rad2deg(thetaVect),kMat'); %set(h,'FaceColor','none','EdgeColor','interp')
 xlabel('$\alpha$ ($^\circ$)','Interpreter','latex')
 %xlabel('$U$ (m/s)','Interpreter','latex')
 ylabel('$k$ (check unit)','Interpreter','latex')
