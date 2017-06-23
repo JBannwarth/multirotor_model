@@ -1,6 +1,8 @@
 clear; close all;
-windFiles = { 'p5_z150_tfwt15', 'p5_z150_tfwt20', 'p5_z150_tfwt25', ...
-              'p5_z150_tfwt30', 'p5_z150_tfwt35', 'p5_z150_tfwt40' };
+% windFiles = { 'p5_z150_tfwt15', 'p5_z150_tfwt20', 'p5_z150_tfwt25', ...
+%               'p5_z150_tfwt30', 'p5_z150_tfwt35', 'p5_z150_tfwt40' };
+windFiles = { '170223_grid_25', '170223_grid_30', '170223_grid_35', ...
+              '170223_grid_40', '170223_grid_45', '170223_grid_50' };
 inFolder  = 'inputdata';
 
 

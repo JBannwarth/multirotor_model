@@ -25,6 +25,7 @@ addpath(fullfile(projectRoot, 'libraries'))
 addpath(fullfile(projectRoot, 'inputdata'))
 addpath(fullfile(projectRoot, 'testscripts'))
 addpath(fullfile(projectRoot, 'simulationscripts'))
+addpath(fullfile(projectRoot, 'plottingscripts'))
 
 % Change working folder to the "work" folder:
 cd(myCacheFolder);

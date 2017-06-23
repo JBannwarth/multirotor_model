@@ -5,10 +5,24 @@ fontSize  = 9;
 outSize   = [8.85684 5];
 printResults = true;
 
+windXLimits = [0 7];
+
+if ( useClosedContraptionData )
+    suffix = '-narrow';
+else
+    suffix = '-wide';
+end
+
 % Compute statistics
 dt = str2double( get_param( 'MultirotorSimulationController/To Workspace errX', 'SampleTime') );
 
-load( 'ExpFlightData' )
+if ( useClosedContraptionData )
+    load( 'ExpFlightData' )
+else
+    load( 'ExpFlightDataWide' )
+end
+
+tCuttOff = Simulation.T_END / 2;
 
 for i = 1:length( output )
     % Get error
@@ -18,9 +32,9 @@ for i = 1:length( output )
     error(i).t = (0:dt:Simulation.T_END)';
     
     % UAV takes about 20 s to recover from initial wind
-    error(i).x = error(i).x( error(i).t >= 30 );
-    error(i).y = error(i).y( error(i).t >= 30 );
-    error(i).z = error(i).z( error(i).t >= 30 );
+    error(i).x = error(i).x( error(i).t >= tCuttOff );
+    error(i).y = error(i).y( error(i).t >= tCuttOff );
+    error(i).z = error(i).z( error(i).t >= tCuttOff );
     
     meanE.x(i) = mean( error(i).x );
     meanE.y(i) = mean( error(i).y );
@@ -32,12 +46,12 @@ for i = 1:length( output )
     % Pitch
     pitchTmp = output(i).get('pitch');
     angle(i).pitch = pitchTmp(:,1);
-    angle(i).pitch = angle(i).pitch( error(i).t >= 30 );
+    angle(i).pitch = angle(i).pitch( error(i).t >= tCuttOff );
     
     meanA.pitch(i) = mean( angle(i).pitch );
     stdA.pitch(i)  =  std( angle(i).pitch - meanA.pitch(i) );
     
-    error(i).t = error(i).t( error(i).t >= 30 ) - 30;
+    error(i).t = error(i).t( error(i).t >= tCuttOff ) - tCuttOff;
 end
 
 
@@ -56,17 +70,24 @@ for ax = ['x', 'y', 'z']
     ylabel(['Stdev $' ax '$-axis error (m)'], 'Interpreter', 'LaTeX')
     xlabel('$U_\mathrm{mean}$ (m/s)', 'Interpreter', 'LaTeX')
     set( gca, 'TickLabelInterpreter', 'latex' )
-    if (ax == 'x')
-        legend( { 'sim', 'exp' }, 'Interpreter', 'LaTeX', 'Orientation', ...
-            'Vertical', 'Location', 'SouthEast' )
+%     if (ax == 'x')
+%         legend( { 'sim', 'exp' }, 'Interpreter', 'LaTeX', 'Orientation', ...
+%             'Vertical', 'Location', 'SouthEast' )
+%     else
+    legend( { 'sim', 'exp' }, 'Interpreter', 'LaTeX', 'Orientation', ...
+        'Vertical', 'Location', 'NorthWest' )
+%     end
+    
+    if ( useClosedContraptionData )
+        ylim([0, 0.15])
     else
-        legend( { 'sim', 'exp' }, 'Interpreter', 'LaTeX', 'Orientation', ...
-            'Vertical', 'Location', 'NorthWest' )
+        ylim([0, 0.04])
     end
-    ylim([0, 0.12])
+    
+    xlim( windXLimits )
     
     if ( printResults )
-        fileName = [ outFolder '/' 'UavErrorMean-' ax '-simvexp'];
+        fileName = [ outFolder '/' 'UavErrorMean-' ax '-simvexp' suffix];
         SetFigProp( outSize , fontSize );
         MatlabToLatexEps( fileName, [], false );
     end
@@ -78,13 +99,14 @@ figure; grid on; box on; hold on;
 plot( avgWindSpeed, meanA.pitch, 'o', avgWindSpeed, -rad2deg(avgPitch), 'x',...
     'linewidth', 1)
 xlabel('Mean wind speed (m/s)', 'Interpreter', 'latex');
-ylim([0 25])
+ylim([0 15])
+xlim( windXLimits )
 set( gca, 'TickLabelInterpreter', 'latex' )
 ylabel('Mean hover pitch angle (deg)', 'Interpreter', 'latex');
 legend( {'sim', 'exp' }, 'location', 'northwest', 'Interpreter', 'latex' )
 
 if ( printResults )
-    fileName = [ outFolder '/' 'PitchMean-' 'simvexp'];
+    fileName = [ outFolder '/' 'PitchMean-' 'simvexp' suffix];
     SetFigProp( outSize , fontSize );
     MatlabToLatexEps( fileName, [], false );
 end
@@ -94,13 +116,20 @@ figure; grid on; box on; hold on;
 plot( avgWindSpeed, stdA.pitch, 'o', avgWindSpeed, rad2deg(avgStd.pitch), 'x', ...
     'linewidth', 1)
 xlabel('Mean wind speed (m/s)', 'Interpreter', 'latex');
-ylim([0 6])
+
+if ( useClosedContraptionData )
+else
+    ylim( [0 1] )
+end
+
+xlim( windXLimits )
+
 set( gca, 'TickLabelInterpreter', 'latex' )
 ylabel('Stdev pitch angle (deg)', 'Interpreter', 'latex');
 legend( {'sim', 'exp'}, 'location', 'northwest', 'Interpreter', 'latex' )
 
 if ( printResults )
-    fileName = [ outFolder '/' 'PitchStd-' 'simvexp'];
+    fileName = [ outFolder '/' 'PitchStd-' 'simvexp' suffix];
     SetFigProp( outSize , fontSize );
     MatlabToLatexEps( fileName, [], false );
 end
