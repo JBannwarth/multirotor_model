@@ -1,5 +1,5 @@
 % Last updated:
-% 16/05/2017 - UAV w/o landing gear, w/ 3.85Ah battery, Raspberry Pi on top
+% 16/05/2017 - Uav w/o landing gear, w/ 3.85Ah battery, Raspberry Pi on top
 % level
 
 %% GEOMETRICAL PARAMETERS
@@ -18,6 +18,12 @@ Uav.R_MOTOR_TO_BODY(:,:,1) = eye(3);
 Uav.R_MOTOR_TO_BODY(:,:,2) = eye(3);
 Uav.R_MOTOR_TO_BODY(:,:,3) = eye(3);
 Uav.R_MOTOR_TO_BODY(:,:,4) = eye(3);
+
+for i = 1:length( Uav.L )
+    Uav.L_VEC(:,i) = [ Uav.L(i) * cos( Uav.BETA(i) );
+                       Uav.L(i) * sin( Uav.BETA(i) ); 
+                       0 ];
+end
 
 %% MASS/INERTIA
 Uav.M   = 1.204; % Frame [kg]
