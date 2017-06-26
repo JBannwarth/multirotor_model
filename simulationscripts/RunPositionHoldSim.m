@@ -5,7 +5,7 @@ clear all; %#ok<CLALL>
 TestControllerInitOnly;
 
 
-model = 'MultirotorSimulationController';
+model = 'MultirotorSimPx4';
 load_system(model);
 
 useClosedContraptionData = true;

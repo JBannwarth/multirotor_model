@@ -4,7 +4,7 @@ clear all; %#ok<CLALL>
 TestControllerInitOnly;
 Simulation.T_END = 30;
 
-model = 'MultirotorSimulationController';
+model = 'MultirotorSimPx4';
 load_system(model);
 
 %% 2) Set up the iterations that we want to compute

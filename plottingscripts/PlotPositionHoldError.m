@@ -14,7 +14,7 @@ else
 end
 
 % Compute statistics
-dt = str2double( get_param( 'MultirotorSimulationController/To Workspace errX', 'SampleTime') );
+dt = str2double( get_param( [model '/To Workspace errX'], 'SampleTime') );
 
 if ( useClosedContraptionData )
     load( 'ExpFlightData' )
