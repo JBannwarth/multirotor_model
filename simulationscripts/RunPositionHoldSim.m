@@ -5,13 +5,14 @@ clear all; %#ok<CLALL>
 TestControllerInitOnly;
 
 
-model = 'MultirotorSimPx4SeparateRotors';
+model = 'MultirotorSimPx4SeparateRotors'; 
 load_system(model);
 
 useClosedContraptionData = true;
 
 % if ( useClosedContraptionData )
 %     Simulation.T_END = 60;
+%            
 % else
 %     Simulation.T_END = 120;
 % end

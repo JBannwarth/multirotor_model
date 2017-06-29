@@ -35,6 +35,8 @@ Uav.THROTTLE_HOVER = ( Motor.K_E*Uav.OMEGA_HOVER + ...
     (Motor.B*Motor.R/Motor.K_T) * Uav.OMEGA_HOVER^2 ) / ...
     Uav.NOMINAL_BATTERY_VOLTAGE;
 
+Uav.NOISE_TS = 0.002;
+
 % Load controller constants
 ArduCopterConstants
 
