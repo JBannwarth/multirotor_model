@@ -1,3 +1,15 @@
+function selfVector = LocalPositionEstimator( selfVector )
+
+end
+
+function self = DecodeSelfVector( selfVector )
+%DECODESELFVECTOR Convert input vector to structure
+end
+
+function selfVector = EncodeSelfVector( self )
+%ENCODESELFVECTOR Convert structure to vector
+end
+
 %% TODO
 % Define n_x = 10 somewhere;
 
@@ -593,7 +605,7 @@ function self = publishLocalPos( self )
 	X_bx = 7; X_by = 8; X_bz = 9; X_tz = 10; n_x = 10;
 
 	%const Vector<float, n_x> &
-	xLP = self.xLowPass.getState();
+	xLP = self.xLowPass.state;
 
 	% lie about eph/epv to allow visual odometry only navigation when velocity est. good
 	% All float
@@ -626,7 +638,7 @@ function self = publishLocalPos( self )
 		self.pub_lpos.y = xLP(X_y);  	% east
 
 		if (self.fusion & FUSE_PUB_AGL_Z)
-			self.pub_lpos.z = -self.aglLowPass.getState(); % agl
+			self.pub_lpos.z = -self.aglLowPass.state; % agl
 
 		else
 			self.pub_lpos.z = xLP(X_z); 	% down
@@ -646,7 +658,7 @@ function self = publishLocalPos( self )
 		self.pub_lpos.ref_lat = self.map_ref.lat_rad * 180 / pi;
 		self.pub_lpos.ref_lon = self.map_ref.lon_rad * 180 / pi;
 		self.pub_lpos.ref_alt = self.altOrigin;
-		self.pub_lpos.dist_bottom = self.aglLowPass.getState();
+		self.pub_lpos.dist_bottom = self.aglLowPass.state;
 		self.pub_lpos.dist_bottom_rate = - xLP(X_vz);
 		self.pub_lpos.surface_bottom_timestamp = self.timeStamp;
 		% we estimate agl even when we don't have terrain info
@@ -697,7 +709,7 @@ function self = publishGlobalPos( self )
 	lat = 0;
 	lon = 0;
 	% const Vector<float, n_x> &
-	xLP = self.xLowPass.getState();
+	xLP = self.xLowPass.state;
 	[ ~, lat, lon ] = map_projection_reproject(self.map_ref, xLP(X_x), xLP(X_y), lat, lon);
 	% float
 	alt = -xLP(X_z) + self.altOrigin;
@@ -778,6 +790,7 @@ function self = initSS( self )
 %INITSS Initialize state space model
 	X_x = 1; X_y = 2; X_z = 3; X_vx = 4; X_vy = 5; X_vz = 6;
 	X_bx = 7; X_by = 8; X_bz = 9; X_tz = 10;
+	U_ax = 1; U_ay = 2; U_az = 3; n_u = 3;
 
 	self = initP( self );
 
@@ -870,9 +883,10 @@ end
 % void BlockLocalPositionEstimator::
 function predict()
 %PREDICT Prediction step
-
 	% Definitions
-	n_x = 10;
+	U_ax = 1; U_ay = 2; U_az = 3; n_u = 3;
+	X_x = 1; X_y = 2; X_z = 3; X_vx = 4; X_vy = 5; X_vz = 6;
+	X_bx = 7; X_by = 8; X_bz = 9; X_tz = 10; n_x = 10;
 
 	% get acceleration
 	q = self.sub_att.q(0); % matrix::Quaternion<float> q(&self.sub_att.get().q(0));
@@ -910,12 +924,12 @@ function predict()
 	end
 
 	% don't integrate z if no valid z data
-	if (~(self.estimatorInitialized & EST_Z))
+	if ( ~(self.estimatorInitialized & EST_Z) )
 		dx(X_z) = 0;
 	end
 
 	% don't integrate tz if no valid tz data
-	if (~(self.estimatorInitialized & EST_TZ))
+	if ( ~(self.estimatorInitialized & EST_TZ) )
 		dx(X_tz) = 0;
 	end
 
@@ -964,7 +978,7 @@ end
 
 % Not examined
 % int BlockLocalPositionEstimator::
-function output = getDelayPeriods(float delay, uint8_t *periods)
+function output = getDelayPeriods( float delay, uint8_t *periods )
 %GETDELAYPERIODS
 	%float
 	t_delay = 0;
@@ -993,7 +1007,7 @@ end
 
 %% ADDITIONAL FUNCTIONS
 
-function out = quat_to_euler(data)
+function out = quat_to_euler( data )
 %QUAT_TO_EULER Create Euler angles vector from the quaternion
     out = [atan2(2.0 * (data(1) * data(2) + data(3) * data(4)), 1.0 - 2.0 * (data(2) * data(2) + data(3) * data(3)));
     asin(2.0 * (data(1) * data(3) - data(4) * data(2)));
@@ -1019,7 +1033,7 @@ function R  = quat_to_dcm( data )
     R(3,3) = aSq - bSq - cSq + dSq;
 end
 
-function [out, lat, lon] = map_projection_reproject(ref, x, y, lat, lon)
+function [ out, lat, lon ] = map_projection_reproject( ref, x, y, lat, lon )
 %MAP_PROJECTION_REPROJECT
     CONSTANTS_RADIUS_OF_EARTH = 6371000;
     M_PI = 3.14159265358979323846;
@@ -1050,7 +1064,7 @@ function [out, lat, lon] = map_projection_reproject(ref, x, y, lat, lon)
     out = 0;
 end
 
-function [ out, x, y] = map_projection_project(ref, lat, lon, x, y)
+function [ out, x, y ] = map_projection_project( ref, lat, lon, x, y )
 %MAP_PROJECTION_PROJECT
     CONSTANTS_RADIUS_OF_EARTH = 6371000;
     M_DEG_TO_RAD = 0.017453292519943295;
@@ -1081,7 +1095,28 @@ function [ out, x, y] = map_projection_project(ref, lat, lon, x, y)
     out = 0;
 end
 
-function init = map_projection_initialized(ref)
+function init = map_projection_initialized( ref )
 % MAP_PROJECTION_INITIALIZED
     init = ref.init_done;
+end
+
+function [out, lp_block] = block_lowpass_update( input, lp_block )
+%BLOCK_LOWPASS_UPADE Update low pass filter
+    M_PI = 3.14159265358979323846;
+    if (~isfinite(lp_block.state))
+		lp_block.state = input;
+    end
+
+    b = 2 * M_PI * lp_block.fcut * lp_block.dt;
+    a = b / (1 + b);
+    lp_block.state = a * input + (1 - a) * lp_block.state;
+    out = lp_block.state;
+end
+
+function self = initialize_blocks(dt, self)
+%INITIALIZE_BLOCKS Initialise low pass blocks
+    self.xLowPass.dt = dt;
+    self.aglLowPass.dt = dt;
+	self.xLowPass.fcut = 0; % TO MODIFY
+    self.aglLowPass.fcut = 0; % TO MODIFY
 end
