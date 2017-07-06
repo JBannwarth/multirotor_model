@@ -1,0 +1,38 @@
+LPE_FLW_OFF_Z;0.0;-1;1;m;Optical flow z offset from center
+LPE_FLW_SCALE;1.3;0.1;10.0;m;Optical flow scale
+LPE_FLW_R;7.0;0.1;10.0;m/s / (rad);Optical flow rotation (roll/pitch) noise gain
+LPE_FLW_RR;7.0;0.0;10.0;m/s / (rad/s);Optical flow angular velocity noise gain
+LPE_FLW_QMIN;150;0;255;-;Optical flow minimum quality threshold
+LPE_SNR_Z;0.05;0.01;1;m;Sonar z standard deviation.
+LPE_SNR_OFF_Z;0.00;-1;1;m;Sonar z offset from center of vehicle +down
+LPE_LDR_Z;0.03;0.01;1;m;Lidar z standard deviation.
+LPE_LDR_OFF_Z;0.00;-1;1;m;Lidar z offset from center of vehicle +down
+LPE_ACC_XY;0.012;0.00001;2;m/s^2/sqrt(Hz);Accelerometer xy noise density
+LPE_ACC_Z;0.02;0.00001;2;m/s^2/sqrt(Hz);Accelerometer z noise density
+LPE_BAR_Z;3.0;0.01;100;m;Barometric presssure altitude z standard deviation.
+LPE_GPS_DELAY;0.29;0;0.4;sec;GPS delay compensaton
+LPE_GPS_XY;1.0;0.01;5;m;Minimum GPS xy standard deviation, uses reported EPH if greater.
+LPE_GPS_Z;3.0;0.01;200;m;Minimum GPS z standard deviation, uses reported EPV if greater.
+LPE_GPS_VXY;0.25;0.01;2;m/s;GPS xy velocity standard deviation.
+LPE_GPS_VZ;0.25;0.01;2;m/s;GPS z velocity standard deviation.
+LPE_EPH_MAX;3.0;1.0;5.0;m;Max EPH allowed for GPS initialization
+LPE_EPV_MAX;5.0;1.0;5.0;m;Max EPV allowed for GPS initialization
+LPE_VIS_DELAY;0.1;0;0.1;sec;Vision delay compensaton.
+LPE_VIS_XY;0.1;0.01;1;m;Vision xy standard deviation.
+LPE_VIS_Z;0.5;0.01;100;m;Vision z standard deviation.
+LPE_VIC_P;0.001;0.0001;1;m;Vicon position standard deviation.
+LPE_PN_P;0.1;0;1;m/s/sqrt(Hz);Position propagation noise density
+LPE_PN_V;0.1;0;1;(m/s)/s/sqrt(Hz);Velocity propagation noise density
+LPE_PN_B;1e-3;0;1;(m/s^2)/s/sqrt(Hz);Accel bias propagation noise density
+LPE_PN_T;0.001;0;1;(m/s)/(sqrt(hz));Terrain random walk noise density, hilly/outdoor (0.1), flat/Indoor (0.001)
+LPE_T_MAX_GRADE;1.0;0;100;%;Terrain maximum percent grade, hilly/outdoor (100 = 45 deg), flat/Indoor (0 = 0 deg)
+LPE_FGYRO_HP;0.001;0;2;Hz;Flow gyro high pass filter cut off frequency
+LPE_FAKE_ORIGIN;0;0;1;-;Enable publishing of a fake global position (e.g for AUTO missions using Optical Flow)
+LPE_LAT;47.397742;-90;90;deg;Local origin latitude for nav w/o GPS
+LPE_LON;8.545594;-180;180;deg;Local origin longitude for nav w/o GPS
+LPE_X_LP;5.0;5;1000;Hz;Cut frequency for state publication
+LPE_VXY_PUB;0.3;0.01;1.0;m/s;Required velocity xy standard deviation to publish position
+LPE_Z_PUB;1.0;0.3;5.0;m;Required z standard deviation to publish altitude/ terrain
+LPE_LAND_Z;0.03;0.001;10.0;m;Land detector z standard deviation
+LPE_LAND_VXY;0.05;0.01;10.0;m/s;Land detector xy velocity standard deviation
+LPE_FUSION;145;0;255;-;Integer bitmask controlling data fusion

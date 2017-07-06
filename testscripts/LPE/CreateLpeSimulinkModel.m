@@ -34,6 +34,7 @@
 %% Cleanup & initial setup
 clear; clc;
 
+paramFileName = 'Params.txt';
 varFileName   = 'LpeVariables.txt';
 implFileName  = 'BlockLocalPositionEstimator.m';
 libName       = 'Px4Library';
@@ -48,13 +49,14 @@ fullPath = [ libName '/' subFolderName ];
 
 %% Load and process variables
 fileId = fopen ( varFileName );
-tmp = textscan( fileId, '%s %d %d %s', 'Delimiter', ' ' );
+tmp = textscan( fileId, '%s %d %d %s %s %s', 'Delimiter', ' ' );
 fclose( fileId );
 
 varNames = tmp{1};
 varM = tmp{2};
 varN = tmp{3};
 varType = tmp{4};
+varInit = tmp{5};
 
 mainDecodeStr  = sprintf('function self = DecodeSelf( selfVecIn )\n\t%% Variable assignment\n');
 mainEncodeStr = sprintf(['function selfVecOut = EncodeSelf( self )\n' ...
@@ -146,3 +148,51 @@ mainFcn = S.find('Name', mainName, '-isa', 'Stateflow.EMChart' );
 inFcn.Script   = inputFcnCode;
 outFcn.Script  = outputFcnCode;
 mainFcn.Script = mainFcnCode;
+
+%% Generate memory block initial conditions
+
+initVector = '[';
+
+currIndex = 1;
+for i = 1:length( varM )
+    
+    for m = 1:varM(i)
+        for n = 1:varN(i)
+            if strncmp( varInit{i}, '[', 1 )
+                initMat = str2num( varInit{i} );
+                initVal = num2str( initMat(m, n) );
+            else
+                initVal = varInit{i};
+            end
+            initVector = [ initVector sprintf('%s, ', initVal ) ];
+        end
+    end
+    
+end
+
+initVector = [initVector(1:end-2), ']']; % remove the last ', '
+
+set_param('Px4Library/local_position_estimator/Self memory', 'X0', initVector)
+
+%% Load-up parameters from file
+fileId = fopen ( 'params.txt' );
+tmp = textscan( fileId, '%s %f %f %f %s %s', 'Delimiter', ';' );
+fclose( fileId );
+
+pName = tmp{1};
+pVal = tmp{2};
+pMin = tmp{3};
+pMax = tmp{4};
+pUnit = tmp{5};
+pInfo = tmp{6};
+
+maskObj = Simulink.Mask.get('Px4Library/local_position_estimator');
+maskObj.removeAllParameters();
+maskObj.addParameter('Type', 'edit',   'Prompt', 'Sampling period (s)', ...
+    'Name', 'LPE_SAMPLING_PERIOD', 'Range', [0 1], 'Value', '0.02');
+
+for i = 1:length( pVal ) 
+    maskObj.addParameter('Type', 'slider', 'Prompt', ...
+        [pInfo{i} ' (' pUnit{i} ')'], 'Name', pName{i}, 'Range', ...
+        [pMin(i) pMax(i)], 'Value', num2str( pVal(i) ));
+end
