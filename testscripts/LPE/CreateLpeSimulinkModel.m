@@ -47,6 +47,26 @@ mainName      = 'local_position_estimator';
 
 fullPath = [ libName '/' subFolderName ];
 
+
+%% Clean-up blocks and lines
+
+allblocks = find_system( fullPath, 'SearchDepth', 1, 'LookUnderMasks', 'on' );
+
+ToKeep = { [fullPath '/' inputFcnName], [fullPath '/' outputFcnName], ...
+    [fullPath '/' memoryName], [fullPath '/' mainName] };
+
+ToDelete = setdiff(allblocks, ToKeep);
+ToDelete = setxor(ToDelete, fullPath);
+
+for i = 1:numel( ToDelete )
+    delete_block( ToDelete{i} )
+end
+
+allLines = find_system( fullPath, 'SearchDepth', 1, 'LookUnderMasks', 'on', ...
+    'FindAll', 'on', 'type', 'line' );
+
+delete_line( allLines )
+
 %% Load and process variables
 fileId = fopen ( varFileName );
 tmp = textscan( fileId, '%s %d %d %s %s %s', 'Delimiter', ' ' );
@@ -62,7 +82,7 @@ mainDecodeStr  = sprintf('function self = DecodeSelf( selfVecIn )\n\t%% Variable
 mainEncodeStr = sprintf(['function selfVecOut = EncodeSelf( self )\n' ...
                          '\t%% Variable assignment\n' ...
                          '\tselfVecOut = zeros(%d, 1);\n'], sum(varM.*varN) );
-inputFcnHead = sprintf('function selfVec = InputAssignment( selfVecIn ...\n');
+inputFcnHead = sprintf('function selfVec = InputAssignment( ...\n');
 inputFcnBody = sprintf('\tselfVec = selfVecIn;\n\n\t%% Variable assignment\n');
 
 outputFcnHead = sprintf('function [ ...\n');
@@ -114,7 +134,7 @@ for i = 1:length( varM )
     
 end
 
-inputFcnHead = [ inputFcnHead, sprintf( '\t)\n%%#codegen\n\n' ) ];
+inputFcnHead = [ inputFcnHead, sprintf( '\t% 20s ...\n\t)\n%%#codegen\n\n', 'selfVecIn' ) ];
 
 outputFcnHead = [ outputFcnHead, sprintf( '\t] = OutputSelection( selfVec )\n%%#codegen\n\n' ) ];
 
@@ -123,7 +143,6 @@ outputFcnCode = [ outputFcnHead, outputFcnBody, 'end' ];
 
 mainDecodeStr = [ mainDecodeStr, sprintf('end\n\n') ];
 mainEncodeStr = [ mainEncodeStr, sprintf('end\n\n') ];
-
 
 %% Format main function
 implementationCode = fileread( implFileName );
@@ -148,6 +167,91 @@ mainFcn = S.find('Name', mainName, '-isa', 'Stateflow.EMChart' );
 inFcn.Script   = inputFcnCode;
 outFcn.Script  = outputFcnCode;
 mainFcn.Script = mainFcnCode;
+
+%% Create I/O and link-up blocks
+
+% Set length of output function based on number of inputs
+varNamesIn = varNames( strcmp( varType, 'in' ) );
+varNamesOut = varNames( strcmp( varType, 'out' ) );
+
+fcnW = 150;
+spacing = 50;
+
+set_param( [fullPath '/' mainName], 'Position', [-fcnW/2, -25, fcnW/2, 25] );
+set_param( [fullPath '/' inputFcnName], 'Position', ...
+    [-fcnW/2-spacing-fcnW, ...
+     -25*max(length(varNamesIn)+1,1), ...
+     -fcnW/2-spacing, ...
+     25*max(length(varNamesIn)+1,1)] );
+set_param( [fullPath '/' outputFcnName], 'Position', ...
+    [fcnW/2+spacing, ...
+     -25*max(length(varNamesOut),1), ...
+     fcnW/2+spacing+fcnW, ...
+     25*max(length(varNamesOut),1)] );
+ 
+memYOffset = 25*max(length(varNamesIn)+1,1) + spacing;
+ 
+set_param( [fullPath '/' memoryName], 'Position', ...
+    [-15, memYOffset, 15, memYOffset+30] );
+
+% Re-add necessary lines
+add_line( fullPath, [ inputFcnName '/1' ], [ mainName '/1' ] )
+add_line( fullPath, [ mainName '/1' ],     [ outputFcnName '/1' ] )
+add_line( fullPath, [ mainName '/1' ],     [ memoryName '/1' ], 'autorouting', 'on' )
+add_line( fullPath, [ memoryName '/1' ], ...
+    [ inputFcnName '/' num2str( length(varNamesIn)+1 ) ], 'autorouting', 'on' )
+
+for i = 1:length( varNamesIn )
+    inputName = strrep( varNamesIn{i}(6:end), '.', '_' );
+    add_block('simulink/Sources/In1', [fullPath '/' inputName] )
+    
+    blockLoc = get_param( [fullPath '/' inputName] , 'Position');
+    w = blockLoc(3) - blockLoc(1);
+    h = blockLoc(4) - blockLoc(2);
+    
+    % Get offsets
+    ports = get_param( [fullPath '/' inputFcnName], 'PortConnectivity');
+    portLocs = [ports.Position];
+    xOffset = portLocs( ((i-1)*2)+1 ) - spacing - w;
+    yOffset  = portLocs( ((i-1)*2)+2 ) - h/2;
+    
+    blockLoc2(1) = xOffset;
+    blockLoc2(2) = yOffset;
+    blockLoc2(3) = xOffset + w;
+    blockLoc2(4) = yOffset + h;
+    
+    set_param( [fullPath '/' inputName] , 'Position', blockLoc2);
+
+    add_line( fullPath, [ inputName  '/1' ], ...
+        [ inputFcnName '/' num2str(i) ] )
+end
+
+
+% set_param( libName, 'showgrid','on')
+
+for i = 1:length( varNamesOut )
+    outputName = strrep( varNamesOut{i}(6:end), '.', '_' );
+    add_block('simulink/Sinks/Out1', [fullPath '/' outputName] )
+    blockLoc = get_param( [fullPath '/' outputName] , 'Position');
+    w = blockLoc(3) - blockLoc(1);
+    h = blockLoc(4) - blockLoc(2);
+    
+    % Get offsets
+    ports = get_param( [fullPath '/' outputFcnName], 'PortConnectivity');
+    portLocs = [ports.Position];
+    portLocs = portLocs(3:end); % First two elements are input
+    xOffset = portLocs( ((i-1)*2)+1 ) + spacing;
+    yOffset  = portLocs( ((i-1)*2)+2 ) - h/2;
+    
+    blockLoc2(1) = xOffset;
+    blockLoc2(2) = yOffset;
+    blockLoc2(3) = xOffset + w;
+    blockLoc2(4) = yOffset + h;
+    
+    set_param( [fullPath '/' outputName] , 'Position', blockLoc2);
+    add_line( fullPath, [ outputFcnName '/' num2str(i) ], ...
+        [ outputName  '/1' ] )
+end
 
 %% Generate memory block initial conditions
 
@@ -189,7 +293,7 @@ pInfo = tmp{6};
 maskObj = Simulink.Mask.get('Px4Library/local_position_estimator');
 maskObj.removeAllParameters();
 maskObj.addParameter('Type', 'edit',   'Prompt', 'Sampling period (s)', ...
-    'Name', 'LPE_SAMPLING_PERIOD', 'Range', [0 1], 'Value', '0.02');
+    'Name', 'LPE_SAMPLING_PERIOD', 'Value', '0.02');
 
 for i = 1:length( pVal ) 
     maskObj.addParameter('Type', 'slider', 'Prompt', ...
