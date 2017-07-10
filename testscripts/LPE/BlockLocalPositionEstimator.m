@@ -13,29 +13,29 @@ function selfVector = LocalPositionEstimator( selfVector, timestamp )
 	% char
 	self.msg_label = '(lpe) ';  % rate of land detector correction
 
-	self.EST_XY = 2^0;
-	self.EST_Z  = 2^1;
-	self.EST_TZ = 2^2;
+	self.EST_XY = uint8(2^0);
+	self.EST_Z  = uint8(2^1);
+	self.EST_TZ = uint8(2^2);
 
 	self.BIAS_MAX = 1e-1;
 
-	self.FUSE_GPS            = 2^0;
-	self.FUSE_FLOW           = 2^1;
-	self.FUSE_VIS_POS        = 2^2;
-	self.FUSE_VIS_YAW        = 2^3;
-	self.FUSE_LAND           = 2^4;
-	self.FUSE_PUB_AGL_Z      = 2^5;
-	self.FUSE_FLOW_GYRO_COMP = 2^6;
-	self.FUSE_BARO           = 2^7;
+	self.FUSE_GPS            = uint8(2^0);
+	self.FUSE_FLOW           = uint8(2^1);
+	self.FUSE_VIS_POS        = uint8(2^2);
+	self.FUSE_VIS_YAW        = uint8(2^3);
+	self.FUSE_LAND           = uint8(2^4);
+	self.FUSE_PUB_AGL_Z      = uint8(2^5);
+	self.FUSE_FLOW_GYRO_COMP = uint8(2^6);
+	self.FUSE_BARO           = uint8(2^7);
 
-	self.SENSOR_BARO   = 2^0;
-	self.SENSOR_GPS    = 2^1;
-	self.SENSOR_LIDAR  = 2^2;
-	self.SENSOR_FLOW   = 2^3;
-	self.SENSOR_SONAR  = 2^4;
-	self.SENSOR_VISION = 2^5;
-	self.SENSOR_MOCAP  = 2^6;
-	self.SENSOR_LAND   = 2^7;
+	self.SENSOR_BARO   = uint8(2^0);
+	self.SENSOR_GPS    = uint8(2^1);
+	self.SENSOR_LIDAR  = uint8(2^2);
+	self.SENSOR_FLOW   = uint8(2^3);
+	self.SENSOR_SONAR  = uint8(2^4);
+	self.SENSOR_VISION = uint8(2^5);
+	self.SENSOR_MOCAP  = uint8(2^6);
+	self.SENSOR_LAND   = uint8(2^7);
 
 	self.BETA_TABLE = [ 0, ...
 				        8.82050518214, ...
@@ -45,14 +45,6 @@ function selfVector = LocalPositionEstimator( selfVector, timestamp )
 				        17.8797700658, ...
 				        19.6465647819 ];
 
-end
-
-function self = DecodeSelfVector( selfVector )
-%DECODESELFVECTOR Convert input vector to structure
-end
-
-function selfVector = EncodeSelfVector( self )
-%ENCODESELFVECTOR Convert structure to vector
 end
 
 % #include "BlockLocalPositionEstimator.hpp"
@@ -67,7 +59,7 @@ end
 
 % NEED TO TAKE CARE OF INITIALIZATION
 % BlockLocalPositionEstimator::
-function BlockLocalPositionEstimator()
+function self = BlockLocalPositionEstimator( self )
 	%% START
 	% % this block has no parent, and has name LPE
 	% SuperBlock(nullptr, "LPE"),
@@ -250,7 +242,7 @@ end
 %float t
 %const Vector<float, BlockLocalPositionEstimator::n_x> &x
 %const Vector<float, BlockLocalPositionEstimator::n_u> &u
-function output = dynamics( t, x, u )
+function output = dynamics( ~, x, u )
 	output = self.A * x + self.B * u;
 end
 
@@ -283,36 +275,38 @@ function self = update( self, timestamp )
 	% auto-detect connected rangefinders while not armed bool - maybe bypass?
 	armedState = self.sub_armed.armed;
 
-	if (~armedState && (self.sub_lidar == nullptr || self.sub_sonar == nullptr))
-
-		% detect distance sensors
-		for i = 1:DIST_SUBS %i < N_DIST_SUBS; i++)
-			%uORB::Subscription<distance_sensor_s> *s = self.dist_subs(i);
-			s = self.dist_subs(i);
-
-			if (s == self.sub_lidar || s == self.sub_sonar)
-				continue;
-			end
-
-			if ( s.updated )
-				s->update();
-
-				if (s.timestamp == 0)
-					continue;
-				end
-
-				if (s.type == MAV_DISTANCE_SENSOR_LASER && ...
-				    self.sub_lidar == nullptr)
-					self.sub_lidar = s;
-					% mavlink_and_console_log_info(&mavlink_log_pub, '%sLidar detected with ID %i', self.msg_label, i);
-				else if (s.type == MAV_DISTANCE_SENSOR_ULTRASOUND && ...
-					   self.sub_sonar == nullptr)
-					self.sub_sonar = s;
-					% mavlink_and_console_log_info(&mavlink_log_pub, '%sSonar detected with ID %i', self.msg_label, i);
-				end
-			end
-		end
-	end
+    
+    % Probably not needed
+% 	if (~armedState && (self.sub_lidar == nullptr || self.sub_sonar == nullptr))
+% 
+% 		% detect distance sensors
+% 		for i = 1:DIST_SUBS %i < N_DIST_SUBS; i++)
+% 			%uORB::Subscription<distance_sensor_s> *s = self.dist_subs(i);
+% 			s = self.dist_subs(i);
+% 
+% 			if (s == self.sub_lidar || s == self.sub_sonar)
+% 				continue;
+% 			end
+% 
+% 			if ( s.updated )
+% 				s.update();
+% 
+% 				if (s.timestamp == 0)
+% 					continue;
+% 				end
+% 
+% 				if (s.type == MAV_DISTANCE_SENSOR_LASER && ...
+% 				    self.sub_lidar == nullptr)
+% 					self.sub_lidar = s;
+% 					% mavlink_and_console_log_info(&mavlink_log_pub, '%sLidar detected with ID %i', self.msg_label, i);
+%                 elseif (s.type == MAV_DISTANCE_SENSOR_ULTRASOUND && ...
+% 					   self.sub_sonar == nullptr)
+% 					self.sub_sonar = s;
+% 					% mavlink_and_console_log_info(&mavlink_log_pub, '%sSonar detected with ID %i', self.msg_label, i);
+% 				end
+% 			end
+% 		end
+% 	end
 
 	% reset pos, vel, and terrain on arming
 
@@ -363,14 +357,14 @@ function self = update( self, timestamp )
 	end
 
 	% All bool
-	flowUpdated   = bitand(self.fusion, self.FUSE_FLOW) && self.sub_flow.updated();
-	gpsUpdated    = bitand(self.fusion, self.FUSE_GPS) && self.sub_gps.updated();
-	visionUpdated = bitand(self.fusion, self.FUSE_VIS_POS) && self.sub_vision_pos.updated();
-	mocapUpdated  = self.sub_mocap.updated();
-	lidarUpdated  = (self.sub_lidar ~= nullptr) && self.sub_lidar->updated();
-	sonarUpdated  = (self.sub_sonar ~= nullptr) && self.sub_sonar->updated();
+	flowUpdated   = bitand(self.fusion, self.FUSE_FLOW) && self.sub_flow.updated;
+	gpsUpdated    = bitand(self.fusion, self.FUSE_GPS) && self.sub_gps.updated;
+	visionUpdated = bitand(self.fusion, self.FUSE_VIS_POS) && self.sub_vision_pos.updated;
+	mocapUpdated  = self.sub_mocap.updated;
+	lidarUpdated  = self.sub_lidar.present && self.sub_lidar.updated;
+	sonarUpdated  = self.sub_sonar.present && self.sub_sonar.updated;
 	landUpdated   = landed() ...
-			   && ((self.timeStamp - self.time_last_land) > 1.0e6 / self.LAND_RATE); % throttle rate
+			   && ((self.timeStamp - self.time_last_land) > (1.0e6 / self.LAND_RATE)); % throttle rate
 
 	% get new data - maybe not necessary
 	self = updateSubscriptions( self );
@@ -391,7 +385,7 @@ function self = update( self, timestamp )
 	if bitand(self.estimatorInitialized, self.EST_XY)
 		% if valid and gps has timed out, set to not valid
 		if (~vxy_stddev_ok && bitand(self.sensorTimeout, self.SENSOR_GPS))
-			self.estimatorInitialized = bitand(self.estimatorInitialized, ~self.EST_XY );
+			self.estimatorInitialized = bitand(self.estimatorInitialized, bitcmp( self.EST_XY , 'uint8' ));
 		end
 	else
 		if (vxy_stddev_ok)
@@ -412,7 +406,7 @@ function self = update( self, timestamp )
 	if bitand(self.estimatorInitialized, self.EST_Z)
 		% if valid and baro has timed out, set to not valid
 		if (~z_stddev_ok && bitand(self.sensorTimeout, self.SENSOR_BARO))
-			self.estimatorInitialized = bitand(self.estimatorInitialized, ~self.EST_Z);
+			self.estimatorInitialized = bitand(self.estimatorInitialized, bitcmp( self.EST_Z, 'uint8' ));
 		end
 
 	else
@@ -426,7 +420,7 @@ function self = update( self, timestamp )
 
 	if bitand(self.estimatorInitialized, self.EST_TZ)
 		if (~tz_stddev_ok)
-			self.estimatorInitialized = (self.estimatorInitialized, ~self.EST_TZ);
+			self.estimatorInitialized = bitand(self.estimatorInitialized, bitcmp( self.EST_TZ, 'uint8' ));
 		end
 
 	else
@@ -436,60 +430,60 @@ function self = update( self, timestamp )
 	end
 
 	% check timeouts
-	checkTimeouts();
+	self = checkTimeouts( self );
 
 	% if we have no lat, lon initialize projection to LPE_LAT, LPE_LON parameters
 	if (~self.map_ref.init_done && bitand(self.estimatorInitialized, self.EST_XY) && self.fake_origin)
-		map_projection_init(&self.map_ref, ...
+		map_projection_init_timestamped(self.map_ref, ...
 				    self.init_origin_lat, ...
-				    self.init_origin_lon);
+				    self.init_origin_lon, self.timeStamp);
 
 		% set timestamp when origin was set to current time
 		self.time_origin = self.timeStamp;
 
-		mavlink_and_console_log_info(&mavlink_log_pub, '(lpe) global origin init (parameter) : lat %6.2f lon %6.2f alt %5.1f m', ...
-					     double(self.init_origin_lat), double(self.init_origin_lon), double(self.altOrigin));
+% 		mavlink_and_console_log_info(mavlink_log_pub, '(lpe) global origin init (parameter) : lat %6.2f lon %6.2f alt %5.1f m', ...
+% 					     double(self.init_origin_lat), double(self.init_origin_lon), double(self.altOrigin));
 
 	end
 
 	% reinitialize x if necessary bool
 	reinit_x = false;
 
-	for i = 0:n_x-1 %; i < n_x; i++)
+	for i = 1:n_x %; i < n_x; i++)
 		% should we do a reinit
 		% of sensors here?
 		% don't want it to take too long
 		if (~isfinite(self.x(i)))
 			reinit_x = true;
-			mavlink_and_console_log_info(&mavlink_log_pub, '%sreinit x, x(%d) not finite', self.msg_label, i);
+			% mavlink_and_console_log_info(mavlink_log_pub, '%sreinit x, x(%d) not finite', self.msg_label, i);
 			break;
 		end
 	end
 
 	if (reinit_x)
-		for i = 0:n_x-1 %; i < n_x; i++)
+		for i = 1:n_x %; i < n_x; i++)
 			self.x(i) = 0;
 		end
 
-		mavlink_and_console_log_info(&mavlink_log_pub, '%sreinit x', self.msg_label);
+		% mavlink_and_console_log_info(mavlink_log_pub, '%sreinit x', self.msg_label);
 	end
 
 	% force P symmetry and reinitialize P if necessary bool
 	reinit_P = false;
 
-	for i = 0:(n_x-1) %; i < n_x; i++)
-		for j = 0:i %; j <= i; j++)
+	for i = 1:n_x %; i < n_x; i++)
+		for j = 1:i %; j <= i; j++)
 			if (~isfinite(self.P(i, j)))
-				mavlink_and_console_log_info(&mavlink_log_pub, ...
-							     '%sreinit P (%d, %d) not finite', self.msg_label, i, j);
+% 				mavlink_and_console_log_info(mavlink_log_pub, ...
+% 							     '%sreinit P (%d, %d) not finite', self.msg_label, i, j);
 				reinit_P = true;
 			end
 
 			if (i == j)
 				% make sure diagonal elements are positive
 				if (self.P(i, i) <= 0)
-					mavlink_and_console_log_info(&mavlink_log_pub, ...
-								     '%sreinit P (%d, %d) negative', self.msg_label, i, j);
+% 					mavlink_and_console_log_info(&mavlink_log_pub, ...
+% 								     '%sreinit P (%d, %d) negative', self.msg_label, i, j);
 					reinit_P = true;
 				end
 			else
@@ -509,74 +503,74 @@ function self = update( self, timestamp )
 	end
 
 	if (reinit_P)
-		initP();
+		self = initP( self );
 	end
 
 	% do prediction
-	predict();
+	self = predict( self );
 
 	% sensor corrections/ initializations
 	if (gpsUpdated)
 		if bitand( self.sensorTimeout, self.SENSOR_GPS )
-			gpsInit();
+			self = gpsInit( self );
 		else
-			gpsCorrect();
+			self = gpsCorrect( self );
 		end
 	end
 
 	if (baroUpdated)
 		if bitand( self.sensorTimeout, self.SENSOR_BARO )
-			baroInit();
+			self = baroInit( self );
 		else
-			baroCorrect();
+			self = baroCorrect( self );
 		end
 	end
 
 	if (lidarUpdated)
 		if bitand( self.sensorTimeout, self.SENSOR_LIDAR )
-			lidarInit();
+			self = lidarInit( self );
 		else
-			lidarCorrect();
+			self = lidarCorrect( self );
 		end
 	end
 
 	if (sonarUpdated)
 		if bitand( self.sensorTimeout, self.SENSOR_SONAR )
-			sonarInit();
+			self = sonarInit( self );
 		else
-			sonarCorrect();
+			self = sonarCorrect( self );
 		end
 	end
 
 	if (flowUpdated)
 		if bitand( self.sensorTimeout, self.SENSOR_FLOW )
-			flowInit();
+			self = flowInit( self );
 		else
-			flowCorrect();
+			self = flowCorrect( self );
 		end
 	end
 
 	if (visionUpdated)
 		if bitand( self.sensorTimeout, self.SENSOR_VISION )
-			visionInit();
+			self = visionInit( self );
 		else
-			visionCorrect();
+			self = visionCorrect( self );
 		end
 	end
 
 	if (mocapUpdated)
 		if bitand( self.sensorTimeout, self.SENSOR_MOCAP )
-			mocapInit();
+			self = mocapInit( self );
 		else
-			mocapCorrect();
+			self = mocapCorrect( self );
 		end
 	end
 
 	if (landUpdated)
 		if bitand( self.sensorTimeout, self.SENSOR_LAND )
-			landInit();
+			self = landInit( self );
 		else
-			landCorrect();
+			self = landCorrect( self );
 		end
 	end
 
@@ -594,11 +588,10 @@ function self = update( self, timestamp )
 	% propagate delayed state, no matter what
 	% if state is frozen, delayed state still
 	% needs to be propagated with frozen state
-	float dt_hist = 1.0e-6 * (self.timeStamp - self.time_last_hist);
+	dt_hist = 1.0e-6 * (self.timeStamp - self.time_last_hist);
 
-	if (self.time_last_hist == 0 || ...
-	    (dt_hist > HIST_STEP))
-		self.tDelay.update(Scalar<uint64_t>(self.timeStamp));
+	if ( self.time_last_hist == 0 || (dt_hist > self.HIST_STEP) )
+		self.tDelay.update( self.timeStamp );
 		self.xDelay.update(self.x);
 		self.time_last_hist = self.timeStamp;
 	end
@@ -981,7 +974,7 @@ function self = predict( self )
 	% propagate
 	self.x = self.x + dx;
 	% Matrix<float, n_x, n_x>
-	dP = (self.A * self.P + self.P * self.A' +
+	dP = (self.A * self.P + self.P * self.A' + ...
 		self.B * self.R * self.B' + self.Q) * self.dt;
 
 	% covariance propagation logic
@@ -1014,8 +1007,8 @@ function [ self, output, periods ] = getDelayPeriods( self, delay )
 
 	HIST_LEN = 10; % DELAY_MAX / HIST_STEP
 	for i_hist = 2:HIST_LEN %; i_hist < HIST_LEN; i_hist++) {
-		tmp = (self.timeStamp - self.tDelay.get(i_hist);
-		t_delay = 1.0e-6 * tmp(1, 1));
+		tmp = (self.timeStamp - self.tDelay(i_hist));
+		t_delay = 1.0e-6 * tmp(1, 1);
 
 		if (t_delay > delay)
 			break;
@@ -1130,6 +1123,19 @@ function init = map_projection_initialized( ref )
     init = ref.init_done;
 end
 
+function [out, ref] = map_projection_init_timestamped(ref, lat_0, lon_0, timestamp) % lat_0, lon_0 are expected to be in correct format: -> 47.1234567 and not 471234567
+    M_DEG_TO_RAD = 0.017453292519943295;
+	ref.lat_rad = lat_0 * M_DEG_TO_RAD;
+	ref.lon_rad = lon_0 * M_DEG_TO_RAD;
+	ref.sin_lat = sin(ref.lat_rad);
+	ref.cos_lat = cos(ref.lat_rad);
+
+	ref.timestamp = timestamp;
+	ref.init_done = double(true);
+
+	out = 0;
+end
+
 function [out, lp_block] = block_lowpass_update( input, lp_block )
 %BLOCK_LOWPASS_UPADE Update low pass filter
     M_PI = 3.14159265358979323846;
@@ -1184,8 +1190,8 @@ function self = mocapInit( self )
 		% 			     double(self.mocapStats.getStdDev()(0)),
 		% 			     double(self.mocapStats.getStdDev()(1)),
 		% 			     double(self.mocapStats.getStdDev()(2)));
-		self.sensorTimeout = bitand( self.sensorTimeout, ~SENSOR_MOCAP );
-		self.sensorFault = bitand( self.sensorFault, ~SENSOR_MOCAP );
+		self.sensorTimeout = bitand( self.sensorTimeout, bitcmp( self.SENSOR_MOCAP , 'uint8' ));
+		self.sensorFault = bitand( self.sensorFault, bitcmp( self.SENSOR_MOCAP , 'uint8' ));
 
 		if (~self.altOriginInitialized)
 			self.altOriginInitialized = true;
@@ -1261,8 +1267,8 @@ function self = mocapCorrect( self )
 			%mavlink_and_console_log_info(&mavlink_log_pub, "[lpe] mocap fault, beta1 %5.2f", double(beta1));
 			self.sensorFault = bitor( self.sensorFault, self.SENSOR_MOCAP );
 		end
-	else if bitand(self.sensorFault, self.SENSOR_MOCAP)
-		self.sensorFault = bitand( self.sensorFault, ~self.SENSOR_MOCAP );
+    elseif bitand(self.sensorFault, self.SENSOR_MOCAP)
+		self.sensorFault = bitand( self.sensorFault, bitcmp( self.SENSOR_MOCAP , 'uint8' ));
 		%mavlink_and_console_log_info(&mavlink_log_pub, "[lpe] mocap OK");
 	end
 
@@ -1277,10 +1283,10 @@ end
 
 % void BlockLocalPositionEstimator::
 function self = mocapCheckTimeout( self )
-%MOCAPCHECKTIMEOUT Check if mocap has timedout
+%MOCAPCHECKTIMEOUT Check if mocap has timed out
 	MOCAP_TIMEOUT = 200000; % 0.2 s
 
-	if (self.timeStamp - self.time_last_mocap > MOCAP_TIMEOUT)
+	if ((self.timeStamp - self.time_last_mocap) > MOCAP_TIMEOUT)
 		if (~bitand(self.sensorTimeout, self.SENSOR_MOCAP))
 			self.sensorTimeout = bitor( self.sensorTimeout, SENSOR_MOCAP ); % |=
 			% self.mocapStats.reset();
@@ -1313,8 +1319,8 @@ function self = baroInit( self )
 		% 			     '[lpe] baro init %d m std %d cm',
 		% 			     (int)self.baroStats.getMean()(0),
 		% 			     (int)(100 * self.baroStats.getStdDev()(0)));
-		self.sensorTimeout = bitand( self.sensorTimeout, ~SENSOR_BARO );
-		self.sensorFault = bitand( self.sensorFault, ~SENSOR_BARO );
+		self.sensorTimeout = bitand( self.sensorTimeout, bitcmp( SENSOR_BARO , 'uint8' ));
+		self.sensorFault = bitand( self.sensorFault, bitcmp( SENSOR_BARO , 'uint8' ));
 
 		if (~self.altOriginInitialized)
 			self.altOriginInitialized = true;
@@ -1324,7 +1330,7 @@ function self = baroInit( self )
 end
 
 % int BlockLocalPositionEstimator:: Vector<float, n_y_baro> &y
-function [self, output, y ] baroMeasure( self )
+function [self, output, y ] = baroMeasure( self )
 %BAROMEASURE Retrieve barometer measurement
 	%measure
 	y = 0;
@@ -1335,7 +1341,7 @@ function [self, output, y ] baroMeasure( self )
 	output = true;
 end
 
-void BlockLocalPositionEstimator::
+% void BlockLocalPositionEstimator::
 function self = baroCorrect( self )
 %BAROCORRECT Correction step for barometer measurement
 	X_x = 1; X_y = 2; X_z = 3; X_vx = 4; X_vy = 5; X_vz = 6;
@@ -1387,8 +1393,8 @@ function self = baroCorrect( self )
 			self.sensorFault = bitor( self.sensorFault, self.SENSOR_BARO );
 		end
 
-	else if bitand(self.sensorFault, self.SENSOR_BARO)
-		self.sensorFault = bitand( self.sensorFault, ~self.SENSOR_BARO );
+    elseif bitand(self.sensorFault, self.SENSOR_BARO)
+		self.sensorFault = bitand( self.sensorFault, bitcmp( self.SENSOR_BARO , 'uint8' ));
 		% mavlink_and_console_log_info(mavlink_log_pub, '[lpe] baro OK');
 	end
 
