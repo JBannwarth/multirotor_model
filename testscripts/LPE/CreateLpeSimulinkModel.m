@@ -69,14 +69,16 @@ delete_line( allLines )
 
 %% Load and process variables
 fileId = fopen ( varFileName );
-tmp = textscan( fileId, '%s %d %d %s %s %s', 'Delimiter', ' ' );
+tmp = textscan( fileId, '%s %d %d %s %s %s %s', 'Delimiter', ' ' );
 fclose( fileId );
 
 varNames = tmp{1};
 varM = tmp{2};
 varN = tmp{3};
-varType = tmp{4};
-varInit = tmp{5};
+varIO = tmp{4};
+varParam = tmp{5};
+varInit = tmp{6};
+varDataType = tmp{7};
 
 mainDecodeStr  = sprintf('function self = DecodeSelf( selfVecIn )\n\t%% Variable assignment\n');
 mainEncodeStr = sprintf(['function selfVecOut = EncodeSelf( self )\n' ...
@@ -96,17 +98,17 @@ for i = 1:length( varM )
     endIndex   = currIndex + varM(i) * varN(i) - 1;
     
     % Check if variable is an input
-    if strcmp( 'in', varType{i} )
-        inputName = strrep( varNames{i}(6:end), '.', '_' );
-        inputFcnHead = [ inputFcnHead sprintf('\t% 20s, ...\n', inputName) ];
-        inputFcnBody = [ inputFcnBody sprintf('\tselfVec(% 2d:% 2d) = % 20s;\n', ...
+    if strcmp( 'in', varIO{i} )
+        inputName = strrep( varNames{i}(5:end), '.', '_' );
+        inputFcnHead = [ inputFcnHead sprintf('\t% 40s, ...\n', inputName) ];
+        inputFcnBody = [ inputFcnBody sprintf('\tselfVec(%2d:%2d) = % 40s;\n', ...
                 startIndex, endIndex, inputName ) ];
     end
     
-    if strcmp( 'out', varType{i} )
-        outputName = strrep( varNames{i}(6:end), '.', '_' );        
-        outputFcnHead = [ outputFcnHead sprintf('\t% 20s, ...\n', outputName) ];
-        outputFcnBody = [ outputFcnBody sprintf('\t% 20s = selfVec(% 2d:% 2d);\n', ...
+    if strcmp( 'out', varIO{i} )
+        outputName = strrep( varNames{i}(5:end), '.', '_' );        
+        outputFcnHead = [ outputFcnHead sprintf('\t% 40s, ...\n', outputName) ];
+        outputFcnBody = [ outputFcnBody sprintf('\t% 40s = selfVec(%2d:%2d);\n', ...
                 outputName, startIndex, endIndex ) ];
     end
     
@@ -115,26 +117,45 @@ for i = 1:length( varM )
     
     % Preallocate vectors/matrices
     if ( ( varM(i) > 1 ) || ( varN(i) > 1 ) )
-        mainDecodeStr = [ mainDecodeStr sprintf('\t% 20s = zeros(% 2d,% 2d);\n', ...
-                varNames{i}, varM(i), varN(i) ) ];
+        mainDecodeStr = [ mainDecodeStr sprintf('\t% 40s        = zeros(%2d,%2d);\n', ...
+                ['self.' varNames{i}], varM(i), varN(i) ) ];
     end
     
     for m = 1:varM(i)
         for n = 1:varN(i)
-            % Main input: self.VAR_NAME = inputVec(currIndex)
-            mainDecodeStr = [ mainDecodeStr sprintf('\t% 20s(% 2d,% 2d) = selfVecIn(% 3d);\n', ...
-                varNames{i}, m, n, currIndex ) ];
+            if ~strcmp( varDataType{i}, 'double' )
+                rhIn = [varDataType{i} '(selfVecIn(%3d));\n'];
+                rhOut = 'double(% 33s(%2d,%2d));\n';
+            else
+                rhIn = 'selfVecIn(%3d);\n';
+                rhOut = '% 40s(%2d,%2d);\n';
+            end
             
+            if ( max([varM(i),varN(i)]) == 1 )
+                lhIn = '% 40s       ';
+            else
+                lhIn = ['% 40s' sprintf('(%2d,%2d)', m, n )];
+            end
+            
+            lhOut = 'selfVecOut(%3d)';
+
+            strRawIn = [ '\t' lhIn ' = ' rhIn ];
+            strRawOut = [ '\t' lhOut ' = ' rhOut ];
+            
+            % Main input: self.VAR_NAME = inputVec(currIndex)
+            mainDecodeStr = [ mainDecodeStr sprintf( strRawIn, ...
+                ['self.' varNames{i}], currIndex ) ];
+
             % Main output: outputVec(currIndex) = self.VAR_NAME
-            mainEncodeStr = [mainEncodeStr sprintf('\tselfVecOut(% 3d) = % 20s(% 2d,% 2d);\n', ...
-                currIndex, varNames{i}, m, n ) ];
+            mainEncodeStr = [mainEncodeStr sprintf( strRawOut, ...
+                currIndex, ['self.' varNames{i}], m, n ) ];
             currIndex = currIndex + 1;
         end
     end
     
 end
 
-inputFcnHead = [ inputFcnHead, sprintf( '\t% 20s ...\n\t)\n%%#codegen\n\n', 'selfVecIn' ) ];
+inputFcnHead = [ inputFcnHead, sprintf( '\t% 40s ...\n\t)\n%%#codegen\n\n', 'selfVecIn' ) ];
 
 outputFcnHead = [ outputFcnHead, sprintf( '\t] = OutputSelection( selfVec )\n%%#codegen\n\n' ) ];
 
@@ -148,10 +169,10 @@ mainEncodeStr = [ mainEncodeStr, sprintf('end\n\n') ];
 implementationCode = fileread( implFileName );
 
 mainFcnCode = sprintf( [ ...
-        'function selfVecOut  = lpeMain( selfVecIn )\n' ...
+        'function selfVecOut  = lpeMain( time, selfVecIn )\n' ...
         '%%#codegen\n' ...
         '\tself = DecodeSelf( selfVecIn );\n' ...
-        '\tself = LocalPositionEstimator( self );\n' ...
+        '\tself = LocalPositionEstimator( self, time*10e6 );\n' ...
         '\tselfVecOut = EncodeSelf( self );\n' ...
         'end\n\n' ...
     ] );
@@ -171,23 +192,29 @@ mainFcn.Script = mainFcnCode;
 %% Create I/O and link-up blocks
 
 % Set length of output function based on number of inputs
-varNamesIn = varNames( strcmp( varType, 'in' ) );
-varNamesOut = varNames( strcmp( varType, 'out' ) );
+varNamesIn = varNames( strcmp( varIO, 'in' ) );
+varNamesOut = varNames( strcmp( varIO, 'out' ) );
 
-fcnW = 150;
-spacing = 50;
+fcnW = 200;
+spacing = 70;
 
 set_param( [fullPath '/' mainName], 'Position', [-fcnW/2, -25, fcnW/2, 25] );
+
+portsMain = get_param( [fullPath '/' mainName], 'PortConnectivity');
+portMainLocs = [portsMain.Position];
+yOffIn = portMainLocs(4);
+yOffOut = portMainLocs(6);
+
 set_param( [fullPath '/' inputFcnName], 'Position', ...
     [-fcnW/2-spacing-fcnW, ...
-     -25*max(length(varNamesIn)+1,1), ...
+     -25*max(length(varNamesIn)+1,1) + yOffIn, ...
      -fcnW/2-spacing, ...
-     25*max(length(varNamesIn)+1,1)] );
+     25*max(length(varNamesIn)+1,1) + yOffIn] );
 set_param( [fullPath '/' outputFcnName], 'Position', ...
     [fcnW/2+spacing, ...
-     -25*max(length(varNamesOut),1), ...
+     -25*max(length(varNamesOut),1) + yOffOut, ...
      fcnW/2+spacing+fcnW, ...
-     25*max(length(varNamesOut),1)] );
+     25*max(length(varNamesOut),1) + yOffOut] );
  
 memYOffset = 25*max(length(varNamesIn)+1,1) + spacing;
  
@@ -195,14 +222,27 @@ set_param( [fullPath '/' memoryName], 'Position', ...
     [-15, memYOffset, 15, memYOffset+30] );
 
 % Re-add necessary lines
-add_line( fullPath, [ inputFcnName '/1' ], [ mainName '/1' ] )
+add_line( fullPath, [ inputFcnName '/1' ], [ mainName '/2' ] )
 add_line( fullPath, [ mainName '/1' ],     [ outputFcnName '/1' ] )
 add_line( fullPath, [ mainName '/1' ],     [ memoryName '/1' ], 'autorouting', 'on' )
 add_line( fullPath, [ memoryName '/1' ], ...
     [ inputFcnName '/' num2str( length(varNamesIn)+1 ) ], 'autorouting', 'on' )
 
+% Add timestamp
+add_block('simulink/Sources/Clock', [fullPath '/Time'] )
+yOffClock = portMainLocs(2);
+
+r = 10;
+set_param( [fullPath '/Time'], 'Position', ...
+    [-fcnW/2-spacing/2 - r, ...
+     -r + yOffClock, ...
+     -fcnW/2-spacing/2 + r, ...
+     r + yOffClock] );
+
+add_line( fullPath, ['Time/1'], [ mainName '/1' ] )
+
 for i = 1:length( varNamesIn )
-    inputName = strrep( varNamesIn{i}(6:end), '.', '_' );
+    inputName = strrep( varNamesIn{i}(5:end), '.', '_' );
     add_block('simulink/Sources/In1', [fullPath '/' inputName] )
     
     blockLoc = get_param( [fullPath '/' inputName] , 'Position');
@@ -230,7 +270,7 @@ end
 % set_param( libName, 'showgrid','on')
 
 for i = 1:length( varNamesOut )
-    outputName = strrep( varNamesOut{i}(6:end), '.', '_' );
+    outputName = strrep( varNamesOut{i}(5:end), '.', '_' );
     add_block('simulink/Sinks/Out1', [fullPath '/' outputName] )
     blockLoc = get_param( [fullPath '/' outputName] , 'Position');
     w = blockLoc(3) - blockLoc(1);
@@ -253,8 +293,49 @@ for i = 1:length( varNamesOut )
         [ outputName  '/1' ] )
 end
 
-%% Generate memory block initial conditions
+%% Load-up parameters from file
+fileId = fopen ( 'params.txt' );
+tmp = textscan( fileId, '%s %f %f %f %s %s', 'Delimiter', ';' );
+fclose( fileId );
 
+pName = tmp{1};
+pVal = tmp{2};
+pMin = tmp{3};
+pMax = tmp{4};
+pUnit = tmp{5};
+pInfo = tmp{6};
+
+maskObj = Simulink.Mask.get('Px4Library/local_position_estimator');
+maskObj.removeAllParameters();
+maskObj.addParameter('Type', 'edit',   'Prompt', 'Sampling period (s)', ...
+    'Name', 'LPE_SAMPLING_PERIOD', 'Value', '0.02');
+
+for i = 1:length( pVal ) 
+    maskObj.addParameter('Type', 'slider', 'Prompt', ...
+        [pName{i} ' - ' pInfo{i} ' (' pUnit{i} ')'], 'Name', pName{i}, 'Range', ...
+        [pMin(i) pMax(i)], 'Value', num2str( pVal(i) ), 'Evaluate', 'on');
+end
+
+% Add checkboxes for sensor fusion mask
+sensors = { 'Barometer', 'GPS', 'LIDAR', 'Flow', 'Sonar', 'Vision', ...
+    'Mocap', 'Land' };
+
+for i = 1:numel( sensors )
+    callbackStr = sprintf( ['status = get_param( gcb, ''%s'' );\n' ...
+    'if strcmp( status, ''on'' )\n' ...
+        '\tlpe = bitor( uint8(str2num(get_param( gcb, ''LPE_FUSION'' ))), uint8(2^%d) );\n' ...
+        '\tset_param( gcb, ''LPE_FUSION'', num2str(lpe) );\n' ...
+    'else\n' ...
+        '\tlpe = bitand( uint8(str2num(get_param( gcb, ''LPE_FUSION'' ))), bitcmp(uint8(2^%d), ''uint8'' ));\n' ...
+        '\tset_param( gcb, ''LPE_FUSION'', num2str(lpe) );\n' ...    
+    'end'], sensors{i}, i-1, i-1 );
+
+    maskObj.addParameter('Type', 'checkbox', 'Prompt', ...
+        [ 'Use ' sensors{i} ], 'Name', sensors{i}, 'Value', 'off', ...
+        'Callback', callbackStr );
+end
+
+%% Generate memory block initial conditions
 initVector = '[';
 
 currIndex = 1;
@@ -278,44 +359,5 @@ initVector = [initVector(1:end-2), ']']; % remove the last ', '
 
 set_param('Px4Library/local_position_estimator/Self memory', 'X0', initVector)
 
-%% Load-up parameters from file
-fileId = fopen ( 'params.txt' );
-tmp = textscan( fileId, '%s %f %f %f %s %s', 'Delimiter', ';' );
-fclose( fileId );
-
-pName = tmp{1};
-pVal = tmp{2};
-pMin = tmp{3};
-pMax = tmp{4};
-pUnit = tmp{5};
-pInfo = tmp{6};
-
-maskObj = Simulink.Mask.get('Px4Library/local_position_estimator');
-maskObj.removeAllParameters();
-maskObj.addParameter('Type', 'edit',   'Prompt', 'Sampling period (s)', ...
-    'Name', 'LPE_SAMPLING_PERIOD', 'Value', '0.02');
-
-for i = 1:length( pVal ) 
-    maskObj.addParameter('Type', 'slider', 'Prompt', ...
-        [pName{i} ' - ' pInfo{i} ' (' pUnit{i} ')'], 'Name', pName{i}, 'Range', ...
-        [pMin(i) pMax(i)], 'Value', num2str( pVal(i) ));
-end
-
-% Add checkboxes for sensor fusion mask
-sensors = { 'Barometer', 'GPS', 'LIDAR', 'Flow', 'Sonar', 'Vision', ...
-    'Mocap', 'Land' };
-
-for i = 1:numel( sensors )
-    callbackStr = sprintf( ['status = get_param( gcb, ''%s'' );\n' ...
-    'if strcmp( status, ''on'' )\n' ...
-        '\tlpe = bitor( uint8(str2num(get_param( gcb, ''LPE_FUSION'' ))), uint8(2^%d) );\n' ...
-        '\tset_param( gcb, ''LPE_FUSION'', num2str(lpe) );\n' ...
-    'else\n' ...
-        '\tlpe = bitand( uint8(str2num(get_param( gcb, ''LPE_FUSION'' ))), bitcmp(uint8(2^%d), ''uint8'' ));\n' ...
-        '\tset_param( gcb, ''LPE_FUSION'', num2str(lpe) );\n' ...    
-    'end'], sensors{i}, i-1, i-1 );
-
-    maskObj.addParameter('Type', 'checkbox', 'Prompt', ...
-        [ 'Use ' sensors{i} ], 'Name', sensors{i}, 'Value', 'off', ...
-        'Callback', callbackStr );
-end
+clear
+TestControllerInitOnly

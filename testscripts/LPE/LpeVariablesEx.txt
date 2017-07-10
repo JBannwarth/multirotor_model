@@ -1,0 +1,6 @@
+self.u 3 1 in -1
+self.x 2 1 out -2
+self.P 3 3 param [0,1,2;3,4,5;6,7,8]
+self.xLowPass.count 1 1 - SOME_PARAM
+self.test 1 1 out -3
+self.test2 1 1 out -4
