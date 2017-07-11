@@ -1,4 +1,4 @@
-function self = LocalPositionEstimator( self, timestamp )
+function self = LocalPositionEstimator( self, timestamp, dt )
 
 % 	% required standard deviation of estimate for estimator to publish data
 % 	% UINT32
@@ -48,7 +48,7 @@ function self = LocalPositionEstimator( self, timestamp )
     if (~self.initialized)
         self = BlockLocalPositionEstimator( self );
         self.initialized = 1;
-        self = initialize_blocks( 0.01, self ); % FIX THIS
+        self = initialize_blocks( dt, self ); % FIX THIS
     end
 
     % Run LPE
@@ -1219,7 +1219,7 @@ function self = mocapInit( self )
 	end
 
 	% if finished
-	REQ_MOCAP_INIT_COUNT = 20;
+	REQ_MOCAP_INIT_COUNT = 1;%20;
 	if (self.mocapStats.count > REQ_MOCAP_INIT_COUNT)
 		% mavlink_and_console_log_info(&mavlink_log_pub, ['[lpe] mocap position init: '
 		% 			     '%5.2f, %5.2f, %5.2f m std %5.2f, %5.2f, %5.2f m'],

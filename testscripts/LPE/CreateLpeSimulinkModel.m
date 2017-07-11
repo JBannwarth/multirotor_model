@@ -169,10 +169,10 @@ mainEncodeStr = [ mainEncodeStr, sprintf('end\n\n') ];
 implementationCode = fileread( implFileName );
 
 mainFcnCode = sprintf( [ ...
-        'function selfVecOut  = lpeMain( time, selfVecIn )\n' ...
+        'function selfVecOut  = lpeMain( time, selfVecIn, LPE_SAMPLING_PERIOD )\n' ...
         '%%#codegen\n' ...
         '\tself = DecodeSelf( selfVecIn );\n' ...
-        '\tself = LocalPositionEstimator( self, time*10e6 );\n' ...
+        '\tself = LocalPositionEstimator( self, time*1e6, LPE_SAMPLING_PERIOD );\n' ...
         '\tselfVecOut = EncodeSelf( self );\n' ...
         'end\n\n' ...
     ] );
@@ -188,6 +188,9 @@ mainFcn = S.find('Name', mainName, '-isa', 'Stateflow.EMChart' );
 inFcn.Script   = inputFcnCode;
 outFcn.Script  = outputFcnCode;
 mainFcn.Script = mainFcnCode;
+if ( length(mainFcn.Inputs) == 3 )
+    set(mainFcn.Inputs(3), 'Scope', 'Parameter')
+end
 
 %% Create I/O and link-up blocks
 
@@ -340,12 +343,20 @@ initVector = '[';
 
 currIndex = 1;
 for i = 1:length( varM )
+    if strncmp( varInit{i}, '[', 1 )
+        clear initMat
+        tmp = strsplit(varInit{i}(2:end-1), ';' )';
+        for j = 1:length( tmp )
+            initMat(j,:) = strsplit(tmp{j}, ',');
+        end
+    end
     
     for m = 1:varM(i)
         for n = 1:varN(i)
             if strncmp( varInit{i}, '[', 1 )
-                initMat = str2num( varInit{i} );
-                initVal = num2str( initMat(m, n) );
+                
+                % initMat = str2num( varInit{i} );
+                initVal = initMat{m, n};
             else
                 initVal = varInit{i};
             end

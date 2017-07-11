@@ -18,7 +18,7 @@ FUSE_VIS_POS 1 1 - - 2^2 uint8
 FUSE_VIS_YAW 1 1 - - 2^3 uint8
 HIST_STEP 1 1 - - 0 double
 LAND_RATE 1 1 - - 10.0 double
-P 10 10 - - 0 double
+P 10 10 - - [8,0,0,0,0,0,0,0,0,0;0,8,0,0,0,0,0,0,0,0;0,0,8,0,0,0,0,0,0,0;0,0,0,2*LPE_VXY_PUB*LPE_VXY_PUB,0,0,0,0,0,0;0,0,0,0,2*LPE_VXY_PUB*LPE_VXY_PUB,0,0,0,0,0;0,0,0,0,0,2*LPE_VXY_PUB*LPE_VXY_PUB,0,0,0,0;0,0,0,0,0,0,1e-6,0,0,0;0,0,0,0,0,0,0,1e-6,0,0;0,0,0,0,0,0,0,0,1e-6,0;0,0,0,0,0,0,0,0,0,8] double
 P_MAX 1 1 - - 1.0e6 double
 Q 10 10 - - 0 double
 R 3 3 - - 0 double
@@ -35,7 +35,7 @@ accel_xy_stddev 1 1 - - 0 double
 accel_xy_stddev 1 1 - param LPE_ACC_XY double
 accel_z_stddev 1 1 - - 0 double
 accel_z_stddev 1 1 - param LPE_ACC_Z double
-aglLowPass.dt 1 1 - - 0 double
+aglLowPass.dt 1 1 - - LPE_SAMPLING_PERIOD double
 aglLowPass.fcut 1 1 - param LPE_X_LP double
 aglLowPass.state 1 1 - - 0 double
 altOrigin 1 1 - - 0 double
@@ -44,7 +44,7 @@ baroAltOrigin 1 1 - - 0 double
 baroStats.count 1 1 - - 0 double
 baroStats.total 1 1 - - 0 double
 baro_stddev 1 1 - param LPE_BAR_Z double
-dt 1 1 - - 0 double
+dt 1 1 - - LPE_SAMPLING_PERIOD double
 estimatorInitialized 1 1 - - 0 uint8
 eul 3 1 - - 0 double
 fake_origin 1 1 - param LPE_FAKE_ORIGIN double
@@ -86,13 +86,13 @@ pn_b_noise_density 1 1 - param LPE_PN_B double
 pn_p_noise_density 1 1 - param LPE_PN_P double
 pn_t_noise_density 1 1 - param LPE_PN_T double
 pn_v_noise_density 1 1 - param LPE_PN_V double
-pub_est_status.covariances 10 1 - - 0 double
-pub_est_status.health_flags 1 1 - - 0 uint8
+pub_est_status.covariances 10 1 out - [8,0,0,0,0,0,0,0,0,0;0,8,0,0,0,0,0,0,0,0;0,0,8,0,0,0,0,0,0,0;0,0,0,2*c*LPE_VXY_PUB,0,0,0,0,0,0;0,0,0,0,2*LPE_VXY_PUB*LPE_VXY_PUB,0,0,0,0,0;0,0,0,0,0,2*LPE_VXY_PUB*LPE_VXY_PUB,0,0,0,0;0,0,0,0,0,0,1e-6,0,0,0;0,0,0,0,0,0,0,1e-6,0,0;0,0,0,0,0,0,0,0,1e-6,0;0,0,0,0,0,0,0,0,0,8] double
+pub_est_status.health_flags 1 1 out - 0 uint8
 pub_est_status.n_states 1 1 - - 0 double
 pub_est_status.nan_flags 1 1 - - 0 uint8
 pub_est_status.pos_horiz_accuracy 1 1 - - 0 double
 pub_est_status.pos_vert_accuracy 1 1 - - 0 double
-pub_est_status.states 10 1 - - 0 double
+pub_est_status.states 10 1 out - 0 double
 pub_est_status.timeout_flags 1 1 - - 0 uint8
 pub_est_status.timestamp 1 1 - - 0 double
 pub_gpos.alt 1 1 - - 0 double
@@ -192,7 +192,7 @@ x 10 1 - - 0 double
 xDelay.h 10 10 - - 0 double
 xDelay.delay 1 1 - - 1 double
 xDelay.index 1 1 - - 1 double
-xLowPass.dt 1 1 - - 0 double
+xLowPass.dt 1 1 - - LPE_SAMPLING_PERIOD double
 xLowPass.fcut 1 1 - param LPE_X_LP double
 xLowPass.state 10 1 - - 0 double
 z_pub_thresh 1 1 - param LPE_Z_PUB double
