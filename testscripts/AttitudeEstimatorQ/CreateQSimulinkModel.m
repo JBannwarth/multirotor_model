@@ -40,10 +40,10 @@ implFileName  = 'attitude_estimator_q_main.m';
 libName       = 'Px4Library';
 subFolderName = 'attitude_estimator_q';
 
-inputFcnName  = 'Input assignment';
-outputFcnName = 'Output selection';
-memoryName    = 'Self memory';
-mainName      = 'local_position_estimator';
+inputFcnName  = 'Input assignment q';
+outputFcnName = 'Output selection q';
+memoryName    = 'Self memory q';
+mainName      = 'attitude_estimator_q';
 
 fullPath = [ libName '/' subFolderName ];
 
@@ -99,14 +99,14 @@ for i = 1:length( varM )
     
     % Check if variable is an input
     if strcmp( 'in', varIO{i} )
-        inputName = strrep( varNames{i}(5:end), '.', '_' );
+        inputName = strrep( varNames{i}(1:end), '.', '_' );
         inputFcnHead = [ inputFcnHead sprintf('\t% 40s, ...\n', inputName) ];
         inputFcnBody = [ inputFcnBody sprintf('\tselfVec(%2d:%2d) = % 40s;\n', ...
                 startIndex, endIndex, inputName ) ];
     end
     
     if strcmp( 'out', varIO{i} )
-        outputName = strrep( varNames{i}(5:end), '.', '_' );        
+        outputName = strrep( varNames{i}(1:end), '.', '_' );        
         outputFcnHead = [ outputFcnHead sprintf('\t% 40s, ...\n', outputName) ];
         outputFcnBody = [ outputFcnBody sprintf('\t% 40s = selfVec(%2d:%2d);\n', ...
                 outputName, startIndex, endIndex ) ];
@@ -169,10 +169,10 @@ mainEncodeStr = [ mainEncodeStr, sprintf('end\n\n') ];
 implementationCode = fileread( implFileName );
 
 mainFcnCode = sprintf( [ ...
-        'function selfVecOut  = lpeMain( time, selfVecIn, LPE_SAMPLING_PERIOD )\n' ...
+        'function selfVecOut  = qMain( time, selfVecIn, Q_SAMPLING_PERIOD )\n' ...
         '%%#codegen\n' ...
         '\tself = DecodeSelf( selfVecIn );\n' ...
-        '\tself = LocalPositionEstimator( self, time*1e6, LPE_SAMPLING_PERIOD );\n' ...
+        '\tself = AttitudeEstimatorQ( self, time*1e6 );\n' ...
         '\tselfVecOut = EncodeSelf( self );\n' ...
         'end\n\n' ...
     ] );
@@ -245,7 +245,7 @@ set_param( [fullPath '/Time'], 'Position', ...
 add_line( fullPath, ['Time/1'], [ mainName '/1' ] )
 
 for i = 1:length( varNamesIn )
-    inputName = strrep( varNamesIn{i}(5:end), '.', '_' );
+    inputName = strrep( varNamesIn{i}(1:end), '.', '_' );
     add_block('simulink/Sources/In1', [fullPath '/' inputName] )
     
     blockLoc = get_param( [fullPath '/' inputName] , 'Position');
@@ -273,7 +273,7 @@ end
 % set_param( libName, 'showgrid','on')
 
 for i = 1:length( varNamesOut )
-    outputName = strrep( varNamesOut{i}(5:end), '.', '_' );
+    outputName = strrep( varNamesOut{i}(1:end), '.', '_' );
     add_block('simulink/Sinks/Out1', [fullPath '/' outputName] )
     blockLoc = get_param( [fullPath '/' outputName] , 'Position');
     w = blockLoc(3) - blockLoc(1);
@@ -297,8 +297,8 @@ for i = 1:length( varNamesOut )
 end
 
 %% Load-up parameters from file
-fileId = fopen ( 'params.txt' );
-tmp = textscan( fileId, '%s %f %f %f %s %s', 'Delimiter', ';' );
+fileId = fopen ( paramFileName );
+tmp = textscan( fileId, '%s %f %f %f %s %s %s %s', 'Delimiter', ';' );
 fclose( fileId );
 
 pName = tmp{1};
@@ -307,36 +307,53 @@ pMin = tmp{3};
 pMax = tmp{4};
 pUnit = tmp{5};
 pInfo = tmp{6};
+pDataType = tmp{7};
+pDropDown = tmp{8};
 
-maskObj = Simulink.Mask.get('Px4Library/local_position_estimator');
+maskObj = Simulink.Mask.get( fullPath );
 maskObj.removeAllParameters();
 maskObj.addParameter('Type', 'edit',   'Prompt', 'Sampling period (s)', ...
-    'Name', 'LPE_SAMPLING_PERIOD', 'Value', '0.02');
+    'Name', 'Q_SAMPLING_PERIOD', 'Value', '0.002');
 
-for i = 1:length( pVal ) 
-    maskObj.addParameter('Type', 'slider', 'Prompt', ...
-        [pName{i} ' - ' pInfo{i} ' (' pUnit{i} ')'], 'Name', pName{i}, 'Range', ...
-        [pMin(i) pMax(i)], 'Value', num2str( pVal(i) ), 'Evaluate', 'on');
+for i = 1:length( pVal )
+    if strcmp( pDataType, 'boolean' ) % Maybe implement this later
+        maskObj.addParameter('Type', 'slider', 'Prompt', ...
+            [pName{i} ' - ' pInfo{i} ' (' pUnit{i} ')'], 'Name', pName{i}, 'Range', ...
+            [pMin(i) pMax(i)], 'Value', num2str( pVal(i) ), 'Evaluate', 'on');
+    elseif ( pDropDown{i} == '-' )
+        maskObj.addParameter('Type', 'slider', 'Prompt', ...
+            [pName{i} ' - ' pInfo{i} ' (' pUnit{i} ')'], 'Name', pName{i}, 'Range', ...
+            [pMin(i) pMax(i)], 'Value', num2str( pVal(i) ), 'Evaluate', 'on');
+    else
+        options = strsplit( pDropDown{i}, ',' );
+        %options = options(2:2:end);
+        optionStr = strjoin( options, ' ' );
+        nMax = length(options)/2;
+        maskObj.addParameter('Type', 'popup', 'Prompt', ...
+            [pName{i} ' - ' pInfo{i} ' (' pUnit{i} '), ' optionStr], 'Name', pName{i}, ...
+            'TypeOptions', strread(num2str((1:nMax)-1),'%s') , ...
+            'Value', num2str( pVal(i) ), 'Evaluate', 'on');
+    end
 end
 
-% Add checkboxes for sensor fusion mask
-sensors = { 'Barometer', 'GPS', 'LIDAR', 'Flow', 'Sonar', 'Vision', ...
-    'Mocap', 'Land' };
-
-for i = 1:numel( sensors )
-    callbackStr = sprintf( ['status = get_param( gcb, ''%s'' );\n' ...
-    'if strcmp( status, ''on'' )\n' ...
-        '\tlpe = bitor( uint8(str2num(get_param( gcb, ''LPE_FUSION'' ))), uint8(2^%d) );\n' ...
-        '\tset_param( gcb, ''LPE_FUSION'', num2str(lpe) );\n' ...
-    'else\n' ...
-        '\tlpe = bitand( uint8(str2num(get_param( gcb, ''LPE_FUSION'' ))), bitcmp(uint8(2^%d), ''uint8'' ));\n' ...
-        '\tset_param( gcb, ''LPE_FUSION'', num2str(lpe) );\n' ...    
-    'end'], sensors{i}, i-1, i-1 );
-
-    maskObj.addParameter('Type', 'checkbox', 'Prompt', ...
-        [ 'Use ' sensors{i} ], 'Name', sensors{i}, 'Value', 'off', ...
-        'Callback', callbackStr );
-end
+% % Add checkboxes for sensor fusion mask
+% sensors = { 'Barometer', 'GPS', 'LIDAR', 'Flow', 'Sonar', 'Vision', ...
+%     'Mocap', 'Land' };
+% 
+% for i = 1:numel( sensors )
+%     callbackStr = sprintf( ['status = get_param( gcb, ''%s'' );\n' ...
+%     'if strcmp( status, ''on'' )\n' ...
+%         '\tlpe = bitor( uint8(str2num(get_param( gcb, ''LPE_FUSION'' ))), uint8(2^%d) );\n' ...
+%         '\tset_param( gcb, ''LPE_FUSION'', num2str(lpe) );\n' ...
+%     'else\n' ...
+%         '\tlpe = bitand( uint8(str2num(get_param( gcb, ''LPE_FUSION'' ))), bitcmp(uint8(2^%d), ''uint8'' ));\n' ...
+%         '\tset_param( gcb, ''LPE_FUSION'', num2str(lpe) );\n' ...    
+%     'end'], sensors{i}, i-1, i-1 );
+% 
+%     maskObj.addParameter('Type', 'checkbox', 'Prompt', ...
+%         [ 'Use ' sensors{i} ], 'Name', sensors{i}, 'Value', 'off', ...
+%         'Callback', callbackStr );
+% end
 
 %% Generate memory block initial conditions
 initVector = '[';
@@ -368,7 +385,7 @@ end
 
 initVector = [initVector(1:end-2), ']']; % remove the last ', '
 
-set_param('Px4Library/local_position_estimator/Self memory', 'X0', initVector)
+set_param( [ fullPath '/' memoryName ], 'X0', initVector)
 
-clear
-TestControllerInitOnly
+%clear
+%TestControllerInitOnly

@@ -103,7 +103,7 @@
 % 	%*
 % 	 * Start task.
 % 	 *
-% 	 * @return		true on success.
+% 	 * @return		1 on success.
 % 	
 % 	int		start();
 % 
@@ -115,7 +115,7 @@
 % 
 % private:
 % 	static constexpr float self.dt_max = 0.02;
-% 	bool		self.task_should_exit = false;		%*< if true, task should exit
+% 	bool		self.task_should_exit = 0;		%*< if 1, task should exit
 % 	int		self.control_task = -1;			%*< task handle for task
 % 
 % 	int		self.sensors_sub = -1;
@@ -146,8 +146,8 @@
 % 	float		self.w_ext_hdg = 0.0;
 % 	float		self.w_gyro_bias = 0.0;
 % 	float		self.mag_decl = 0.0;
-% 	bool		self.mag_decl_auto = false;
-% 	bool		self.acc_comp = false;
+% 	bool		self.mag_decl_auto = 0;
+% 	bool		self.acc_comp = 0;
 % 	float		self.bias_max = 0.0;
 % 	int		self.ext_hdg_mode = 0;
 % 	int 	self.airspeed_mode = 0;
@@ -182,9 +182,9 @@
 % 
 % 	hrt_abstime self.vel_prev_t = 0;
 % 
-% 	bool		self.inited = false;
-% 	bool		self.data_good = false;
-% 	bool		self.ext_hdg_good = false;
+% 	bool		self.inited = 0;
+% 	bool		self.data_good = 0;
+% 	bool		self.ext_hdg_good = 0;
 % 
 % 	orb_advert_t	self.mavlink_log_pub = nullptr;
 % 
@@ -202,15 +202,18 @@
 
 
 % AttitudeEstimatorQ:: :
-function self = AttitudeEstimatorQ( timestamp, self )
+function self = AttitudeEstimatorQ( self, timestamp )
 % 	self.vel_prev(0, 0, 0),
 % 	self.pos_acc(0, 0, 0),
-% 	self.lp_accel_x(250.0, 30.0),
-% 	self.lp_accel_y(250.0, 30.0),
-% 	self.lp_accel_z(250.0, 30.0),
-% 	self.lp_gyro_x(250.0, 30.0),
-% 	self.lp_gyro_y(250.0, 30.0),
-% 	self.lp_gyro_z(250.0, 30.0)
+    if (~self.ran_once)
+        self.lp_accel_x = lp2p_set_cutoff_frequency( self.lp_accel_x, 250.0, 30.0 );
+        self.lp_accel_y = lp2p_set_cutoff_frequency( self.lp_accel_y, 250.0, 30.0 );
+        self.lp_accel_z = lp2p_set_cutoff_frequency( self.lp_accel_z, 250.0, 30.0 );
+        self.lp_gyro_x = lp2p_set_cutoff_frequency( self.lp_gyro_x, 250.0, 30.0 );
+        self.lp_gyro_y = lp2p_set_cutoff_frequency( self.lp_gyro_y, 250.0, 30.0 );
+        self.lp_gyro_z = lp2p_set_cutoff_frequency( self.lp_gyro_z, 250.0, 30.0 );
+        self.ran_once = 1;
+    end
 % 	self.params_handles.w_acc		= param_find('ATT_W_ACC');
 % 	self.params_handles.w_mag		= param_find('ATT_W_MAG');
 % 	self.params_handles.w_ext_hdg	= param_find('ATT_W_EXT_HDG');
@@ -231,7 +234,7 @@ end
 
 % 	if (self.control_task ~= -1) 
 % 		% task wakes up every 100ms or so at the longest
-% 		self.task_should_exit = true;
+% 		self.task_should_exit = 1;
 
 % 		% wait for a second for the task to quit at our request
 % 		unsigned i = 0;
@@ -271,7 +274,7 @@ end
 %         return;
 % 	end
 % 
-% 	output = true;
+% 	output = 1;
 % end
 
 % void AttitudeEstimatorQ::
@@ -304,16 +307,16 @@ function self = task_main( self )
 % 	self.params_sub = orb_subscribe(ORB_ID(parameter_update));
 % 	self.global_pos_sub = orb_subscribe(ORB_ID(vehicle_global_position));
 
-	self = update_parameters( self, true );
+	% self = update_parameters( self, 1 );
 
 	% hrt_abstime
-    last_time = 0;
+    % self.last_time = 0;
 
 	% px4_pollfd_struct_t fds[1] = {};
 	% fds[0].fd = self.sensors_sub;
 	% fds[0].events = POLLIN;
 
-	while ( ~self.task_should_exit ) 
+% 	while ( ~self.task_should_exit ) 
 		%int
         % ret = px4_poll(fds, 1, 1000);
 
@@ -329,45 +332,50 @@ function self = task_main( self )
 % 			continue;
 % 		end
 
-		self = update_parameters( self, false );
+% 		self = update_parameters( self, 0 );
 
 		% Update sensors
 		% sensor_combined_s sensors ;
 
 		% if (~orb_copy(ORB_ID(sensor_combined), self.sensors_sub, sensors))
-        if sensor_combined.updated
+        sensors_updated = self.sensors_sub.updated;
+        sensors = self.sensors_sub;
+        
+        if sensors_updated
 			% Feed validator with recent sensor data
 			if (sensors.timestamp > 0) 
 				% Filter gyro signal since it is not fildered in the drivers.
-				self.gyro(0) = self.lp_gyro_x.apply( sensors.gyro_rad(0) );
-				self.gyro(1) = self.lp_gyro_y.apply( sensors.gyro_rad(1) );
-				self.gyro(2) = self.lp_gyro_z.apply( sensors.gyro_rad(2) );
+				[self.lp_gyro_x, self.gyro(1)] = lp2p_apply( self.lp_gyro_x, sensors.gyro_rad(1) );
+				[self.lp_gyro_y, self.gyro(2)] = lp2p_apply( self.lp_gyro_y, sensors.gyro_rad(2) );
+				[self.lp_gyro_z, self.gyro(3)] = lp2p_apply( self.lp_gyro_z, sensors.gyro_rad(3) );
 			end
 
-			if ( sensors.accelerometer_timestamp_relative ~= sensor_combined_s.RELATIVE_TIMESTAMP_INVALID ) 
+			if ( sensors.accelerometer_timestamp_relative ~= 2147483647 ) % sensor_combined_s.RELATIVE_TIMESTAMP_INVALID ) 
 				% Filter accel signal since it is not fildered in the drivers.
-				self.accel(0) = self.lp_accel_x.apply( sensors.accelerometer_m_s2(0) );
-				self.accel(1) = self.lp_accel_y.apply( sensors.accelerometer_m_s2(1) );
-				self.accel(2) = self.lp_accel_z.apply( sensors.accelerometer_m_s2(2) );
+				[self.lp_accel_x, self.accel(1)] = lp2p_apply( self.lp_accel_x, sensors.accelerometer_m_s2(1) );
+				[self.lp_accel_y, self.accel(2)] = lp2p_apply( self.lp_accel_y, sensors.accelerometer_m_s2(2) );
+				[self.lp_accel_z, self.accel(3)] = lp2p_apply( self.lp_accel_z, sensors.accelerometer_m_s2(3) );
 
 				if ( norm(self.accel) < 0.01) 
 					% disp('WARNING: degenerate accel~');
-					continue;
+					% continue;
+                    return;
 				end
 			end
 
-			if ( sensors.magnetometer_timestamp_relative ~= sensor_combined_s.RELATIVE_TIMESTAMP_INVALID ) 
-				self.mag(0) = sensors.magnetometer_ga(0);
+			if ( sensors.magnetometer_timestamp_relative ~= 2147483647 ) % sensor_combined_s.RELATIVE_TIMESTAMP_INVALID ) 
 				self.mag(1) = sensors.magnetometer_ga(1);
 				self.mag(2) = sensors.magnetometer_ga(2);
+				self.mag(3) = sensors.magnetometer_ga(3);
 
 				if ( norm(self.mag) < 0.01 ) 
 					% disp('WARNING: degenerate mag~');
-					continue;
+					% continue;
+                    return;
 				end
 			end
 
-			self.data_good = true;
+			self.data_good = 1;
         end
 
 		% Update vision and motion capture heading
@@ -424,15 +432,15 @@ function self = task_main( self )
 		end
 
 		% Check for timeouts on data
-		if (self.ext_hdg_mode == 1) 
-			self.ext_hdg_good = (self.vision.timestamp > 0) && ( (self.hrt_absolute_time - self.vision.timestamp) < 500000 );
+		if (self.ext_hdg_mode == 2) 
+			self.ext_hdg_good = double( (self.vision.timestamp > 0) && ( (self.hrt_absolute_time - self.vision.timestamp) < 500000 ) );
 
-		elseif (self.ext_hdg_mode == 2) 
-			self.ext_hdg_good = self.mocap.timestamp > 0 && ((self.hrt_absolute_time - self.mocap.timestamp) < 500000);
+		elseif (self.ext_hdg_mode == 3) 
+			self.ext_hdg_good = double( (self.mocap.timestamp > 0) && ((self.hrt_absolute_time - self.mocap.timestamp) < 500000) );
 		end
 
 		% bool
-        gpos_updated = gpos_pos_sub.updated;
+        gpos_updated = self.global_pos_sub.updated;
 		% orb_check(self.global_pos_sub, &gpos_updated);
 
 		if ( gpos_updated ) 
@@ -476,31 +484,32 @@ function self = task_main( self )
 
 		% time from previous iteration
 		% hrt_abstime
-        now = self.hrt_absolute_time;
+        self.now = self.hrt_absolute_time;
 		% float
-        if (last_time > 0)
-            dt =  (now  - last_time) / 1000000.0;
+        if (self.last_time > 0)
+            dt =  (self.now  - self.last_time) / 1000000.0;
         else
             dt = 0.00001;
         end
         
-		last_time = now;
+		self.last_time = self.now;
 
-		if ( dt > self.dt_max ) 
-			dt = self.dt_max;
+        if ( dt > self.dt_max )
+            dt = self.dt_max;
         end
     
         [self, status] = update( self, dt );
-		if ( ~status ) 
-			continue;
+        if ( ~status ) 
+            % continue;
+            return;
         end
         
         %vehicle_attitude_s
-        att.timestamp = sensors.timestamp;
-        att.rollspeed = self.rates(0);
-        att.pitchspeed = self.rates(1);
-        att.yawspeed = self.rates(2);
-        att.q = [self.q(0); self.q(1); self.q(2); self.q(3)];
+        att.timestamp  = sensors.timestamp;
+        att.rollspeed  = self.rates(1);
+        att.pitchspeed = self.rates(2);
+        att.yawspeed   = self.rates(3);
+        att.q = [self.q(1); self.q(2); self.q(3); self.q(4)];
 
         % the instance count is not used here
         % int att_inst;
@@ -513,43 +522,41 @@ function self = task_main( self )
         ctrl_state.timestamp = sensors.timestamp;
 
         % attitude quaternions for control state
-        ctrl_state.q(0) = self.q(0);
-        ctrl_state.q(1) = self.q(1);
-        ctrl_state.q(2) = self.q(2);
-        ctrl_state.q(3) = self.q(3);
+        ctrl_state.q = self.q;
 
-        ctrl_state.x_acc = self.accel(0);
-        ctrl_state.y_acc = self.accel(1);
-        ctrl_state.z_acc = self.accel(2);
+        ctrl_state.x_acc = self.accel(1);
+        ctrl_state.y_acc = self.accel(2);
+        ctrl_state.z_acc = self.accel(3);
 
         % attitude rates for control state
-        ctrl_state.roll_rate  = self.rates(0);
-        ctrl_state.pitch_rate = self.rates(1);
-        ctrl_state.yaw_rate   = self.rates(2);
+        ctrl_state.roll_rate  = self.rates(1);
+        ctrl_state.pitch_rate = self.rates(2);
+        ctrl_state.yaw_rate   = self.rates(3);
 
         % TODO get bias estimates from estimator
         ctrl_state.roll_rate_bias = 0.0;
         ctrl_state.pitch_rate_bias = 0.0;
         ctrl_state.yaw_rate_bias = 0.0;
 
-        ctrl_state.airspeed_valid = false;
+        ctrl_state.airspeed_valid = 0;
+        ctrl_state.airspeed = 0;
 
-        if (self.airspeed_mode == control_state_s.AIRSPD_MODE_MEAS) 
+        if (self.airspeed_mode == 0 ) % control_state_s.AIRSPD_MODE_MEAS) 
             % use measured airspeed
             if (isfinite(self.airspeed.indicated_airspeed_m_s) && ...
                     (self.hrt_absolute_time - self.airspeed.timestamp < 1e6) && ...
                     (self.airspeed.timestamp > 0) ) 
                 ctrl_state.airspeed = self.airspeed.indicated_airspeed_m_s;
-                ctrl_state.airspeed_valid = true;
+                ctrl_state.airspeed_valid = 1;
             end
-        elseif (self.airspeed_mode == control_state_s.AIRSPD_MODE_EST) 
+        elseif (self.airspeed_mode == 1 ) % control_state_s.AIRSPD_MODE_EST) 
             % use estimated body velocity as airspeed estimate
             if ( (self.hrt_absolute_time - self.gpos.timestamp) < 1e6) 
-                ctrl_state.airspeed = sqrtf(self.gpos.vel_n * self.gpos.vel_n + self.gpos.vel_e * self.gpos.vel_e + self.gpos.vel_d * self.gpos.vel_d);
-                ctrl_state.airspeed_valid = true;
+                ctrl_state.airspeed = sqrt(self.gpos.vel_n * self.gpos.vel_n + self.gpos.vel_e * self.gpos.vel_e + self.gpos.vel_d * self.gpos.vel_d);
+                ctrl_state.airspeed_valid = 1;
             end
 
-        elseif (self.airspeed_mode == control_state_s.AIRSPD_MODE_DISABLED) 
+        elseif (self.airspeed_mode == 2 ) % control_state_s.AIRSPD_MODE_DISABLED) 
             % do nothing, airspeed has been declared as non-valid above, controllers
             % will handle this assuming always trim airspeed
         end
@@ -570,7 +577,7 @@ function self = task_main( self )
         % TODO handle attitude states in position estimators instead so we can publish all data at once
         % or we need to enable more thatn just one estimator_status topic
         % orb_publish_auto(ORB_ID(estimator_status), &self.est_state_pub, &est, &est_inst, ORB_PRIO_HIGH);
-	end
+%	end
 % 
 % #ifdef self._PX4_POSIX
 % 	perf_end(self.perf_accel);
@@ -587,39 +594,39 @@ function self = task_main( self )
 end
 
 % void AttitudeEstimatorQ:: bool
-function self = update_parameters( self,  force )
-
-	% bool
-    updated = force;
-
-	if (~updated) 
-		% orb_check(self.params_sub, &updated);
-        updated = self.params_sub.updated;
-	end
-
-	if (updated) 
-		% parameter_update_s param_update;
-		% orb_copy(ORB_ID(parameter_update), self.params_sub, &param_update);
-
-% 		param_get(self.params_handles.w_acc, &self.w_accel);
-% 		param_get(self.params_handles.w_mag, &self.w_mag);
-% 		param_get(self.params_handles.w_ext_hdg, &self.w_ext_hdg);
-% 		param_get(self.params_handles.w_gyro_bias, &self.w_gyro_bias);
-% 		% float
-%         mag_decl_deg = 0.0;
-% 		param_get(self.params_handles.mag_decl, &mag_decl_deg);
-% 		update_mag_declination( radians(mag_decl_deg) );
-% 		% int32_t mag_decl_auto_int;
-% 		param_get(self.params_handles.mag_decl_auto, &mag_decl_auto_int);
-% 		self.mag_decl_auto = mag_decl_auto_int ~= 0;
-% 		% int32_t acc_comp_int;
-% 		param_get(self.params_handles.acc_comp, &acc_comp_int);
-% 		self.acc_comp = acc_comp_int ~= 0;
-% 		param_get(self.params_handles.bias_max, &self.bias_max);
-% 		param_get(self.params_handles.ext_hdg_mode, &self.ext_hdg_mode);
-% 		param_get(self.params_handles.airspeed_mode, &self.airspeed_mode);
-	end
-end
+% function self = update_parameters( self,  force )
+% 
+% 	% bool
+%     updated = force;
+% 
+% 	if (~updated) 
+% 		% orb_check(self.params_sub, &updated);
+%         updated = self.params_sub.updated;
+% 	end
+% 
+% 	if (updated) 
+% 		% parameter_update_s param_update;
+% 		% orb_copy(ORB_ID(parameter_update), self.params_sub, &param_update);
+% 
+% % 		param_get(self.params_handles.w_acc, &self.w_accel);
+% % 		param_get(self.params_handles.w_mag, &self.w_mag);
+% % 		param_get(self.params_handles.w_ext_hdg, &self.w_ext_hdg);
+% % 		param_get(self.params_handles.w_gyro_bias, &self.w_gyro_bias);
+% % 		% float
+% %         mag_decl_deg = 0.0;
+% % 		param_get(self.params_handles.mag_decl, &mag_decl_deg);
+% % 		update_mag_declination( radians(mag_decl_deg) );
+% % 		% int32_t mag_decl_auto_int;
+% % 		param_get(self.params_handles.mag_decl_auto, &mag_decl_auto_int);
+% % 		self.mag_decl_auto = mag_decl_auto_int ~= 0;
+% % 		% int32_t acc_comp_int;
+% % 		param_get(self.params_handles.acc_comp, &acc_comp_int);
+% % 		self.acc_comp = acc_comp_int ~= 0;
+% % 		param_get(self.params_handles.bias_max, &self.bias_max);
+% % 		param_get(self.params_handles.ext_hdg_mode, &self.ext_hdg_mode);
+% % 		param_get(self.params_handles.airspeed_mode, &self.airspeed_mode);
+% 	end
+% end
 
 % bool AttitudeEstimatorQ::
 function [ self, output ] = init( self )
@@ -632,7 +639,7 @@ function [ self, output ] = init( self )
 
 	% 'i' is Earth X axis (North) unit vector in body frame, orthogonal with 'k'
 	% Vector<3>
-    i = (self.mag - k * (self.mag * k));
+    i = (self.mag - (k * dot(self.mag, k) ) );
 	i = normalize( i );
 
 	% 'j' is Earth Y axis (East) unit vector in body frame, orthogonal with 'k' and 'i'
@@ -656,13 +663,13 @@ function [ self, output ] = init( self )
 
 	self.q = normalize( self.q );
 
-	if (isfinite(self.q(0)) && isfinite(self.q(1)) && ...
-	    isfinite(self.q(2)) && isfinite(self.q(3)) && ...
+	if (isfinite(self.q(1)) && isfinite(self.q(2)) && ...
+	    isfinite(self.q(3)) && isfinite(self.q(4)) && ...
 	    ( norm( self.q ) > 0.95) && ( norm( self.q ) < 1.05) ) 
-		self.inited = true;
+		self.inited = 1;
 
 	else 
-		self.inited = false;
+		self.inited = 0;
 	end
 
 	output = self.inited;
@@ -674,11 +681,12 @@ function [ self, output ] = update( self, dt )
 	if (~self.inited) 
 
         if (~self.data_good)
-            output = false;
+            output = 0;
             return;
         end
 
         self = init( self );
+        output = 0;
 		return;
 	end
 
@@ -691,37 +699,37 @@ function [ self, output ] = update( self, dt )
 	% float
     spinRate = norm( self.gyro );
 
-	if ( (self.ext_hdg_mode > 0) && self.ext_hdg_good) 
-		if (self.ext_hdg_mode == 1) 
+	if ( (self.ext_hdg_mode > 1) && self.ext_hdg_good) 
+		if (self.ext_hdg_mode == 2) 
 			% Vision heading correction
 			% Project heading to global frame and extract XY component
 			% Vector<3>
             vision_hdg_earth = quat_conjugate( self.q, self.vision_hdg );
 			% float
-            vision_hdg_err = wrap_pi( atan2(vision_hdg_earth(1), vision_hdg_earth(0)) );
+            vision_hdg_err = wrap_pi( atan2(vision_hdg_earth(2), vision_hdg_earth(1)) );
 			% Project correction to body frame
 			corr = corr + quat_conjugate_inversed( self.q, [0.0; 0.0; -vision_hdg_err] ) * self.w_ext_hdg;
 		end
 
-		if (self.ext_hdg_mode == 2) 
+		if (self.ext_hdg_mode == 3) 
 			% Mocap heading correction
 			% Project heading to global frame and extract XY component
 			% Vector<3>
             mocap_hdg_earth = quat_conjugate( self.q, self.mocap_hdg );
 			% float
-            mocap_hdg_err = wrap_pi( atan2(mocap_hdg_earth(1), mocap_hdg_earth(0)) );
+            mocap_hdg_err = wrap_pi( atan2(mocap_hdg_earth(2), mocap_hdg_earth(1)) );
 			% Project correction to body frame
-			corr = corr + quat_conjugate_inversed( self.q, [0.0, 0.0, -mocap_hdg_err] ) * self.w_ext_hdg;
+			corr = corr + quat_conjugate_inversed( self.q, [0.0; 0.0; -mocap_hdg_err] ) * self.w_ext_hdg;
 		end
 	end
 
-	if ( (self.ext_hdg_mode == 0) || (~self.ext_hdg_good) )
+	if ( (self.ext_hdg_mode == 1) || (~self.ext_hdg_good) )
 		% Magnetometer correction
 		% Project mag field vector to global frame and extract XY component
 		% Vector<3>
         mag_earth = quat_conjugate( self.q, self.mag );
 		% float
-        mag_err = wrap_pi( atan2(mag_earth(1), mag_earth(0)) - self.mag_decl);
+        mag_err = wrap_pi( atan2(mag_earth(2), mag_earth(1)) - self.mag_decl);
 		% float
         gainMult = 1.0;
 		% const float
@@ -744,9 +752,9 @@ function [ self, output ] = update( self, dt )
 	% Optimized version with dropped zeros
 	% Vector<3>
     k = [ ...
-		2.0 * (self.q(1) * self.q(3) - self.q(0) * self.q(2));
-		2.0 * (self.q(2) * self.q(3) + self.q(0) * self.q(1));
-		(self.q(0) * self.q(0) - self.q(1) * self.q(1) - self.q(2) * self.q(2) + self.q(3) * self.q(3)) ...
+		2.0 * (self.q(2) * self.q(4) - self.q(1) * self.q(3));
+		2.0 * (self.q(3) * self.q(4) + self.q(1) * self.q(2));
+		(self.q(1) * self.q(1) - self.q(2) * self.q(2) - self.q(3) * self.q(3) + self.q(4) * self.q(4)) ...
 	];
     
     % self.acc... .normalized()
@@ -769,22 +777,22 @@ function [ self, output ] = update( self, dt )
 	corr = corr + self.rates;
 
 	% Apply correction to state
-	self.q = self.q + quat_derivative( q, corr ) * dt;
+	self.q = self.q + quat_derivative( self.q, corr ) * dt;
 
 	% Normalize quaternion
 	self.q = normalize( self.q );
 
-    if (~(isfinite(self.q(0)) && isfinite(self.q(1)) && ...
-            isfinite(self.q(2)) && isfinite(self.q(3)))) 
+    if (~(isfinite(self.q(1)) && isfinite(self.q(2)) && ...
+            isfinite(self.q(3)) && isfinite(self.q(4)))) 
         % Reset quaternion to last good state
         self.q = q_last;
-        self.rates.zero();
-        self.gyro_bias.zero();
-        output = false;
+        self.rates = zeros(3, 1);
+        self.gyro_bias = zeros(3, 1);
+        output = 0;
         return;
     end
     
-    output = true;
+    output = 1;
 end
 
 % void AttitudeEstimatorQ:: float 
@@ -798,7 +806,7 @@ function self = update_mag_declination( self, new_declination)
 		% Quaternion
         % decl_rotation = zeros(4,1);
 		decl_rotation = quat_from_yaw(new_declination - self.mag_decl);
-		self.q = decl_rotation * self.q;
+		self.q = quat_mult( decl_rotation, self.q );
 		self.mag_decl = new_declination;
 	end
 end
@@ -825,7 +833,7 @@ end
 % 			return 1;
 % 		end
 % 
-% 		if (true ~= attitude_estimator_q::instance->start()) 
+% 		if (1 ~= attitude_estimator_q::instance->start()) 
 % 			delete attitude_estimator_q::instance;
 % 			attitude_estimator_q::instance = nullptr;
 % 			warnx('start failed');
@@ -1008,7 +1016,7 @@ end
 function output = get_mag_declination(lat, lon)
 %GET_MAG_DECLINATION
 % If the values exceed valid ranges, return zero as default
-% as we have no way of knowing what the closest real value
+% as we have no way of kself.nowing what the closest real value
 % would be.
     SAMPLING_RES     =   10.0;
     SAMPLING_MAX_LAT =   60.0;
@@ -1116,3 +1124,59 @@ function bearing = wrap_pi(bearing)
         c = c + 1;
     end
 end
+
+%% 2nd Order Low Pass Filter
+%void LowPassFilter2p:: float float
+function lp2p = lp2p_set_cutoff_frequency( lp2p, sample_freq, cutoff_freq )
+	lp2p.cutoff_freq = cutoff_freq;
+
+    M_PI_F = 3.14159265358979323846;
+    
+    if (lp2p.cutoff_freq <= 0.0)
+        % no filtering
+        return;
+    end
+
+	fr = sample_freq / lp2p.cutoff_freq;
+	ohm = tan( M_PI_F / fr );
+	c = 1.0 + 2.0 * cos( M_PI_F / 4.0 ) * ohm + ohm * ohm;
+	lp2p.b0 = ohm * ohm / c;
+	lp2p.b1 = 2.0 * lp2p.b0;
+	lp2p.b2 = lp2p.b0;
+	lp2p.a1 = 2.0 * (ohm * ohm - 1.0) / c;
+	lp2p.a2 = (1.0 - 2.0 * cos( M_PI_F / 4.0 ) * ohm + ohm * ohm) / c;
+end
+
+% float LowPassFilter2p::
+function [ lp2p, output ] = lp2p_apply( lp2p, sample )
+    if ( lp2p.cutoff_freq <= 0.0 )
+        % no filtering
+        output = sample;
+        return;
+    end
+
+	% do the filtering
+	delay_element_0 = sample - lp2p.delay_element_1 * lp2p.a1 - lp2p.delay_element_2 * lp2p.a2;
+
+    if (~isfinite(delay_element_0))
+        % don't allow bad values to propagate via the filter
+        delay_element_0 = sample;
+    end
+
+	output = delay_element_0 * lp2p.b0 + ...
+        lp2p.delay_element_1 * lp2p.b1 + lp2p.delay_element_2 * lp2p.b2;
+
+	lp2p.delay_element_2 = lp2p.delay_element_1;
+	lp2p.delay_element_1 = delay_element_0;
+
+	% return the value.  Should be no need to check limits
+% 	return output;
+end
+
+% float LowPassFilter2p::
+% function [ lp2p, output ] = lp2p_reset( lp2p, sample )
+% 	dval = sample / (lp2p.b0 + lp2p.b1 + lp2p.b2);
+% 	lp2p.delay_element_1 = dval;
+% 	lp2p.delay_element_2 = dval;
+% 	[ lp2p, output ] = lp2p_apply( lp2p, sample );
+% end

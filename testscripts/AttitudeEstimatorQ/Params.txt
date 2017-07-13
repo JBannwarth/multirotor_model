@@ -2,8 +2,9 @@ ATT_W_ACC;0.2;0;1;-;Complimentary filter accelerometer weight;double;-
 ATT_W_MAG;0.1;0;1;-;Complimentary filter magnetometer weight;double;-
 ATT_W_EXT_HDG;0.1;0;1;-;Complimentary filter external heading weight;double;-
 ATT_W_GYRO_BIAS;0.1;0;1;-;Complimentary filter gyroscope bias weight;double;-
-ATT_MAG_DECL;0.0;-180;180;deg;Magnetic declination. This parameter is not used in normal operation, as the declination is looked up based on the GPS coordinates of the vehicle.;double;-
+ATT_MAG_DECL;0.0;-180;180;deg;Magnetic declination. Not used when GPS available;double;-
 ATT_MAG_DECL_A;1;0;1;-;Automatic GPS based declination compensation;boolean;-
 ATT_EXT_HDG_M;0;0;2;-;External heading usage mode (from Motion capture/Vision);double;0,None,1,Vision,2,Motion Capture
 ATT_ACC_COMP;1;0;1;-;Acceleration compensation based on GPS velocity.;boolean;-
 ATT_BIAS_MAX;0.05;0;2;rad/s;Gyro bias limit;double;-
+FW_ARSP_MODE;0;0;2;-;Method used to publish the airspeed;double;0,Measured airspeed,1,Vehicle ground speed,2,Airspeed invalid
