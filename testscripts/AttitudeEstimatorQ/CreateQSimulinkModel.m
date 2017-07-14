@@ -387,5 +387,5 @@ initVector = [initVector(1:end-2), ']']; % remove the last ', '
 
 set_param( [ fullPath '/' memoryName ], 'X0', initVector)
 
-%clear
+clear
 %TestControllerInitOnly

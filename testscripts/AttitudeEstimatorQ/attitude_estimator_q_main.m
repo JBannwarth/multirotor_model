@@ -447,7 +447,7 @@ function self = task_main( self )
 			%orb_copy(ORB_ID(vehicle_global_position), self.global_pos_sub, &self.gpos);
             self.gpos = self.global_pos_sub;
 
-			if ( self.mag_decl_auto && (self.gpos.eph < 20.0) && (self.hrt_absolute_time - self.gpos.timestamp) < 1000000) 
+			if ( self.mag_decl_auto && (self.gpos.eph < 20.0) && ((self.hrt_absolute_time - self.gpos.timestamp) < 1000000) ) 
 				% set magnetic declination automatically
 				self = update_mag_declination( self, ( get_mag_declination(self.gpos.lat, self.gpos.lon) ) * pi / 180 );
 			end
