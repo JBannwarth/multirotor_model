@@ -661,6 +661,7 @@ function [ self, output ] = init( self )
     decl_rotation = quat_from_yaw( self.mag_decl );
 	self.q = quat_mult(decl_rotation, self.q);
 
+    self.q = [-0.726717000000000,-0.00744072000000000,-0.00534285000000000,-0.686876000000000]';
 	self.q = normalize( self.q );
 
 	if (isfinite(self.q(1)) && isfinite(self.q(2)) && ...

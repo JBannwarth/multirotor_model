@@ -16,9 +16,9 @@ bias_max 1 1 - param ATT_BIAS_MAX double
 control_task 1 1 - - 0 double
 ctrl_state_pub.timestamp 1 1 - - 0 double
 ctrl_state_pub.q 4 1 - - 0 double
-ctrl_state_pub.x_acc 1 1 - - 0 double
-ctrl_state_pub.y_acc 1 1 - - 0 double
-ctrl_state_pub.z_acc 1 1 - - 0 double
+ctrl_state_pub.x_acc 1 1 out - 0 double
+ctrl_state_pub.y_acc 1 1 out - 0 double
+ctrl_state_pub.z_acc 1 1 out - 0 double
 ctrl_state_pub.roll_rate 1 1 - - 0 double
 ctrl_state_pub.pitch_rate 1 1 - - 0 double
 ctrl_state_pub.yaw_rate 1 1 - - 0 double
