@@ -338,6 +338,8 @@ function self = task_main( self )
 		% sensor_combined_s sensors ;
 
 		% if (~orb_copy(ORB_ID(sensor_combined), self.sensors_sub, sensors))
+        self.sensors_sub.updated = double( self.sensors_sub.timestamp ~= self.sensors_sub.timestamp_prev );
+        self.sensors_sub.timestamp_prev = self.sensors_sub.timestamp;
         sensors_updated = self.sensors_sub.updated;
         sensors = self.sensors_sub;
         
@@ -369,7 +371,7 @@ function self = task_main( self )
 				self.mag(3) = sensors.magnetometer_ga(3);
 
 				if ( norm(self.mag) < 0.01 ) 
-					% disp('WARNING: degenerate mag~');
+					disp('WARNING: degenerate mag~');
 					% continue;
                     return;
 				end
@@ -380,10 +382,14 @@ function self = task_main( self )
 
 		% Update vision and motion capture heading
         % bool
+        self.vision_sub.updated = double( self.vision_sub.timestamp ~= self.vision_sub.timestamp_prev );
+        self.vision_sub.timestamp_prev = self.vision_sub.timestamp;
 		vision_updated = self.vision_sub.updated;
 		% orb_check(self.vision_sub, vision_updated);
 
 		% bool
+        self.mocap_sub.updated = double( self.mocap_sub.timestamp ~= self.mocap_sub.timestamp_prev );
+        self.mocap_sub.timestamp_prev = self.mocap_sub.timestamp;
         mocap_updated = self.mocap_sub.updated;
 		% orb_check(self.mocap_sub, mocap_updated);
 
@@ -440,6 +446,8 @@ function self = task_main( self )
 		end
 
 		% bool
+        self.global_pos_sub.updated = double( self.global_pos_sub.timestamp ~= self.global_pos_sub.timestamp_prev );
+        self.global_pos_sub.timestamp_prev = self.global_pos_sub.timestamp;
         gpos_updated = self.global_pos_sub.updated;
 		% orb_check(self.global_pos_sub, &gpos_updated);
 
@@ -1155,10 +1163,17 @@ function [ lp2p, output ] = lp2p_apply( lp2p, sample )
         output = sample;
         return;
     end
-
+    
 	% do the filtering
 	delay_element_0 = sample - lp2p.delay_element_1 * lp2p.a1 - lp2p.delay_element_2 * lp2p.a2;
 
+    % Hack to get correct initialisation
+    if ~lp2p.init
+        lp2p.delay_element_1 = delay_element_0;
+        lp2p.delay_element_2 = delay_element_0;
+        lp2p.init = 1;
+    end
+    
     if (~isfinite(delay_element_0))
         % don't allow bad values to propagate via the filter
         delay_element_0 = sample;
@@ -1169,7 +1184,7 @@ function [ lp2p, output ] = lp2p_apply( lp2p, sample )
 
 	lp2p.delay_element_2 = lp2p.delay_element_1;
 	lp2p.delay_element_1 = delay_element_0;
-
+    
 	% return the value.  Should be no need to check limits
 % 	return output;
 end

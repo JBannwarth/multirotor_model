@@ -50,6 +50,16 @@ fullPath = [ libName '/' subFolderName ];
 
 %% Clean-up blocks and lines
 
+% Load library
+if ~bdIsLoaded( libName )
+    load_system( libName )
+end
+
+% Unlock library
+if strcmp( get_param( libName, 'Lock' ), 'on' )
+    set_param( libName, 'Lock', 'off' );
+end
+
 allblocks = find_system( fullPath, 'SearchDepth', 1, 'LookUnderMasks', 'on' );
 
 ToKeep = { [fullPath '/' inputFcnName], [fullPath '/' outputFcnName], ...
@@ -387,5 +397,8 @@ initVector = [initVector(1:end-2), ']']; % remove the last ', '
 
 set_param( [ fullPath '/' memoryName ], 'X0', initVector)
 
+
+%% Clean-up
+close_system( libName, 1 )
 clear
 %TestControllerInitOnly
