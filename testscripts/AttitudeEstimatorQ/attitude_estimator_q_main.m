@@ -639,6 +639,12 @@ end
 % bool AttitudeEstimatorQ::
 function [ self, output ] = init( self )
 
+    if ( sum( self.q ) == 0 ) % output assigned
+        self.inited = 1;
+        output = self.inited;
+        return;
+    end
+
 	% Rotation matrix can be easily constructed from acceleration and mag field vectors
 	% 'k' is Earth Z axis (Down) unit vector in body frame
 	% Vector<3>
@@ -669,7 +675,7 @@ function [ self, output ] = init( self )
     decl_rotation = quat_from_yaw( self.mag_decl );
 	self.q = quat_mult(decl_rotation, self.q);
 
-    self.q = [-0.726717000000000,-0.00744072000000000,-0.00534285000000000,-0.686876000000000]';
+    % self.q = [-0.726717000000000,-0.00744072000000000,-0.00534285000000000,-0.686876000000000]';
 	self.q = normalize( self.q );
 
 	if (isfinite(self.q(1)) && isfinite(self.q(2)) && ...

@@ -13,11 +13,11 @@ att_pub.timestamp 1 1 out - 0 double
 att_pub.rollspeed 1 1 out - 0 double
 att_pub.pitchspeed 1 1 out - 0 double
 att_pub.yawspeed 1 1 out - 0 double
-att_pub.q 4 1 out - 0 double
+att_pub.q 4 1 out - [INIT_Q(1);INIT_Q(2);INIT_Q(3);INIT_Q(4)] double
 bias_max 1 1 - param ATT_BIAS_MAX double
 control_task 1 1 - - 0 double
 ctrl_state_pub.timestamp 1 1 - - 0 double
-ctrl_state_pub.q 4 1 - - 0 double
+ctrl_state_pub.q 4 1 - - [INIT_Q(1);INIT_Q(2);INIT_Q(3);INIT_Q(4)] double
 ctrl_state_pub.x_acc 1 1 out - 0 double
 ctrl_state_pub.y_acc 1 1 out - 0 double
 ctrl_state_pub.z_acc 1 1 out - 0 double
@@ -130,7 +130,7 @@ mocap_sub.timestamp 1 1 in - 0 double
 mocap_sub.timestamp_prev 1 1 - - 0 double
 params_sub.updated 1 1 - - 0 double
 pos_acc 3 1 - - 0 double
-q 4 1 - - 0 double
+q 4 1 - - [INIT_Q(1);INIT_Q(2);INIT_Q(3);INIT_Q(4)] double
 ran_once 1 1 - - 0 double
 rates 3 1 - - 0 double
 sensors_sub.updated 1 1 - - 0 double

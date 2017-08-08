@@ -308,7 +308,7 @@ end
 
 %% Load-up parameters from file
 fileId = fopen ( paramFileName );
-tmp = textscan( fileId, '%s %f %f %f %s %s %s %s', 'Delimiter', ';' );
+tmp = textscan( fileId, '%s %s %f %f %s %s %s %s', 'Delimiter', ';' );
 fclose( fileId );
 
 pName = tmp{1};
@@ -322,18 +322,22 @@ pDropDown = tmp{8};
 
 maskObj = Simulink.Mask.get( fullPath );
 maskObj.removeAllParameters();
-maskObj.addParameter('Type', 'edit',   'Prompt', 'Sampling period (s)', ...
+maskObj.addParameter('Type', 'edit', 'Prompt', 'Sampling period (s)', ...
     'Name', 'Q_SAMPLING_PERIOD', 'Value', '0.002');
 
 for i = 1:length( pVal )
-    if strcmp( pDataType, 'boolean' ) % Maybe implement this later
+    if strcmp( pDropDown{i}, 'free' )
+        maskObj.addParameter('Type', 'edit', 'Prompt', ...
+            [pName{i} ' - ' pInfo{i} ' (' pUnit{i} ')'], 'Name', pName{i}, ...
+            'Value', pVal{i}, 'Evaluate', 'on');
+    elseif strcmp( pDataType, 'boolean' ) % Maybe implement this later
         maskObj.addParameter('Type', 'slider', 'Prompt', ...
             [pName{i} ' - ' pInfo{i} ' (' pUnit{i} ')'], 'Name', pName{i}, 'Range', ...
-            [pMin(i) pMax(i)], 'Value', num2str( pVal(i) ), 'Evaluate', 'on');
+            [pMin(i) pMax(i)], 'Value', pVal{i}, 'Evaluate', 'on');
     elseif ( pDropDown{i} == '-' )
         maskObj.addParameter('Type', 'slider', 'Prompt', ...
             [pName{i} ' - ' pInfo{i} ' (' pUnit{i} ')'], 'Name', pName{i}, 'Range', ...
-            [pMin(i) pMax(i)], 'Value', num2str( pVal(i) ), 'Evaluate', 'on');
+            [pMin(i) pMax(i)], 'Value', pVal{i}, 'Evaluate', 'on');
     else
         options = strsplit( pDropDown{i}, ',' );
         %options = options(2:2:end);
@@ -342,7 +346,7 @@ for i = 1:length( pVal )
         maskObj.addParameter('Type', 'popup', 'Prompt', ...
             [pName{i} ' - ' pInfo{i} ' (' pUnit{i} '), ' optionStr], 'Name', pName{i}, ...
             'TypeOptions', strread(num2str((1:nMax)-1),'%s') , ...
-            'Value', num2str( pVal(i) ), 'Evaluate', 'on');
+            'Value', pVal{i}, 'Evaluate', 'on');
     end
 end
 
@@ -381,7 +385,6 @@ for i = 1:length( varM )
     for m = 1:varM(i)
         for n = 1:varN(i)
             if strncmp( varInit{i}, '[', 1 )
-                
                 % initMat = str2num( varInit{i} );
                 initVal = initMat{m, n};
             else

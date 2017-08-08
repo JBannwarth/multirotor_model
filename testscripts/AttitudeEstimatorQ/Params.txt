@@ -1,3 +1,4 @@
+INIT_Q;[0,0,0,0]'';0;1;-;Initial UAV orientation - set to 0 to let controller decide (bugged);double;free
 ATT_W_ACC;0.2;0;1;-;Complimentary filter accelerometer weight;double;-
 ATT_W_MAG;0.1;0;1;-;Complimentary filter magnetometer weight;double;-
 ATT_W_EXT_HDG;0.1;0;1;-;Complimentary filter external heading weight;double;-
