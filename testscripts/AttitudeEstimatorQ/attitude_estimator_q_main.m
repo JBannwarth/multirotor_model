@@ -639,7 +639,7 @@ end
 % bool AttitudeEstimatorQ::
 function [ self, output ] = init( self )
 
-    if ( sum( self.q ) == 0 ) % output assigned
+    if ( sum( self.q ) ~= 0 ) % output assigned
         self.inited = 1;
         output = self.inited;
         return;
@@ -1039,15 +1039,15 @@ function output = get_mag_declination(lat, lon)
     SAMPLING_MIN_LON = -180.0;
     SAMPLING_MAX_LON =  180.0;
 
-    if (lat < -90.0 || lat > 90.0 || ...
-        lon < -180.0 || lon > 180.0)
+    if ( (lat < -90.0) || (lat > 90.0) || ...
+        (lon < -180.0) || (lon > 180.0) )
         output = 0.0;
         return;
     end
 
 	% Round down to nearest sampling resolution
-	min_lat = floor((lat / SAMPLING_RES) * SAMPLING_RES);
-	min_lon = floor((lon / SAMPLING_RES) * SAMPLING_RES);
+	min_lat = floor(lat / SAMPLING_RES) * SAMPLING_RES;
+	min_lon = floor(lon / SAMPLING_RES) * SAMPLING_RES;
 
 	% Find index of nearest low sampling point
 	[min_lat_index, min_lat] = get_lookup_table_index( min_lat, SAMPLING_MIN_LAT, SAMPLING_MAX_LAT);
@@ -1145,7 +1145,7 @@ end
 function lp2p = lp2p_set_cutoff_frequency( lp2p, sample_freq, cutoff_freq )
 	lp2p.cutoff_freq = cutoff_freq;
 
-    M_PI_F = 3.14159265358979323846;
+    M_PI_F = 3.14159;
     
     if (lp2p.cutoff_freq <= 0.0)
         % no filtering
@@ -1174,11 +1174,11 @@ function [ lp2p, output ] = lp2p_apply( lp2p, sample )
 	delay_element_0 = sample - lp2p.delay_element_1 * lp2p.a1 - lp2p.delay_element_2 * lp2p.a2;
 
     % Hack to get correct initialisation
-    if ~lp2p.init
-        lp2p.delay_element_1 = delay_element_0;
-        lp2p.delay_element_2 = delay_element_0;
-        lp2p.init = 1;
-    end
+%     if ~lp2p.init
+%         lp2p.delay_element_1 = delay_element_0;
+%         lp2p.delay_element_2 = delay_element_0;
+%         lp2p.init = 1;
+%     end
     
     if (~isfinite(delay_element_0))
         % don't allow bad values to propagate via the filter
