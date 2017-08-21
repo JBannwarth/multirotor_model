@@ -23,8 +23,7 @@ load_system(model);
 
 %% Set up iterations
 windInput = 'windData';
-set_param( [model '/Wind switch'], 'sw', '1' ); % Choose input from workspace
-set_param( [model '/Varying wind input'], 'VariableName', 'windData' );
+UseWindProfile( model, true );
 
 %% Perform simulation(s)
 output = sim( model, 'SimulationMode', 'normal');

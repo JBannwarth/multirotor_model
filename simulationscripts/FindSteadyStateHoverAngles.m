@@ -24,8 +24,7 @@ end
 %% 3) Loop over the number of iterations
 pitchSS = zeros( length(windSpeedX), 1 );
 for i = 1:length(windSpeedX)
-    set_param( [model '/Varying wind input'], 'commented', 'on' );
-    set_param( [model '/Wind switch'], 'sw', '0' ); % Choose input from workspace
+    UseWindProfile( model, false );
     set_param( [model '/Fixed wind input'], 'value', windVelString{i} );
     output = sim(model, 'SimulationMode', 'normal');
     pitch = output.get('pitch');
