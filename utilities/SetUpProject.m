@@ -29,5 +29,5 @@ addpath(fullfile(projectRoot, 'scripts_plotting'))
 addpath(fullfile(projectRoot, 'scripts_data'))
 
 % Change working folder to the "work" folder:
-cd(myCacheFolder);
+%cd(myCacheFolder);
 end
