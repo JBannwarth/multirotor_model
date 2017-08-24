@@ -9,8 +9,16 @@ function clean_up_project()
 % Remove folders from path
 project = simulinkproject;
 projectRoot = project.RootFolder;
-rmpath(fullfile(projectRoot, 'scripts'))
 rmpath(fullfile(projectRoot, 'ccode'))
+rmpath(fullfile(projectRoot, 'libraries'))
+rmpath(fullfile(projectRoot, 'scripts_misc'))
+rmpath(fullfile(projectRoot, 'scripts_test'))
+rmpath(fullfile(projectRoot, 'scripts_simulation'))
+rmpath(fullfile(projectRoot, 'scripts_plotting'))
+rmpath(fullfile(projectRoot, 'scripts_data'))
+rmpath(fullfile(projectRoot, 'data_misc'))
+rmpath(fullfile(projectRoot, 'data_validation'))
+rmpath(fullfile(projectRoot, 'data_wind'))
 
 % Reset the location where generated code and other temporary files are
 % created (slprj) to the default:
