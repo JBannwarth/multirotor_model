@@ -19,9 +19,10 @@ load_system(model);
 UseWindProfile( model, false );
 UseEstimators( model, true );
 UsePositionController( model, false );
+set_param( [model '/att_thrustDesSwitch'], 'sw', '1' )
 set_param( [model '/Fixed wind input'], 'value', '[0 0 0]' );
 set_param( [model '/Drag model'], 'ModelName', 'DragModelNew' );
-set_param( [model '/Motor model'], 'ModelName', 'MotorModelVariable' );
+set_param( [model '/Motor model'], 'ModelName', 'MotorModel' );
 
 % Get list of files to plot
 prefix = 'step_att_';
@@ -34,13 +35,14 @@ for i = 1:length(inputFiles)
     end
 end
 inputFiles( logical(toRemove) ) = [];
+inputFiles = { 'step_att_pitch-10_1.mat' };
 
 %% Perform simulation(s)
 for i = 1:length( inputFiles )
     load( inputFiles{i} )
-    PrepareAttitudeStepData;
+    PrepareAttitudeStepDataSingleAxis;
     Simulation.T_END = qDesInput(end,1);
-    Initial.Q = [1 1 -1 -1]' .* qExp(1,:)';
+    %Initial.Q = [1 1 -1 -1]' .* qDes(1,:)';
     set_param( 'MultirotorSimPx4SeparateRotors/Sensor Model/attitude_estimator_q', ...
         'INIT_Q', [ '[' num2str( Initial.Q' ) ']' ] )
     out = sim( model, 'SimulationMode', 'normal');
