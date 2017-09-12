@@ -1,7 +1,7 @@
 %CHECKATTITUDECONTROLPLOT Plot step responses
 %   Written by: J.X.J. Bannwarth, 2017/08/21
 
-close all;
+% close all;
 
 outFolder = '../multirotor_model_verification_report/fig';
 fontSize  = 9;
@@ -28,17 +28,27 @@ eulDes.Yaw = unwrap( eulDes.Yaw );
 
 % Get axis to look at
 fileNameCurrent = inputFiles{i};
-dashLoc = strfind( fileNameCurrent, '-' );
-underscoreLoc = strfind( fileNameCurrent, '_' );
-if isempty( dashLoc )
-    dashLoc = strfind( fileNameCurrent, '+' );
+% dashLoc = strfind( fileNameCurrent, '-' );
+% underscoreLoc = strfind( fileNameCurrent, '_' );
+% if isempty( dashLoc )
+%     dashLoc = strfind( fileNameCurrent, '+' );
+% end
+if ~isempty( strfind( fileNameCurrent, 'roll' ) )
+    ax = 'Roll';
+elseif ~isempty( strfind( fileNameCurrent, 'pitch' ) )
+    ax = 'Pitch';
+elseif ~isempty( strfind( fileNameCurrent, 'yaw' ) )
+    ax = 'Yaw';
+else
+    error('No axis')
 end
-ax = fileNameCurrent( underscoreLoc+1:dashLoc-1 );
-ax(1) = upper(ax(1));
+% ax = fileNameCurrent( underscoreLoc+1:dashLoc-1 );
+% ax(1) = upper(ax(1));
 % Plot results
 % ind = 1;
 % for ax = { 'Roll', 'Pitch', 'Yaw' }
 %     subplot( 3, 1, ind )
+figure('name', inputFiles{i} )
 hold on; grid on; box on;
 stairs( tDes, rad2deg( eulDes.(char(ax)) ) )
 stairs( tExp, rad2deg( eulExp.(char(ax)) ) )

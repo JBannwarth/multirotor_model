@@ -1,4 +1,4 @@
-% InitialiseParameters.m
+%INITIALIZEPARAMETERS
 % Initialises parameters for quadcopter model
 %
 % Model properties based off of the quadcopter used for the ICUAS'16 paper:
@@ -8,8 +8,8 @@
 % The paper also contains a derivation of the equations of motion used in
 % also attached simulink model.
 %
-% Written by: J.Bannwarth, J.Chen, and K.Stol
-% Last modified 10/08/2016 by JB
+% Written by: J.X.J. Bannwarth, J.Chen, and K.Stol
+% Last modified: 10/09/2017 by J.X.J. Bannwarth
 
 % Clean up
 % clear variables; clc;
@@ -37,22 +37,37 @@ Uav.THROTTLE_HOVER = ( Motor.K_E*Uav.OMEGA_HOVER + ...
 
 Uav.NOISE_TS = 0.002;
 
-% Load controller constants
-ArduCopterConstants
-
 %% INITIAL CONDITIONS
 % For quaternion:
 % q = [cos(alpha); sin(alpha)*rotX; sin(alpha)*rotY; sin(alpha)*rotZ]
 % where: - alpha is the angle the UAV is rotated aronud the rotation axis
-%        - [rotX, rotY, rotZ] is a unit vector defining the rotation axis 
-Initial.XI      = [0; 0; 0];            % Initial position in inertial frame
-Initial.XI_DOT  = [0; 0; 0];            % Initial velocity in inertial frame
-Initial.ETA     = rad2deg( [0; 0; 0] ); % Initial orientation (roll, pitch, yaw)
-% Initial.Q       = [1; 0; 0; 0];         % Initial orientation (quaternion)
-Initial.NU_BODY = [0; 0; 0];            % Initial angular velocity in body frame
-Initial.OMEGA   = Uav.OMEGA_HOVER;  % Initial rotor speed
+%        - [rotX, rotY, rotZ] is a unit vector defining the rotation axis
+if (~exist('Initial', 'var')) || (~isfield( Initial, 'XI' ))     % Initial position in inertial frame
+    Initial.XI      = [0; 0; 0];
+end
+if ~isfield( Initial, 'XI_DOT' ) % Initial velocity in inertial frame
+    Initial.XI_DOT  = [0; 0; 0];
+end
+if ~isfield( Initial, 'ETA' )    % Initial orientation (roll, pitch, yaw)
+    Initial.ETA     = rad2deg( [0; 0; 0] ); 
+end
+if ~isfield( Initial, 'Q' )      % Initial orientation (quaternion)
+    Initial.Q       = [1; 0; 0; 0];
+end
+if ~isfield( Initial, 'NU_BODY' ) % Initial angular velocity in body frame
+    Initial.NU_BODY = [0; 0; 0];
+end
+if ~isfield( Initial, 'OMEGA' )   % Initial rotor speed
+    Initial.OMEGA   = Uav.OMEGA_HOVER;
+end
 
 %% SIMULATION PARAMETERS
-Simulation.T_S   = 0.01; % Timestep for logging
-%Simulation.T_END = 100; 
-%Simulation.T_SIM = (0:Simulation.T_S:Simulation.T_END)';
+if (~exist('Simulation', 'var')) || ~isfield( Simulation, 'T_S' )
+    Simulation.T_S   = 0.01; % Timestep for logging
+end
+if ~isfield( Simulation, 'T_END' )
+    Simulation.T_END = 100; 
+end
+if ~isfield( Simulation, 'T_SIM' )
+    Simulation.T_SIM = (0:Simulation.T_S:Simulation.T_END)';
+end

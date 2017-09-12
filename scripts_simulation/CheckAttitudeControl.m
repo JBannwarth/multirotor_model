@@ -1,6 +1,6 @@
 %CHECKATTITUDECONTROL Send attitude step commands to system and record perf
 %   Written by: J.X.J. Bannwarth, 2017/08/21
-clear all;
+clearvars;
 
 %% Initialization
 InitializeModel
@@ -20,22 +20,20 @@ UseWindProfile( model, false );
 UseEstimators( model, true );
 UsePositionController( model, false );
 set_param( [model '/Fixed wind input'], 'value', '[0 0 0]' );
-inputFiles = { ...
-    'step_roll-1.mat', ...
-    'step_roll-2.mat', ...
-    'step_roll+1.mat', ...
-    'step_roll+2.mat', ...
-    'step_pitch-1.mat', ...
-    'step_pitch-2.mat', ...
-    'step_pitch+1.mat', ...
-    'step_pitch+2.mat', ...
-    'step_yaw-1.mat', ...
-    'step_yaw-2.mat', ...
-    'step_yaw+1.mat', ...
-    'step_yaw+2.mat', ...
-    };
+set_param( [model '/Drag model'], 'ModelName', 'DragModelNew' );
+set_param( [model '/Motor model'], 'ModelName', 'MotorModelVariable' );
 
-% inputFiles = { '' };
+% Get list of files to plot
+prefix = 'step_att_';
+inputFiles = dir('data_validation');
+inputFiles = {inputFiles.name};
+toRemove = zeros( size(inputFiles) );
+for i = 1:length(inputFiles)
+    if ~strncmp( inputFiles{i}, prefix, length(prefix) )
+        toRemove(i) = 1;
+    end
+end
+inputFiles( logical(toRemove) ) = [];
 
 %% Perform simulation(s)
 for i = 1:length( inputFiles )
