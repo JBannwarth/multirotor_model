@@ -15,6 +15,7 @@ for i = 1:length(start)
     clear( 'flog' );
 
     % Extract useful data
+    params = flogOriginal.params;
     tDes    = flogOriginal.vehicle_attitude_setpoint.time;
     qDes = table2array( flogOriginal.vehicle_attitude_setpoint(:,6:9) );
     thrustDes = flogOriginal.vehicle_attitude_setpoint.thrust;
@@ -39,6 +40,6 @@ for i = 1:length(start)
     [ eulDes.Roll, eulDes.Pitch, eulDes.Yaw ] = QuatToEuler( qDes );
     
     save( fullfile(projectRoot, 'data_validation', ['step_' name{i}] ), 'tDes', 'qDes', 'thrustDes', 'yawRateDes', ...
-        'tExp', 'qExp', 'eulExp', 'eulDes' )
+        'tExp', 'qExp', 'eulExp', 'eulDes', 'params' )
     
 end

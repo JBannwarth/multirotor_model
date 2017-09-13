@@ -1,9 +1,10 @@
 close all;
+load('RunPosHold.mat')
 
 outFolder = '../journal_paper_1/fig';
 fontSize  = 9;
 outSize   = [8.85684 5];
-printResults = false;
+printResults = true;
 
 windXLimits = [0 7];
 
@@ -14,8 +15,6 @@ else
 end
 
 % Compute statistics
-dt = str2double( get_param( [model '/To Workspace errX'], 'SampleTime') );
-
 if ( useClosedContraptionData )
     load( 'ExpFlightData' )
 else

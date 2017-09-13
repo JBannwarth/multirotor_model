@@ -1,6 +1,7 @@
 %CHECKATTITUDECONTROL Send attitude step commands to system and record perf
 %   Written by: J.X.J. Bannwarth, 2017/08/21
 clearvars;
+close all;
 
 %% Initialization
 InitializeModel
@@ -21,8 +22,8 @@ UseEstimators( model, true );
 UsePositionController( model, false );
 set_param( [model '/att_thrustDesSwitch'], 'sw', '1' )
 set_param( [model '/Fixed wind input'], 'value', '[0 0 0]' );
-set_param( [model '/Drag model'], 'ModelName', 'DragModelNew' );
-set_param( [model '/Motor model'], 'ModelName', 'MotorModel' );
+set_param( [model '/Drag model'], 'ModelName', 'DragModelMomentDrag' );
+set_param( [model '/Motor model'], 'ModelName', 'MotorModelVariable' );
 
 % Get list of files to plot
 prefix = 'step_att_';
@@ -41,11 +42,18 @@ inputFiles = { 'step_att_pitch-10_1.mat' };
 for i = 1:length( inputFiles )
     load( inputFiles{i} )
     PrepareAttitudeStepDataSingleAxis;
-    Simulation.T_END = qDesInput(end,1);
+    %Simulation.T_END = qDesInput(end,1);
+    Simulation.T_END = 10;
     %Initial.Q = [1 1 -1 -1]' .* qDes(1,:)';
-    set_param( 'MultirotorSimPx4SeparateRotors/Sensor Model/attitude_estimator_q', ...
+    LoadPx4Parameters( model, params )
+    set_param( [model '/Sensor Model/attitude_estimator_q'], ...
+        'ATT_EXT_HDG_M', '2')
+    set_param( [model '/Sensor Model/attitude_estimator_q'], ...
         'INIT_Q', [ '[' num2str( Initial.Q' ) ']' ] )
+    set_param( [model '/Drag model'], 'ModelName', 'DragModelMomentDrag' );
     out = sim( model, 'SimulationMode', 'normal');
+%     set_param( [model '/Drag model'], 'ModelName', 'DragModelNew' );
+%     out = sim( model, 'SimulationMode', 'normal');
     CheckAttitudeControlPlot;
 end
 
