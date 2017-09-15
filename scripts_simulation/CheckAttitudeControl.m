@@ -36,14 +36,14 @@ for i = 1:length(inputFiles)
     end
 end
 inputFiles( logical(toRemove) ) = [];
-inputFiles = { 'step_att_pitch-10_1.mat' };
+inputFiles = { 'step_att_pitch_full_1.mat' };
 
 %% Perform simulation(s)
 for i = 1:length( inputFiles )
     load( inputFiles{i} )
     PrepareAttitudeStepDataSingleAxis;
-    %Simulation.T_END = qDesInput(end,1);
-    Simulation.T_END = 10;
+    Simulation.T_END = qDesInput(end,1);
+    % Simulation.T_END = 10;
     %Initial.Q = [1 1 -1 -1]' .* qDes(1,:)';
     LoadPx4Parameters( model, params )
     set_param( [model '/Sensor Model/attitude_estimator_q'], ...
@@ -63,4 +63,4 @@ end
 
 % Assign units manually
 % unitsLookupTable = readtable('SignalUnits.csv');
-% logsout = SetDatasetUnits(logsout, unitsLookupTable, true);
+% logsout = SetDatasetUnits(logsout, unitsLookupTable,   true);

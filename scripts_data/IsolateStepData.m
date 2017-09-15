@@ -3,7 +3,7 @@
 
 fileId = fopen ( 'StepDetailAtt.csv' );
 fgets( fileId ); % skip headers
-tmp = textscan( fileId, '%f %f %s %s', 'Delimiter', '\t' );
+tmp = textscan( fileId, '%f %f %s %s', 'Delimiter', ',' );
 fclose( fileId );
 start = tmp{1}; stop = tmp{2}; name = tmp{3}; source = tmp{4};
 
@@ -15,6 +15,10 @@ for i = 1:length(start)
     clear( 'flog' );
 
     % Extract useful data
+    if ((start(i) == -1) && (stop(i) == -1))
+        start(i) = 0;
+        stop(i) = 99999;
+    end
     params = flogOriginal.params;
     tDes    = flogOriginal.vehicle_attitude_setpoint.time;
     qDes = table2array( flogOriginal.vehicle_attitude_setpoint(:,6:9) );

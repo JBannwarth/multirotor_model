@@ -23,6 +23,7 @@ if ( useClosedContraptionData )
 else
     windFiles = { '170223_grid_30', '170223_grid_35', ...
                   '170223_grid_40', '170223_grid_45', '170223_grid_50' };
+    Uav.M = Uav.M*5
 end
 
 LoadPx4ParametersFile( model, 'DefaultPx4Params.mat' )
@@ -66,14 +67,15 @@ for i = 1:length( windFiles )
     set_param( [ model '/Sensor Model/attitude_estimator_q' ], ...
         'INIT_Q', [ '[' num2str( Initial.Q ) ']' ] )
     output(index + i) = sim( model, 'SimulationMode', 'normal' );
+    Uav.M
 end
 
-%% 4) Plot data
-PlotPositionHoldError;
-
-%% 5) Save data
+%% 4) Save data
 dt = str2double( get_param( [model '/To Workspace errX'], 'SampleTime') );
 save( 'data_misc/RunPosHold.mat', 'output', 'dt', 'useClosedContraptionData', 'Simulation') 
+
+%% 5) Plot data
+PlotPositionHoldError;
 
 %% 5) Clean up
 % close_system(model, 0);
