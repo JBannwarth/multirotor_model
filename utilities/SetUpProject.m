@@ -29,6 +29,7 @@ addpath(fullfile(projectRoot, 'scripts_data'))
 addpath(fullfile(projectRoot, 'data_misc'))
 addpath(fullfile(projectRoot, 'data_validation'))
 addpath(fullfile(projectRoot, 'data_wind'))
+addpath(fullfile(projectRoot, 'data_results'))
 
 % Change working folder to the "work" folder:
 %cd(myCacheFolder);

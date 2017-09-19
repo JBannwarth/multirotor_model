@@ -26,7 +26,9 @@ for i = 1:length( Uav.L )
 end
 
 %% MASS/INERTIA
-Uav.M   = 1.204; % Frame [kg]
+if ~isfield( Uav, 'M' )
+    Uav.M   = 1.204; % Frame [kg]
+end
 
 % Gravity vector
 Uav.G   = Uav.M * [0; 0; -GRAVITY]; % [N]

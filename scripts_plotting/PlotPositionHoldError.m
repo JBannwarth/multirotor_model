@@ -1,3 +1,6 @@
+%PLOTPOSITIONHOLDERROR Plot position hold error
+%   Written by:    J.X.J. Bannwarth, 2017
+%   Last Modified: J.X.J. Bannwarth, 2017/09/19
 close all;
 load('RunPosHold.mat')
 
