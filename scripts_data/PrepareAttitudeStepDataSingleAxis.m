@@ -5,7 +5,7 @@ toPlot = false;
 % [ eulDes.Roll, eulDes.Pitch, eulDes.Yaw ] = QuatToEuler( qDes );
 % [ eulExp.Roll, eulExp.Pitch, eulExp.Yaw ] = QuatToEuler( qDes );
 
-fileNameCurrent = inputFiles{i};
+fileNameCurrent = inputFiles{n};
 if ~isempty( strfind( fileNameCurrent, 'roll' ) )
     ax = 'Roll';
     eulDes.Pitch = eulDes.Pitch .* 0;

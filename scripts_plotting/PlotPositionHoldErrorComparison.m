@@ -7,8 +7,23 @@ close all;
 %% Load data
 toLoad = { 'PosHoldOpenContraption1.5TranslRotDrag.mat', ...
     'PosHoldOpenContraption1.5TranslRotDragNoLin.mat', ...
-    'PosHoldOpenContraption1.5LinRotDrag.mat'};
-description = { 'Transl+LinRotDrag', 'TranslRotDrag', 'LinRotDrag' };
+    'PosHoldOpenContraption1.5LinRotDrag.mat', ...
+    'PosHoldOpenContraption1.5NoRotDrag.mat', ...
+    %'PosHoldOpenContraption1.5LinRotDragOldMotor.mat' ...
+    };
+% toLoad = { 'PosHoldClosedContraption1.204TranslRotDrag.mat', ...
+%     'PosHoldClosedContraption1.204TranslRotDragNoLin.mat', ...
+%     'PosHoldClosedContraption1.204LinRotDrag.mat', ...
+%     'PosHoldClosedContraption1.204NoRotDrag.mat' ...
+%     %'PosHoldOpenContraption1.5LinRotDragOldMotor.mat' ...
+%     };
+%\mathbf{M}_D
+description = { '$\propto {^\mathcal{B}\mathbf{V}}_\mathrm{app}, {^\mathcal{B}}${\boldmath$\nu$}$^2$', ...
+    '$\propto {^\mathcal{B}\mathbf{V}}_\mathrm{app}$', ...
+    '$\propto {^\mathcal{B}}${\boldmath$\nu$}$^2$', ...
+    'No drag'
+    %'$\propto {^\mathcal{B}}${\boldmath$\nu$}$^2$, lin motor' ...
+    };
 
 for i = 1:length( toLoad )
     load( toLoad{i} );
@@ -17,10 +32,10 @@ for i = 1:length( toLoad )
 end
 
 %% Output setup
-outFolder = '../journal_paper_1/fig';
+outFolder = '../multirotor_model_verification_report/fig';
 fontSize  = 9;
-outSize   = [8.85684 5];
-printResults = false;
+outSize   = [8.85684 8.85684];
+printResults = true;
 
 windXLimits = [0 7];
 
@@ -67,13 +82,17 @@ end
 
 %% Plot data
 legendStr = description;
-legendStr{end+1} = 'exp';
+legendStr{end+1} = 'Exp';
 
 ax = ['x', 'y', 'z'];
+markers = 'o+xds^*v><ph.';
 for i = 1:length(ax)
     figure( 'Name', [ 'Simulation error statistics - ' ax(i) ] )
     hold on; grid on; box on
-    plot( avgWindSpeed, stdE.(ax(i)), 'o', avgWindSpeed, avgStd.(ax(i)), '+' )
+    for j = 1:size(meanE.(ax(i)),1)
+        plot( avgWindSpeed, stdE.(ax(i))(j,:), markers(j) )
+    end
+    plot( avgWindSpeed, avgStd.(ax(i)), markers(j+1) ) % Experimental
     axErr(i) = gca;
     ylabel(['Stdev $' ax(i) '$-axis error (m)'], 'Interpreter', 'LaTeX')
     xlabel('$U_\mathrm{mean}$ (m/s)', 'Interpreter', 'LaTeX')
@@ -81,10 +100,8 @@ for i = 1:length(ax)
     legend( legendStr, 'Interpreter', 'LaTeX', 'Orientation', ...
         'Vertical', 'Location', 'NorthWest' )
     
-    if i == 1
-        xlim( windXLimits )
-        ylim( [0 axErr(1).YLim(2)] )
-    end
+    xlim( windXLimits )
+    ylim( [0 axErr(1).YLim(2)] )
     
     if ( printResults )
         fileName = [ outFolder '/' 'UavErrorMean-' ax(i) '-simvexp' suffix];
@@ -97,8 +114,11 @@ linkaxes( axErr )
 
 % Angles mean
 figure; grid on; box on; hold on;
-plot( avgWindSpeed, meanA.pitch, 'o', avgWindSpeed, -rad2deg(avgPitch), 'x',...
-    'linewidth', 1);
+for j = 1:size(meanA.pitch,1)
+    plot( avgWindSpeed, meanA.pitch(j,:), markers(j) )
+end
+plot(avgWindSpeed, -rad2deg(avgPitch), markers(j+1) ) % Experimental
+    
 axA = gca;
 xlabel('Mean wind speed (m/s)', 'Interpreter', 'latex');
 ylabel('Mean hover pitch angle (deg)', 'Interpreter', 'latex');
@@ -117,8 +137,10 @@ end
 
 % Angles std
 figure; grid on; box on; hold on;
-plot( avgWindSpeed, stdA.pitch, 'o', avgWindSpeed, rad2deg(avgStd.pitch), 'x', ...
-    'linewidth', 1)
+for j = 1:size(stdA.pitch,1)
+    plot( avgWindSpeed, stdA.pitch(j,:), markers(j) )
+end
+plot(avgWindSpeed, rad2deg(avgStd.pitch), markers(j+1) ) % Experimental
 axAStd = gca;
 xlabel('Mean wind speed (m/s)', 'Interpreter', 'latex');
 ylabel('Stdev pitch angle (deg)', 'Interpreter', 'latex');

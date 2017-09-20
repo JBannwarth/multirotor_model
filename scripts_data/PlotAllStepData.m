@@ -2,7 +2,7 @@
 %   Written by: J.X.J. Bannwarth, 11/09/2017
 
 %% Setup
-prefix = 'att_step';
+prefix = 'att_step_small';
 close all;
 
 %% Get list of files to plot

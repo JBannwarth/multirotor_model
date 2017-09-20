@@ -9,16 +9,16 @@ outSize   = [8.85684 8.85684];
 printResults = true;
 
 % Assign values
-q = out.get('q');
-eta = out.get('eta');
+q = output.get('logsout').get('q').Values;
+eta = output.get('logsout').get('eta').Values;
 
 % Get data
-tSim = q.time - tDesOffset;
-qSim = q.signals.values;
+tSim = q.Time - tDesOffset;
+qSim = q.Data;
 qSimN = length( qSim );
 qSim = [ ones(qSimN,1), ones(qSimN,1), -ones(qSimN,1), -ones(qSimN,1)] .* qSim;
 %[ eulSim.Roll, eulSim.Pitch, eulSim.Yaw ] = QuatToEuler( qSim );
-etaSim = [ ones(qSimN,1), -ones(qSimN,1), -ones(qSimN,1)] .* eta.signals.values;
+etaSim = [ ones(qSimN,1), -ones(qSimN,1), -ones(qSimN,1)] .* eta.Data;
 eulSim.Roll = etaSim(:,1); eulSim.Pitch = etaSim(:,2); eulSim.Yaw = etaSim(:,3);
 eulSim.Yaw = unwrap( eulSim.Yaw );
 
@@ -27,7 +27,7 @@ eulExp.Yaw = unwrap( eulExp.Yaw );
 eulDes.Yaw = unwrap( eulDes.Yaw );
 
 % Get axis to look at
-fileNameCurrent = inputFiles{i};
+fileNameCurrent = inputFiles{n};
 % dashLoc = strfind( fileNameCurrent, '-' );
 % underscoreLoc = strfind( fileNameCurrent, '_' );
 % if isempty( dashLoc )
@@ -48,7 +48,7 @@ end
 % ind = 1;
 % for ax = { 'Roll', 'Pitch', 'Yaw' }
 %     subplot( 3, 1, ind )
-figure('name', inputFiles{i} )
+figure('name', inputFiles{n} )
 hold on; grid on; box on;
 stairs( tDes, rad2deg( eulDes.(char(ax)) ) )
 stairs( tExp, rad2deg( eulExp.(char(ax)) ) )

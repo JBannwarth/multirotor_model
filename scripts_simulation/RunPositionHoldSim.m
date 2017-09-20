@@ -33,7 +33,7 @@ UseEstimators( model, true );
 UsePositionController( model, true );
 
 %% 4) Select submodels
-set_param( [model '/Drag model'], 'ModelName', 'DragModelMomentDrag' );
+set_param( [model '/Drag model'], 'ModelName', 'DragModelNew' );
 set_param( [model '/Motor model'], 'ModelName', 'MotorModelVariable' );
 
 %% 5) Loop over the number of iterations
@@ -47,6 +47,14 @@ if ( useClosedContraptionData )
     UseWindProfile( model, false );
     set_param( [model '/Fixed wind input'], 'Value', '[0;0;0]' );
     output(1) = sim( model, 'SimulationMode', 'normal' );
+    userData.ClosedContraption = useClosedContraptionData;
+    userData.Simulation = Simulation;
+    userData.Uav = Uav;
+    userData.Initial = Initial;
+    userData.Blocks.MotorModel = get_param( [model '/Motor model'], 'ModelName' );
+    userData.Blocks.DragModel = get_param( [model '/Drag model'], 'ModelName' );
+    userData.Params = Params;    
+    output(1) = output(1).setUserData( userData );
     index = 1;
 else
     index = 0;
@@ -84,7 +92,7 @@ if ( useClosedContraptionData )
 else
     fileName = 'PosHoldOpenContraption';
 end
-save( ['data_results/' fileName num2str(Uav.M) 'TranslRotDragNoLin' '.mat'], 'output' ) 
+save( ['data_results/' fileName num2str(Uav.M) 'NoRotDrag' '.mat'], 'output' ) 
 
 %% 7) Plot data
 % PlotPositionHoldError;
