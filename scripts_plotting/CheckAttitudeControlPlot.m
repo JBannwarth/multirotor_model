@@ -6,7 +6,7 @@
 outFolder = '../multirotor_model_verification_report/fig';
 fontSize  = 9;
 outSize   = [8.85684 8.85684];
-printResults = true;
+printResults = false;
 
 % Assign values
 q = output.get('logsout').get('q').Values;
