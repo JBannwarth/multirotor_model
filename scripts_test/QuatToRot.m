@@ -1,4 +1,4 @@
-function R = QuaternionToRotationMatrixMat( q )
+function R = QuatToRot( q )
 % QUATERNIONTOROTATIONMATRIXMAT Convert quaternion to rotation matrix
 % Written by: J.X.J. Bannwarth, 27/03/17
 

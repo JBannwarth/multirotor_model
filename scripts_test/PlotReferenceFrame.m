@@ -1,19 +1,31 @@
-function [] = PlotReferenceFrame( q, scale, label )
+function [h] = PlotReferenceFrame( in, scale, label, color )
 % PLOTREFERENCEFRAME.M Plot a 3d reference frame
-% Written by: J.X.J. Bannwarth, 27/03/2017
+%   Written by:    J.X.J. Bannwarth, 27/03/2017
+%   Last modified: J.x.J. Bannwarth, 28/09/2017
 
-    R = QuaternionToRotationMatrixMat( q );
+    sz = size( in );
     
-    xRot = scale .* R * [1; 0; 0];
-    yRot = scale .* R * [0; 1; 0];
-    zRot = scale .* R * [0; 0; 1];
-
-    quiver3(0, 0, 0, xRot(1), xRot(2), xRot(3), 'linewidth', 1.5 )
-    hold on;
-    view([1, 1, 1])
-    quiver3(0, 0, 0, yRot(1), yRot(2), yRot(3), 'linewidth', 1.5 )
-    quiver3(0, 0, 0, zRot(1), zRot(2), zRot(3), 'linewidth', 1.5 )
-
+    if ( ( sz(1) == 3 ) && ( sz(2) == 3 ) )
+        R = in;
+    elseif ( ( sz(1) == 4 ) && ( sz(2) == 1 ) )
+        R = QuatToRot( in );
+    elseif ( ( sz(1) == 1 ) && ( sz(2) == 4 ) )
+        R = QuatToRot( in' );
+    else
+        error( 'Input needs to be a quaternion or a rotation matrix' )
+    end
+    
+    xRot = scale .* R * [1;  0;  0]; % N
+    yRot = scale .* R * [0; -1;  0]; % E
+    zRot = scale .* R * [0;  0; -1]; % D
+    
+    hold on;    
+    % Plot arrows
+    h(1) = quiver3(0, 0, 0, xRot(1), xRot(2), xRot(3), 'linewidth', 1.5, 'color', color );
+    h(2) = quiver3(0, 0, 0, yRot(1), yRot(2), yRot(3), 'linewidth', 1.5, 'color', color );
+    h(3) = quiver3(0, 0, 0, zRot(1), zRot(2), zRot(3), 'linewidth', 1.5, 'color', color );
+        
+    % Add arrow labels
     if ( ~strcmp(label, '') )
         xstr = ['x_{' label '}'];
         ystr = ['y_{' label '}'];
@@ -24,7 +36,14 @@ function [] = PlotReferenceFrame( q, scale, label )
         zstr = 'z';
     end
     
+    xRot = 1.05 * xRot;
+    yRot = 1.05 * yRot;
+    zRot = 1.05 * zRot;
     text(xRot(1), xRot(2), xRot(3), xstr);
     text(yRot(1), yRot(2), yRot(3), ystr);
-    text(zRot(1), zRot(2), zRot(3), zstr)
+    text(zRot(1), zRot(2), zRot(3), zstr);
+    
+    %text(1.3,    0,    0, 'N' );
+    %text(0,   -1.3,    0, 'E' );
+    %text(0,      0, -1.3, 'D' );
 end
