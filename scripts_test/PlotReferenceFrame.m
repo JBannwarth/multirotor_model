@@ -1,7 +1,7 @@
 function [h] = PlotReferenceFrame( in, scale, label, color )
 % PLOTREFERENCEFRAME.M Plot a 3d reference frame
 %   Written by:    J.X.J. Bannwarth, 27/03/2017
-%   Last modified: J.x.J. Bannwarth, 28/09/2017
+%   Last modified: J.x.J. Bannwarth, 02/10/2017
 
     sz = size( in );
     
@@ -27,21 +27,21 @@ function [h] = PlotReferenceFrame( in, scale, label, color )
         
     % Add arrow labels
     if ( ~strcmp(label, '') )
-        xstr = ['x_{' label '}'];
-        ystr = ['y_{' label '}'];
-        zstr = ['z_{' label '}'];
+        xstr = ['${' label '}_x$'];
+        ystr = ['${' label '}_y$'];
+        zstr = ['${' label '}_z$'];
     else
-        xstr = 'x';
-        ystr = 'y';
-        zstr = 'z';
+        xstr = '$x$';
+        ystr = '$y$';
+        zstr = '$z$';
     end
     
     xRot = 1.05 * xRot;
     yRot = 1.05 * yRot;
     zRot = 1.05 * zRot;
-    text(xRot(1), xRot(2), xRot(3), xstr);
-    text(yRot(1), yRot(2), yRot(3), ystr);
-    text(zRot(1), zRot(2), zRot(3), zstr);
+    text(xRot(1), xRot(2), xRot(3), xstr, 'interpreter', 'latex');
+    text(yRot(1), yRot(2), yRot(3), ystr, 'interpreter', 'latex');
+    text(zRot(1), zRot(2), zRot(3), zstr, 'interpreter', 'latex');
     
     %text(1.3,    0,    0, 'N' );
     %text(0,   -1.3,    0, 'E' );
