@@ -25,7 +25,7 @@ set_param( [model '/Drag model'], 'ModelName', 'DragModelMomentDrag' );
 set_param( [model '/Motor model'], 'ModelName', 'MotorModelVariable' );
 
 % Get list of files to plot
-prefix = 'step_att_full';
+prefix = 'step_att_small';
 inputFiles = dir('data_validation');
 inputFiles = {inputFiles.name};
 toRemove = zeros( size(inputFiles) );
@@ -35,14 +35,14 @@ for i = 1:length(inputFiles)
     end
 end
 inputFiles( logical(toRemove) ) = [];
-inputFiles = { 'step_att_pitch-10_1.mat' };
+%inputFiles = { 'step_att_pitch-15_3.mat' };
 
 %% Perform simulation(s)
 for n = 1:length( inputFiles )
     load( inputFiles{n} )
     PrepareAttitudeStepDataSingleAxis;
     Simulation.T_END = qDesInput(end,1);
-    Simulation.T_END = 60;
+    %Simulation.T_END = 60;
     %Initial.Q = [1 1 -1 -1]' .* qDes(1,:)';
     InitializeModel
     LoadPx4Parameters( model, params )
