@@ -6,7 +6,7 @@
 outFolder = '../multirotor_model_verification_report/fig';
 fontSize  = 9;
 outSize   = [8.85684 8.85684];
-printResults = false;
+printResults = true;
 
 % Assign values
 q = output.get('logsout').get('q').Values;
@@ -26,6 +26,13 @@ eulSim.Yaw = unwrap( eulSim.Yaw );
 eulExp.Yaw = unwrap( eulExp.Yaw );
 eulDes.Yaw = unwrap( eulDes.Yaw );
 
+if ( tDes(end) < tSim(end) )
+    eulDes.Roll(end+1) =  eulDes.Roll(end);
+    eulDes.Roll(end+1) =  eulDes.Pitch(end);
+    eulDes.Pitch(end+1) =  eulDes.Yaw(end);
+    tDes(end+1) = tSim(end);
+end
+
 % Get axis to look at
 fileNameCurrent = inputFiles{n};
 % dashLoc = strfind( fileNameCurrent, '-' );
@@ -33,6 +40,12 @@ fileNameCurrent = inputFiles{n};
 % if isempty( dashLoc )
 %     dashLoc = strfind( fileNameCurrent, '+' );
 % end
+
+if ~isempty( strfind( fileNameCurrent, '+' ) )
+    legendLoc = 'southeast';
+else
+    legendLoc = 'northeast';
+end
 if ~isempty( strfind( fileNameCurrent, 'roll' ) )
     ax = 'Roll';
 elseif ~isempty( strfind( fileNameCurrent, 'pitch' ) )
@@ -57,7 +70,7 @@ xlim( [0 inf] )
 %ylim( [-inf inf] )
 xlabel( 'Time (s)', 'interpreter', 'latex' )
 ylabel( [ ax ' (deg) ' ], 'interpreter', 'latex' )
-legend( { 'Des', 'Exp', 'Sim' }, 'location', 'southeast', 'interpreter', 'latex')
+legend( { 'Des', 'Exp', 'Sim' }, 'location', legendLoc, 'interpreter', 'latex')
 %     ind = ind + 1;
 % end
 

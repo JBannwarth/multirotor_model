@@ -35,14 +35,14 @@ for i = 1:length(inputFiles)
     end
 end
 inputFiles( logical(toRemove) ) = [];
-%inputFiles = { 'step_att_pitch-15_3.mat' };
+%inputFiles = { 'step_att_small_pitch-5_7.mat' };
 
 %% Perform simulation(s)
 for n = 1:length( inputFiles )
     load( inputFiles{n} )
     PrepareAttitudeStepDataSingleAxis;
     Simulation.T_END = qDesInput(end,1);
-    %Simulation.T_END = 60;
+    %Simulation.T_END = 35;
     %Initial.Q = [1 1 -1 -1]' .* qDes(1,:)';
     InitializeModel
     LoadPx4Parameters( model, params )
