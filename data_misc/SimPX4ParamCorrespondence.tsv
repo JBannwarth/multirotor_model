@@ -1,0 +1,15 @@
+attCtrlBus.controller_status.roll_rate_integ    mc_att_ctrl_status.roll_rate_integ
+attCtrlBus.controller_status.pitch_rate_integ   mc_att_ctrl_status.pitch_rate_integ
+attCtrlBus.controller_status.yaw_rate_integ mc_att_ctrl_status.yaw_rate_integ
+attCtrlBus.controller_status.timestamp  mc_att_ctrl_status.timestamp
+attCtrlBus.actuators.control    actuators_controls.control_0_,actuators_controls.control_1_,actuators_controls.control_2_,actuators_controls.control_3_,actuators_controls.control_4_,actuators_controls.control_5_,actuators_controls.control_6_,actuators_controls.control_7_
+attCtrlBus.actuators.timestamp  actuators_controls.timestamp
+attCtrlBus.v_rates_sp.roll  vehicle_rates_setpoint.roll
+attCtrlBus.v_rates_sp.pitch vehicle_rates_setpoint.pitch
+attCtrlBus.v_rates_sp.yaw   vehicle_rates_setpoint.yaw
+attCtrlBus.v_rates_sp.thrust    vehicle_rates_setpoint.thrust
+attCtrlBus.v_rates_sp.timestamp vehicle_rates_setpoint.timestamp
+pwm actuator_outputs.output_0_,actuator_outputs.output_1_,actuator_outputs.output_2_,actuator_outputs.output_3_
+stickPos    rc_channels.channels_0_,rc_channels.channels_1_,rc_channels.channels_2_,rc_channels.channels_3_
+nuBodyMeasured  vehicle_attitude.rollspeed,vehicle_attitude.pitchspeed,vehicle_attitude.yawspeed
+qMeasured   vehicle_attitude.q_0_,vehicle_attitude.q_1_,vehicle_attitude.q_2_,vehicle_attitude.q_3_
