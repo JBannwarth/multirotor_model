@@ -62,20 +62,23 @@ end
 % for ax = { 'Roll', 'Pitch', 'Yaw' }
 %     subplot( 3, 1, ind )
 figure('name', inputFiles{n} )
+for i = 1:2
+subplot(2,1,i)
 hold on; grid on; box on;
 stairs( tDes, rad2deg( eulDes.(char(ax)) ) )
 stairs( tExp, rad2deg( eulExp.(char(ax)) ) )
 stairs( tSim, rad2deg( eulSim.(char(ax)) ) )
 xlim( [0 inf] )
 %ylim( [-inf inf] )
-xlabel( 'Time (s)', 'interpreter', 'latex' )
-ylabel( [ ax ' (deg) ' ], 'interpreter', 'latex' )
-legend( { 'Des', 'Exp', 'Sim' }, 'location', legendLoc, 'interpreter', 'latex')
+xlabel( 'Time (s)' )
+ylabel( [ ax ' (deg) ' ] )
+legend( { 'Des', 'Exp', 'Sim' }, 'location', legendLoc)
 %     ind = ind + 1;
 % end
+end
 
 if ( printResults )
     fileName = [ outFolder '/' fileNameCurrent(1:end-4)];
     SetFigProp( outSize , fontSize );
-    MatlabToLatexEps( fileName, [], false );
+    MatlabToLatexEps( fileName );
 end
