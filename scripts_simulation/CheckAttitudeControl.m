@@ -17,7 +17,7 @@ mpc_self;
 
 %% Set up model
 UseWindProfile( model, false );
-UseEstimators( model, true );
+UseEstimators( model, false );
 UsePositionController( model, false );
 set_param( [model '/att_thrustDesSwitch'], 'sw', '1' )
 set_param( [model '/Fixed wind input'], 'value', '[0 0 0]' );
