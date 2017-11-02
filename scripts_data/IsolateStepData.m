@@ -43,7 +43,9 @@ for i = 1:length(start)
     [ eulExp.Roll, eulExp.Pitch, eulExp.Yaw ] = QuatToEuler( qExp );
     [ eulDes.Roll, eulDes.Pitch, eulDes.Yaw ] = QuatToEuler( qDes );
     
+    flogOriginal = CropFLog( flogOriginal, start(i), stop(i), 1 );
+    
     save( fullfile(projectRoot, 'data_validation', ['step_' name{i}] ), 'tDes', 'qDes', 'thrustDes', 'yawRateDes', ...
-        'tExp', 'qExp', 'eulExp', 'eulDes', 'params' )
+        'tExp', 'qExp', 'eulExp', 'eulDes', 'params', 'flogOriginal' )
     
 end

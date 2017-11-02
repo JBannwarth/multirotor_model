@@ -8,6 +8,8 @@ model = 'MultirotorSimPx4SeparateRotors';
 load_system(model);
 
 %% Initialization
+project = simulinkproject;
+projectRoot = project.RootFolder;
 Simulation.TS_MAX = 0.01;
 InitializeModel
 Px4Bus;
@@ -59,6 +61,7 @@ for n = 1:length( inputFiles )
     userData.Blocks.DragModel = get_param( [model '/Drag model'], 'ModelName' );
     userData.Params = params;    
     output = output.setUserData( userData );
+    save( fullfile(projectRoot, 'data_results', [ inputFiles{n}(1:end-4) 'Sim.mat' ] ), 'output' );
 %     set_param( [model '/Drag model'], 'ModelName', 'DragModelNew' );
 %     out = sim( model, 'SimulationMode', 'normal');
     CheckAttitudeControlPlot;
