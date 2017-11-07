@@ -34,6 +34,9 @@ eulSim.Yaw = unwrap( eulSim.Yaw );
 
 tSimPwm = pwm.Time - tDesOffset;
 pwmSim = pwm.Data;
+% Reorder PWM to match experimental order
+% [ px4Pwm(3); px4Pwm(2); px4Pwm(4); px4Pwm(1) ];
+pwmSim = [ pwmSim(:,4) pwmSim(:,2) pwmSim(:,1) pwmSim(:,3) ];
 
 % Unwrap (need to write function to do this without DSP toolbox)
 eulExp.Yaw = unwrap( eulExp.Yaw );
@@ -89,12 +92,18 @@ legend( { 'Des', 'Exp', 'Sim' }, 'location', legendLoc)
 %     ind = ind + 1;
 % end
 %end
+
 subplot(2,1,2)
 hold on; grid on; box on;
-stairs( tExpPwm, pwmExp )
-stairs( tSimPwm, 1000+1000.*pwmSim )
+col = get(gca,'colororder');
+for i = 1:4
+    stairs( tExpPwm, pwmExp(:,i), 'color', col(i,:) )
+    stairs( tSimPwm, 1000+1000.*pwmSim(:,i), '--', 'color', col(i,:) )
+end
 xlim( [0 inf] )
-legend( {'Exp1', 'Exp2', 'Exp3', 'Exp4', 'Sim1', 'Sim2', 'Sim3', 'Sim4'} )
+xlabel( 'Time (s)' )
+ylabel( 'PWM magnitude (-)' )
+legend( {'Exp1', 'Sim1', 'Exp2', 'Sim2', 'Exp3', 'Sim3', 'Exp4', 'Sim4'} )
 
 SetFigProp( outSize , fontSize );
 if ( printResults )

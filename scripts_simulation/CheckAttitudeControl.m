@@ -5,6 +5,7 @@ close all;
 
 %% Load model
 model = 'MultirotorSimPx4SeparateRotors';
+dragModel = 'DragModelMomentDrag';
 load_system(model);
 
 %% Initialization
@@ -12,8 +13,8 @@ project = simulinkproject;
 projectRoot = project.RootFolder;
 Simulation.TS_MAX = 0.01;
 InitializeModel
-Motor.B([1 3]) = 1.4* Motor.B([1 3]);
-Motor.B([2 4]) = 0.6* Motor.B([2 4]);
+%Motor.B([1 3]) = 1.4* Motor.B([1 3]);
+%Motor.B([2 4]) = 1.5* Motor.B([2 4]);
 Px4Bus;
 selfBus;
 mpc_self;
@@ -25,7 +26,7 @@ UseEstimators( model, false );
 UsePositionController( model, false );
 set_param( [model '/att_thrustDesSwitch'], 'sw', '1' )
 set_param( [model '/Fixed wind input'], 'value', '[0 0 0]' );
-set_param( [model '/Drag model'], 'ModelName', 'DragModelMomentDrag' );
+set_param( [model '/Drag model'], 'ModelName', dragModel );
 set_param( [model '/Motor model'], 'ModelName', 'MotorModelVariable' );
 
 % Get list of files to plot
@@ -48,16 +49,16 @@ for n = 1:length( inputFiles )
     Simulation.T_END = qDesInput(end,1);
     %Simulation.T_END = 35;
     % Initial.Q = [1 1 -1 -1]' .* qDes(1,:)';
-    Uav.M = Uav.M*1.5;
+    %Uav.M = Uav.M*1.5;
     InitializeModel
-    Motor.B([1 3]) = 1.3* Motor.B([1 3]);
-    Motor.B([2 4]) = 0.7* Motor.B([2 4]);
+    %Motor.B([1 3]) = 1.3* Motor.B([1 3]);
+    %Motor.B([2 4]) = 1.5* Motor.B([2 4]);
     LoadPx4Parameters( model, params )
     set_param( [model '/Sensor Model/attitude_estimator_q'], ...
         'ATT_EXT_HDG_M', '2')
     set_param( [model '/Sensor Model/attitude_estimator_q'], ...
         'INIT_Q', [ '[' num2str( Initial.Q' ) ']' ] )
-    set_param( [model '/Drag model'], 'ModelName', 'DragModelMomentDrag' );
+    set_param( [model '/Drag model'], 'ModelName', dragModel );
     output = sim( model, 'SimulationMode', 'normal');
     userData.Simulation = Simulation;
     userData.Uav = Uav;

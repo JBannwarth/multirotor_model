@@ -1,6 +1,7 @@
 # Windows default autosave extension
 *.asv
 *.autosave
+*.original
 
 # OSX / *nix default autosave extension
 *.m~
