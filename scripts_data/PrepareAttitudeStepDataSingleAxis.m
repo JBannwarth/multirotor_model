@@ -48,4 +48,4 @@ end
 tDesOffset = 30;
 qDesInput = [ tDes+tDesOffset, qDes ];
 thrustDesInput = [ tDes+tDesOffset, thrustDes ];
-yawRateDesInput = [ tDes+tDesOffset, yawRateDes ];
+yawRateDesInput = [ tDes+tDesOffset, zeros(size(yawRateDes)) ]; % yawRateDes
