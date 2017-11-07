@@ -45,7 +45,7 @@ if toPlot
 end
 
 % Add offset to give estimator the time to converge and format data for sim
-tDesOffset = 0;%60;
+tDesOffset = 30;
 qDesInput = [ tDes+tDesOffset, qDes ];
 thrustDesInput = [ tDes+tDesOffset, thrustDes ];
-yawRateDesInput = [ tDes+tDesOffset, yawRateDes ];
+yawRateDesInput = [ tDes+tDesOffset, zeros(size(yawRateDes)) ]; % yawRateDes

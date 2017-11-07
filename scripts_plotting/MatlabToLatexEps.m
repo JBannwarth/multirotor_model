@@ -1,7 +1,23 @@
-function MatlabToLatexEps(filename, res, printEps)
+function MatlabToLatexEps(filename, varargin )
 %MATLABTOLATEXEPS Print figure to PDF, EPS (optional), and PNG (optional)
+%   MatlabToLatexEps(filename)
+%   MatlabToLatexEps(filename, res)
+%   MatlabToLatexEps(filename, res, printEps)
 %   Written by: Z.J. Chen
-%   Last modified by: J.X.J. Bannwarth, 10/05/2017
+%   Last modified by: J.X.J. Bannwarth, 11/10/2017
+    nArg = length(varargin);
+    res = [];
+    printEps = false;
+    
+    if ( nArg == 1 )
+        res = varargin{1};
+    elseif ( nArg == 2 )
+        res = varargin{1};
+        printEps = varargin{2};
+    elseif ( nArg > 2 )
+        error('Too many input');
+    end
+
     if ~isempty(res)
         % Set quality
         resString = sprintf('-r%d', res);

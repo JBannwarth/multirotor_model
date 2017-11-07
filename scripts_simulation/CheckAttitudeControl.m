@@ -8,8 +8,12 @@ model = 'MultirotorSimPx4SeparateRotors';
 load_system(model);
 
 %% Initialization
+project = simulinkproject;
+projectRoot = project.RootFolder;
 Simulation.TS_MAX = 0.01;
 InitializeModel
+Motor.B([1 3]) = 1.4* Motor.B([1 3]);
+Motor.B([2 4]) = 0.6* Motor.B([2 4]);
 Px4Bus;
 selfBus;
 mpc_self;
@@ -17,7 +21,7 @@ mpc_self;
 
 %% Set up model
 UseWindProfile( model, false );
-UseEstimators( model, true );
+UseEstimators( model, false );
 UsePositionController( model, false );
 set_param( [model '/att_thrustDesSwitch'], 'sw', '1' )
 set_param( [model '/Fixed wind input'], 'value', '[0 0 0]' );
@@ -25,7 +29,7 @@ set_param( [model '/Drag model'], 'ModelName', 'DragModelMomentDrag' );
 set_param( [model '/Motor model'], 'ModelName', 'MotorModelVariable' );
 
 % Get list of files to plot
-prefix = 'step_att_full';
+prefix = 'step_att_small';
 inputFiles = dir('data_validation');
 inputFiles = {inputFiles.name};
 toRemove = zeros( size(inputFiles) );
@@ -35,16 +39,19 @@ for i = 1:length(inputFiles)
     end
 end
 inputFiles( logical(toRemove) ) = [];
-inputFiles = { 'step_att_pitch-10_1.mat' };
+inputFiles = { 'step_att_small_pitch-5_7.mat' };
 
 %% Perform simulation(s)
 for n = 1:length( inputFiles )
     load( inputFiles{n} )
     PrepareAttitudeStepDataSingleAxis;
     Simulation.T_END = qDesInput(end,1);
-    Simulation.T_END = 60;
-    %Initial.Q = [1 1 -1 -1]' .* qDes(1,:)';
+    %Simulation.T_END = 35;
+    % Initial.Q = [1 1 -1 -1]' .* qDes(1,:)';
+    Uav.M = Uav.M*1.5;
     InitializeModel
+    Motor.B([1 3]) = 1.3* Motor.B([1 3]);
+    Motor.B([2 4]) = 0.7* Motor.B([2 4]);
     LoadPx4Parameters( model, params )
     set_param( [model '/Sensor Model/attitude_estimator_q'], ...
         'ATT_EXT_HDG_M', '2')
@@ -59,6 +66,7 @@ for n = 1:length( inputFiles )
     userData.Blocks.DragModel = get_param( [model '/Drag model'], 'ModelName' );
     userData.Params = params;    
     output = output.setUserData( userData );
+    save( fullfile(projectRoot, 'data_results', [ inputFiles{n}(1:end-4) 'Sim.mat' ] ), 'output' );
 %     set_param( [model '/Drag model'], 'ModelName', 'DragModelNew' );
 %     out = sim( model, 'SimulationMode', 'normal');
     CheckAttitudeControlPlot;
