@@ -22,6 +22,11 @@ GRAVITY = 9.80665; % [m/s^2]
 MotorRcTimerMt2610
 UavQuadcopter460mm
 
+%% AERO PARAMETERS
+if ~exist( 'Aero', 'var' )
+    load( 'FitsCT1fixCT2zeroedCDRoterror.mat' );
+end
+
 %% ROTOR/MOTOR DYNAMICS
 % Single motor thrust required for hover [N]
 Uav.THRUST_HOVER = abs(Uav.G(3)) / 4;

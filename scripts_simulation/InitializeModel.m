@@ -21,9 +21,12 @@ init_eta = [0, 0, 0];
 Initial.Q = EulerToQuat(init_eta)';
 
 if ~exist( 'model', 'var' )
-    error( 'Need to define variable ''model'' before calling this function' );
+    % Default
+    model = 'MultirotorSimPx4SeparateRotors';
+    %error( 'Need to define variable ''model'' before calling this function' );
 end
 
+load_system(model);
 set_param( [ model '/Sensor Model/attitude_estimator_q' ], ...
     'INIT_Q', [ '[' num2str( Initial.Q' ) ']' ] )
 

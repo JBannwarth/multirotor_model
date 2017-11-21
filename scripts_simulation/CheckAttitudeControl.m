@@ -5,7 +5,7 @@ close all;
 
 %% Load model
 model = 'MultirotorSimPx4SeparateRotors';
-dragModel = 'DragModelMomentDrag';
+dragModel = 'DragModelMomentDragNew';
 load_system(model);
 
 %% Initialization
@@ -27,7 +27,7 @@ UsePositionController( model, false );
 set_param( [model '/att_thrustDesSwitch'], 'sw', '1' )
 set_param( [model '/Fixed wind input'], 'value', '[0 0 0]' );
 set_param( [model '/Drag model'], 'ModelName', dragModel );
-set_param( [model '/Motor model'], 'ModelName', 'MotorModelVariable' );
+set_param( [model '/Motor model'], 'ModelName', 'MotorModelNew' );
 
 % Get list of files to plot
 prefix = 'step_att_small';

@@ -33,8 +33,8 @@ UseEstimators( model, true );
 UsePositionController( model, true );
 
 %% 4) Select submodels
-set_param( [model '/Drag model'],  'ModelName', 'DragModelMomentDrag' );
-set_param( [model '/Motor model'], 'ModelName', 'MotorModelVariable' );
+set_param( [model '/Drag model'],  'ModelName', 'DragModelMomentDragNew' );
+set_param( [model '/Motor model'], 'ModelName', 'MotorModelNew' );
 
 %% 5) Loop over the number of iterations
 load( [ inFolder '/' windFiles{1} suffix '.mat' ] )
@@ -92,7 +92,7 @@ if ( useClosedContraptionData )
 else
     fileName = 'PosHoldOpenContraption';
 end
-save( ['data_results/' fileName num2str(Uav.M) 'RotDragLinPwmOffset' '.mat'], 'output' ) 
+save( ['data_results/' fileName num2str(Uav.M) 'RotDragNew' '.mat'], 'output' ) 
 
 %% 7) Plot data
 % PlotPositionHoldError;
