@@ -5,7 +5,7 @@ close all; clc;
 clear all; %#ok<CLALL>
 
 %% 1) Load input data
-useClosedContraptionData = false;
+useClosedContraptionData = true;
 
 if ( useClosedContraptionData )
     windFiles = { 'p5_z150_tfwt15', 'p5_z150_tfwt20', 'p5_z150_tfwt25', ...
@@ -92,7 +92,7 @@ if ( useClosedContraptionData )
 else
     fileName = 'PosHoldOpenContraption';
 end
-save( ['data_results/' fileName num2str(Uav.M) 'RotDragNew' '.mat'], 'output' ) 
+save( ['data_results/' fileName num2str(Uav.M) 'RotDragNewWindDelay' '.mat'], 'output' ) 
 
 %% 7) Plot data
 % PlotPositionHoldError;
