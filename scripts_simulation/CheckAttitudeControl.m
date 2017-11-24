@@ -40,7 +40,7 @@ for i = 1:length(inputFiles)
     end
 end
 inputFiles( logical(toRemove) ) = [];
-inputFiles = { 'step_att_small_pitch-5_7.mat' };
+%inputFiles = { 'step_att_small_pitch-5_7.mat' };
 
 %% Perform simulation(s)
 for n = 1:length( inputFiles )

@@ -32,7 +32,7 @@ end
 Uav.THRUST_HOVER = abs(Uav.G(3)) / 4;
 
 % Motor speed at hover thrust [rad/s]
-Uav.OMEGA_HOVER = 5.16e2;
+Uav.OMEGA_HOVER = sqrt( Uav.THRUST_HOVER / (0.5*0.25*Uav.RHO_AIR*Aero.CT1.coefs(1)) );
 % sqrt(Uav.THRUST_HOVER/Motor.K);
 
 % Estimated throttle required to maintain hover
