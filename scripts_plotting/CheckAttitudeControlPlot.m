@@ -6,12 +6,14 @@
 outFolder = '../multirotor_model_verification_report/fig';
 fontSize  = 9;
 outSize   = [8.85684 8.85684];
-printResults = false;
+printResults = true;
 
-% Assign values
+%% Get data from logs
+logsout = output.got('logsout');
 q = output.get('logsout').get('q').Values;
 eta = output.get('logsout').get('eta').Values;
 pwm = output.get('logsout').get('pwm').Values;
+pitch = output.get('logsout').get('pitch').Values;
 
 if (exist('flogOriginal'))
     pwmExp = [ flogOriginal.actuator_outputs.output_0_, ...
@@ -32,6 +34,11 @@ etaSim = [ ones(qSimN,1), -ones(qSimN,1), -ones(qSimN,1)] .* eta.Data;
 eulSim.Roll = etaSim(:,1); eulSim.Pitch = etaSim(:,2); eulSim.Yaw = etaSim(:,3);
 eulSim.Yaw = unwrap( eulSim.Yaw );
 
+errorSim.Pitch = pitch.Data(:,2) - pitch.Data(:,1);
+avgErrSim = abs(mean(errorSim.Pitch));
+maxErrSim = max(abs(errorSim.Pitch));
+rmsErrSim = rms(errorSim.Pitch);
+
 tSimPwm = pwm.Time - tDesOffset;
 pwmSim = pwm.Data;
 % Reorder PWM to match experimental order
@@ -48,6 +55,33 @@ if ( tDes(end) < tSim(end) )
     eulDes.Pitch(end+1) =  eulDes.Yaw(end);
     tDes(end+1) = tSim(end);
 end
+
+eulDes.Roll = eulDes.Roll( tDes >= 0 );
+eulDes.Pitch = eulDes.Pitch( tDes >= 0 );
+eulDes.Yaw = eulDes.Yaw( tDes >= 0 );
+tDes = tDes( tDes >= 0 );
+
+% if ( (tDes(1) >= tExp(1)) && (tDes(end) <= tExp(end)) )
+%     tResample = tDes;
+% elseif ( (tDes(1) <= tExp(1)) && (tDes(end) >= tExp(end)) )
+%     tResample = tExp;
+% else
+    tResample = max([min(tDes), min(tExp) ]):median(diff(tExp)):min([max(tDes), max(tExp) ]);
+% end
+
+tResample = tResample( tResample >= 0 );
+
+errorExp.Pitch = resample(timeseries( eulDes.Pitch, tDes), tResample) - ...
+    resample(timeseries( eulExp.Pitch, tExp ), tResample) ;
+errorExp.Roll = resample(timeseries( eulDes.Roll, tDes), tResample) - ...
+    resample(timeseries( eulExp.Roll, tExp ), tResample);
+errorExp.Yaw = resample(timeseries( eulDes.Yaw, tDes), tResample) - ...
+    resample(timeseries( eulExp.Yaw, tExp ), tResample);
+avgErrExp = abs(rad2deg(mean(errorExp.Pitch.Data)));
+maxErrExp = rad2deg(max(abs(errorExp.Pitch.Data)));
+rmsErrExp = rad2deg(rms(errorExp.Pitch.Data));
+
+tableStr = sprintf('%f & %f & %f & %f & %f & %f \\\\', avgErrSim, avgErrExp, maxErrSim, maxErrExp, rmsErrSim, rmsErrExp);
 
 % Get axis to look at
 fileNameCurrent = inputFiles{n};

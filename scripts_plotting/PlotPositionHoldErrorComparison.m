@@ -5,10 +5,10 @@
 close all;
 
 %% Load data
-toLoad = { ...
+% toLoad = { ...
 %     'PosHoldOpenContraption1.5TranslRotDrag.mat', ...
-    'PosHoldOpenContraption1.5NoRotDrag.mat', ...
-    'PosHoldOpenContraption1.5RotDragNewWindDelay.mat'
+%     'PosHoldOpenContraption1.5NoRotDrag.mat', ...
+%     'PosHoldOpenContraption1.5RotDragNewWindDelay.mat'
 %     'PosHoldOpenContraption1.5TranslRotDragNoLin.mat', ...
 %     'PosHoldOpenContraption1.5LinRotDrag.mat', ...
 %     'PosHoldOpenContraption1.5RotDragFixedController.mat', ...
@@ -17,7 +17,7 @@ toLoad = { ...
 %     'PosHoldOpenContraption1.5RotDragLinPwmOffset.mat', ...
 %     'PosHoldOpenContraption1.5RotDragNewDamping.mat', ...
 %       'PosHoldOpenContraption1.5LinRotDragOldMotor.mat' ...
-    };
+%     };
 % toLoad = { ...
 % %     'PosHoldClosedContraption1.204TranslRotDrag.mat', ...
 % %     'PosHoldClosedContraption1.204TranslRotDragNoLin.mat', ...
@@ -26,11 +26,21 @@ toLoad = { ...
 %     'PosHoldClosedContraption1.204RotDragNewWindDelay.mat'
 % %     'PosHoldOpenContraption1.5LinRotDragOldMotor.mat' ...
 %     };
-%\mathbf{M}_D
+toLoad = { 'PosHoldOpenContraption1.5TurbSimTest30.mat', ...
+           'PosHoldOpenContraption1.5TurbSimTest35.mat', ...
+           'PosHoldOpenContraption1.5TurbSimTest40.mat', ...
+           'PosHoldOpenContraption1.5TurbSimTest45.mat', ...
+           'PosHoldOpenContraption1.5TurbSimTest50.mat' ...
+           };
 description = { ...
+    '30', ...
+    '35', ...
+    '40', ...
+    '45', ...
+    '50' ...
 %     '$\propto {^\mathcal{B}\mathbf{V}}_\mathrm{app}, {^\mathcal{B}}${\boldmath$\nu$}$^2$', ...
-    'No drag', ...
-    'newest'
+%     'No drag', ...
+%     'newest'
 %     '$\propto {^\mathcal{B}\mathbf{V}}_\mathrm{app}$', ...
 %     '$\propto {^\mathcal{B}}${\boldmath$\nu$}$^2$', ...
 %     'fixed ctrl', ...
@@ -51,7 +61,7 @@ end
 outFolder = '../multirotor_model_verification_report/fig';
 fontSize  = 9;
 outSize   = [8.85684 8.85684];
-printResults = true;
+printResults = false;
 
 windXLimits = [0 7];
 
@@ -70,15 +80,19 @@ else
     load( 'ExpFlightDataWide' )
 end
 
+binEdges = linspace(-.5,.5,100)';
+binWidth = mean(diff(binEdges));
+binMid = binEdges(1:end-1)+binWidth;
 for i = 1:length( dataSim )
     for j = 1:length( dataSim{i} )
         % Get error
         Simulation = dataSim{i}(j).getSimulationMetadata.UserData.Simulation;
-        tCuttOff = Simulation.T_END / 2;
+        tCutOff = 100; % Simulation.T_END / 2;
+        tCutOffEnd = tCutOff + 120; % Simulation.T_END;
         logsout = dataSim{i}(j).get('logsout');
-        error(i,j).x = getsampleusingtime( logsout.get('posTrackingX').Values, tCuttOff, Simulation.T_END);
-        error(i,j).y  = getsampleusingtime( logsout.get('posTrackingY').Values, tCuttOff, Simulation.T_END);
-        error(i,j).z  = getsampleusingtime( logsout.get('posTrackingZ').Values, tCuttOff, Simulation.T_END);
+        error(i,j).x = getsampleusingtime( logsout.get('posTrackingX').Values, tCutOff, tCutOffEnd);
+        error(i,j).y  = getsampleusingtime( logsout.get('posTrackingY').Values, tCutOff, tCutOffEnd);
+        error(i,j).z  = getsampleusingtime( logsout.get('posTrackingZ').Values, tCutOff, tCutOffEnd);
 
         meanE.x(i,j) = mean( error(i,j).x );
         meanE.y(i,j) = mean( error(i,j).y );
@@ -87,14 +101,56 @@ for i = 1:length( dataSim )
         stdE.y(i,j)  =  std( error(i,j).y );
         stdE.z(i,j)  =  std( error(i,j).z );
 
+        temp(i,j).Nx = histcounts(squeeze(error(i,j).x.Data),binEdges+meanE.x(i,j),'Normalization','pdf');
+        temp(i,j).Ny = histcounts(squeeze(error(i,j).y.Data),binEdges+meanE.y(i,j),'Normalization','pdf');
+        temp(i,j).Nz = histcounts(squeeze(error(i,j).z.Data),binEdges+meanE.z(i,j),'Normalization','pdf');
+        temp(i,j).NTheoreticalx = (1/sqrt(2*pi*stdE.x(i,j)^2))*exp(-(binMid).^2/(2*stdE.x(i,j)^2));
+        temp(i,j).NTheoreticaly = (1/sqrt(2*pi*stdE.y(i,j)^2))*exp(-(binMid).^2/(2*stdE.y(i,j)^2));
+        temp(i,j).NTheoreticalz = (1/sqrt(2*pi*stdE.z(i,j)^2))*exp(-(binMid).^2/(2*stdE.z(i,j)^2));
+        
         % Pitch
-        angle(i,j).pitch = getsampleusingtime( logsout.get('pitch').Values, tCuttOff, Simulation.T_END);
+        angle(i,j).roll = getsampleusingtime( logsout.get('roll').Values, tCutOff, tCutOffEnd);
+        angle(i,j).pitch = getsampleusingtime( logsout.get('pitch').Values, tCutOff, tCutOffEnd);
+        angle(i,j).yaw = getsampleusingtime( logsout.get('yaw').Values, tCutOff, tCutOffEnd);
+        meanTmp = mean( angle(i,j).roll );
+        stdTmp =  std( angle(i,j).roll );
+        meanA.roll(i,j) = meanTmp(1);
+        stdA.roll(i,j)  = stdTmp(1);
         meanTmp = mean( angle(i,j).pitch );
         stdTmp =  std( angle(i,j).pitch );
         meanA.pitch(i,j) = meanTmp(1);
         stdA.pitch(i,j)  = stdTmp(1);
+        meanTmp = mean( angle(i,j).yaw );
+        stdTmp =  std( angle(i,j).yaw );
+        meanA.yaw(i,j) = meanTmp(1);
+        stdA.yaw(i,j)  = stdTmp(1);
     end
 end
+
+%% JEREMY
+figure('color',[1,1,1])
+hold on; grid on; box on;
+j = 1;
+for i=1:length(logs)
+    plot(windSpeed(i)+(temp(i,j).Nx)/max(temp(i,j).Nx)*0.4,binMid+meanE.x(i,j),'k.')
+    plot(windSpeed(i)+(temp(i,j).NTheoreticalx)/max(temp(i,j).NTheoreticalx)*0.4,binMid+meanE.x(i,j),'k')
+end
+
+figure('color',[1,1,1])
+hold on; grid on; box on;
+for i=1:length(logs)
+    plot(windSpeed(i)+(temp(i,j).Ny)/max(temp(i,j).Ny)*0.4,binMid+meanE.y(i,j),'k.')
+    plot(windSpeed(i)+(temp(i,j).NTheoreticaly)/max(temp(i,j).NTheoreticaly)*0.4,binMid+meanE.y(i,j),'k')
+end
+
+figure('color',[1,1,1])
+hold on; grid on; box on;
+for i=1:length(logs)
+    plot(windSpeed(i)+(temp(i,j).Nz)/max(temp(i,j).Nz)*0.4,binMid+meanE.z(i,j),'k.')
+    plot(windSpeed(i)+(temp(i,j).NTheoreticalz)/max(temp(i,j).NTheoreticalz)*0.4,binMid+meanE.z(i,j),'k')
+end
+
+%return
 
 %% Plot data
 legendStr = description;
@@ -106,7 +162,7 @@ for i = 1:length(ax)
     figure( 'Name', [ 'Simulation error statistics - ' ax(i) ] )
     hold on; grid on; box on
     for j = 1:size(meanE.(ax(i)),1)
-        plot( avgWindSpeed, stdE.(ax(i))(j,:), markers(j) )
+        plot( avgWindSpeed(j), stdE.(ax(i))(j,:), markers(j) )
     end
     plot( avgWindSpeed, avgStd.(ax(i)), markers(j+1) ) % Experimental
     axErr(i) = gca;
@@ -118,10 +174,10 @@ for i = 1:length(ax)
     
     xlim( windXLimits )
     ylim( [0 axErr(1).YLim(2)] )
+    SetFigProp( outSize , fontSize );
     
     if ( printResults )
         fileName = [ outFolder '/' 'UavErrorMean-' ax(i) '-simvexp' suffix];
-        SetFigProp( outSize , fontSize );
         MatlabToLatexEps( fileName, [], false );
     end
 end
@@ -129,46 +185,51 @@ end
 linkaxes( axErr )
 
 % Angles mean
+ax = {'roll', 'pitch', 'yaw'};
 figure; grid on; box on; hold on;
-for j = 1:size(meanA.pitch,1)
-    plot( avgWindSpeed, meanA.pitch(j,:), markers(j) )
-end
-plot(avgWindSpeed, -rad2deg(avgPitch), markers(j+1) ) % Experimental
-    
-axA = gca;
-xlabel('Mean wind speed (m/s)', 'Interpreter', 'latex');
-ylabel('Mean hover pitch angle (deg)', 'Interpreter', 'latex');
-legend( legendStr, 'Interpreter', 'LaTeX', 'Orientation', ...
-    'Vertical', 'Location', 'NorthWest' )
-set( axA, 'TickLabelInterpreter', 'latex' )
+for i = 1:length( ax )
+    for j = 1:size(meanA.(ax{i}),1)
+        plot( avgWindSpeed(j), meanA.(ax{i})(j,:), markers(j) )
+    end
+    plot(avgWindSpeed, -rad2deg(avgAngle.(ax{i})), markers(j+1) ) % Experimental
+    axA = gca;
+    xlabel('Mean wind speed (m/s)', 'Interpreter', 'latex');
+    ylabel(['Mean hover ' ax{i} ' angle (deg)'], 'Interpreter', 'latex');
+    legend( legendStr, 'Interpreter', 'LaTeX', 'Orientation', ...
+        'Vertical', 'Location', 'NorthWest' )
+    set( axA, 'TickLabelInterpreter', 'latex' )
 
-xlim( windXLimits )
-ylim([0 axA.YLim(2)])
+    xlim( windXLimits )
+    ylim([0 axA.YLim(2)])
+    SetFigProp( outSize , fontSize );
+end
 
 if ( printResults )
     fileName = [ outFolder '/' 'PitchMean-' 'simvexp' suffix];
-    SetFigProp( outSize , fontSize );
     MatlabToLatexEps( fileName, [], false );
 end
 
 % Angles std
-figure; grid on; box on; hold on;
-for j = 1:size(stdA.pitch,1)
-    plot( avgWindSpeed, stdA.pitch(j,:), markers(j) )
-end
-plot(avgWindSpeed, rad2deg(avgStd.pitch), markers(j+1) ) % Experimental
-axAStd = gca;
-xlabel('Mean wind speed (m/s)', 'Interpreter', 'latex');
-ylabel('Stdev pitch angle (deg)', 'Interpreter', 'latex');
-legend( legendStr, 'Interpreter', 'LaTeX', 'Orientation', ...
-    'Vertical', 'Location', 'NorthWest' )
-set( axAStd, 'TickLabelInterpreter', 'latex' )
+ax = {'roll', 'pitch', 'yaw'};
+for i = 1:length( ax )
+    figure; grid on; box on; hold on;
+    for j = 1:size(stdA.(ax{i}),1)
+        plot( avgWindSpeed(j), stdA.(ax{i})(j,:), markers(j) )
+    end
+    plot(avgWindSpeed, rad2deg(avgStd.(ax{i})), markers(j+1) ) % Experimental
+    axAStd = gca;
+    xlabel('Mean wind speed (m/s)', 'Interpreter', 'latex');
+    ylabel(['Stdev ' ax{i} ' angle (deg)'], 'Interpreter', 'latex');
+    legend( legendStr, 'Interpreter', 'LaTeX', 'Orientation', ...
+        'Vertical', 'Location', 'NorthWest' )
+    set( axAStd, 'TickLabelInterpreter', 'latex' )
 
-xlim( windXLimits )
-ylim([0 axAStd.YLim(2)])
+    xlim( windXLimits )
+    ylim([0 axAStd.YLim(2)])
+    SetFigProp( outSize , fontSize );
+end
 
 if ( printResults )
     fileName = [ outFolder '/' 'PitchStd-' 'simvexp' suffix];
-    SetFigProp( outSize , fontSize );
     MatlabToLatexEps( fileName, [], false );
 end

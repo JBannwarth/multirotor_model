@@ -47,12 +47,7 @@ for n = 1:length( inputFiles )
     load( inputFiles{n} )
     PrepareAttitudeStepDataSingleAxis;
     Simulation.T_END = qDesInput(end,1);
-    %Simulation.T_END = 35;
-    % Initial.Q = [1 1 -1 -1]' .* qDes(1,:)';
-    %Uav.M = Uav.M*1.5;
     InitializeModel
-    %Motor.B([1 3]) = 1.3* Motor.B([1 3]);
-    %Motor.B([2 4]) = 1.5* Motor.B([2 4]);
     LoadPx4Parameters( model, params )
     set_param( [model '/Sensor Model/attitude_estimator_q'], ...
         'ATT_EXT_HDG_M', '2')
@@ -68,10 +63,19 @@ for n = 1:length( inputFiles )
     userData.Params = params;    
     output = output.setUserData( userData );
     save( fullfile(projectRoot, 'data_results', [ inputFiles{n}(1:end-4) 'Sim.mat' ] ), 'output' );
-%     set_param( [model '/Drag model'], 'ModelName', 'DragModelNew' );
-%     out = sim( model, 'SimulationMode', 'normal');
-    CheckAttitudeControlPlot;
+    
+    tableStrs{n} = tableStr;
 end
+
+
+CheckAttitudeControlPlot;
+
+tableOut = '';
+for i = 1:length( tableStrs )
+    tableOut = sprintf( '%s%s\n', tableOut, tableStrs{i});
+end
+
+disp(tableOut)
 
 %% Format data
 % logsout = out.get('logsout');

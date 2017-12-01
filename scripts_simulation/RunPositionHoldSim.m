@@ -5,18 +5,19 @@ close all; clc;
 clear all; %#ok<CLALL>
 
 %% 1) Load input data
-useClosedContraptionData = true;
+useClosedContraptionData = false;
 
 if ( useClosedContraptionData )
     windFiles = { 'p5_z150_tfwt15', 'p5_z150_tfwt20', 'p5_z150_tfwt25', ...
                   'p5_z150_tfwt30', 'p5_z150_tfwt35', 'p5_z150_tfwt40' };
 else
-    windFiles = { '170223_grid_30', '170223_grid_35', ...
-                  '170223_grid_40', '170223_grid_45', '170223_grid_50' };
+%     windFiles = { '170223_grid_30', '170223_grid_35', ...
+%                   '170223_grid_40', '170223_grid_45', '170223_grid_50' };
+    windFiles{1} = 'TurbSim_45_05';
     Uav.M = 1.5; % UAV was a bit heavier at the time this data was taken
 end
 
-suffix = 'NoDrops';
+suffix = '';%'NoDrops';
 inFolder  = 'data_wind';
 
 
@@ -38,7 +39,7 @@ set_param( [model '/Motor model'], 'ModelName', 'MotorModelNew' );
 
 %% 5) Loop over the number of iterations
 load( [ inFolder '/' windFiles{1} suffix '.mat' ] )
-Simulation.T_END = ( 2 * windInput.Time(end) ) - windInput.Time(1);
+Simulation.T_END = windInput.Time(end); %;( 2 * windInput.Time(end) ) - windInput.Time(1);
 InitializeModel;
 clearvars( 'windInput' )
 
@@ -65,10 +66,10 @@ for i = 1:length( windFiles )
     
     % Set-up wind profile
     load( [ inFolder '/' windFiles{i} suffix '.mat' ] )
-    timeTmp = [windInput.time; windInput.time + windInput.time(end)];
-    timeTmp = timeTmp - timeTmp(1);
-    dataTmp = [windInput.Data; windInput.Data];
-    windInput = timeseries( dataTmp, timeTmp );
+%     timeTmp = [windInput.time; windInput.time + windInput.time(end)];
+%     timeTmp = timeTmp - timeTmp(1);
+%     dataTmp = [windInput.Data; windInput.Data];
+%     windInput = timeseries( dataTmp, timeTmp );
     
     % Set simulation parameters
     UseWindProfile( model, true );
@@ -92,7 +93,8 @@ if ( useClosedContraptionData )
 else
     fileName = 'PosHoldOpenContraption';
 end
-save( ['data_results/' fileName num2str(Uav.M) 'RotDragNewWindDelay' '.mat'], 'output' ) 
+
+save( ['data_results/' fileName num2str(Uav.M) 'TurbSimTest45' '.mat'], 'output' ) 
 
 %% 7) Plot data
 % PlotPositionHoldError;
