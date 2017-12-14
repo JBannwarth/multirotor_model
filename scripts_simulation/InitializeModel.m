@@ -14,7 +14,7 @@ end
 if ~isfield( Simulation, 'T_END' )
     Simulation.T_END = 60;
 end
-Simulation.T_OUT = Simulation.TS_MAX:Simulation.TS_MAX:Simulation.T_END-Simulation.TS_MAX;
+Simulation.T_OUT = Simulation.TS_OUT:Simulation.TS_OUT:Simulation.T_END-Simulation.TS_OUT;
 
 %% Set initial orientation
 init_eta = [0, 0, 0];

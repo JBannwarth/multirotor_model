@@ -1,147 +1,174 @@
 %CHECKATTITUDECONTROLPLOT Plot step responses
 %   Written by: J.X.J. Bannwarth, 2017/08/21
 
-% close all;
+close all; clearvars;
 
-outFolder = '../multirotor_model_verification_report/fig';
+% Setup
+project = simulinkproject; projectRoot = project.RootFolder;
+inFolder  = fullfile( projectRoot, 'data_results', 'AttSim_2017-12-08_11-57-02' );
+outFolder = fullfile( projectRoot, '..', 'journal_paper_1', 'fig' );
+indexToPrint = 8;
 fontSize  = 9;
-outSize   = [8.85684 8.85684];
+outSize   = [8 8];
 printResults = true;
 
-%% Get data from logs
-logsout = output.got('logsout');
-q = output.get('logsout').get('q').Values;
-eta = output.get('logsout').get('eta').Values;
-pwm = output.get('logsout').get('pwm').Values;
-pitch = output.get('logsout').get('pitch').Values;
+% Get data - might require a lot of memory
+inputFiles = dir( inFolder );
+inputFiles = {inputFiles.name};
+inputFiles( ~contains( inputFiles, '.mat' ) ) = [];
 
-if (exist('flogOriginal'))
-    pwmExp = [ flogOriginal.actuator_outputs.output_0_, ...
-            flogOriginal.actuator_outputs.output_1_, ...
-            flogOriginal.actuator_outputs.output_2_, ...
-            flogOriginal.actuator_outputs.output_3_ ...
-        ];
-    tExpPwm = flogOriginal.actuator_outputs.time;
+for i = 1:length(inputFiles)
+    load( fullfile( inFolder, inputFiles{i} ) )
+    simData{i} = output;
+end
+clearvars output;
+
+%% Process data
+% Find shortest data
+minStepLength = simData{1}.getSimulationMetadata.UserData.AttInput.stepLength;
+stepStart = zeros(1, length(simData));
+stepLength = zeros(1, length(simData));
+offset = zeros(1, length(simData));
+for i = 1:length( simData )
+    stepStart(i) = simData{i}.getSimulationMetadata.UserData.AttInput.stepTime;
+    stepLength(i) = simData{i}.getSimulationMetadata.UserData.AttInput.stepLength;
+    offset(i) = simData{i}.getSimulationMetadata.UserData.AttInput.tDesOffset;
+end
+stepEnd = stepStart+min(stepLength) .* ones(size(stepLength));
+
+%% Plot data
+tableStr = '';
+for i = 1:length( inputFiles )
+    logsout = simData{i}.get('logsout');
+    pwm     = logsout.get('pwm').Values;
+    pitch   = logsout.get('pitch').Values;
+    
+    % Isolate relevant data
+    pwm   = getsampleusingtime( pwm, stepStart(i)+offset(i), stepEnd(i)+offset(i) );
+    pitch = getsampleusingtime( pitch, stepStart(i)+offset(i), stepEnd(i)+offset(i) );
+    pwm.Time = pwm.Time - (stepStart(i)+offset(i));
+    pitch.Time = pitch.Time - (stepStart(i)+offset(i));
+    
+    % Experimental
+    flog = simData{i}.getSimulationMetadata.UserData.FlogOriginal;
+    
+    % PWM
+    pwmExp = [ flog.actuator_outputs.output_0_, ...
+            flog.actuator_outputs.output_1_,    ...
+            flog.actuator_outputs.output_2_,    ...
+            flog.actuator_outputs.output_3_     ];
+    pwmExpT = flog.actuator_outputs.time - stepStart(i);
+        
+    % Measured pitch
+    qExp = [ flog.vehicle_attitude.q_0_, ...
+             flog.vehicle_attitude.q_1_, ...
+             flog.vehicle_attitude.q_2_, ...
+             flog.vehicle_attitude.q_3_  ];
+    [~, pitchExp, ~] = QuatToEuler( qExp );
+    pitchExpT = flog.vehicle_attitude.time - stepStart(i);
+    
+    % Desired pitch
+    qDesExp = [ flog.vehicle_attitude_setpoint.q_d_0_, ...
+             flog.vehicle_attitude_setpoint.q_d_1_, ...
+             flog.vehicle_attitude_setpoint.q_d_2_, ...
+             flog.vehicle_attitude_setpoint.q_d_3_  ];
+    [~, pitchDesExp, ~] = QuatToEuler( qDesExp );
+    pitchDesExpT = flog.vehicle_attitude_setpoint.time - stepStart(i);
+    
+    % Rearrange PWM and change axes to match sim
+    pwmExp      = [ pwmExp(:,3), pwmExp(:,2), pwmExp(:,4), pwmExp(:,1) ];
+    pitchExp    = - pitchExp;
+    pitchDesExp = - pitchDesExp;
+    
+    % Resample
+    TResample   = 1/250;
+    pitchExp    = resample( timeseries(pitchExp, pitchExpT), 0:TResample:min(stepLength) );
+    pitchDesExp = resample( timeseries(pitchDesExp, pitchDesExpT), 0:TResample:min(stepLength) );
+    pwmExp      = resample( timeseries(pwmExp, pwmExpT), 0:TResample:min(stepLength) );
+    
+    % Get data stats
+    errPitchExp = pitchDesExp - pitchExp;
+    errPitchSim = pitch.Data(:,2) - pitch.Data(:,1);
+    avgErrSim(i) = abs(mean(errPitchSim));
+    maxErrSim(i) = max(abs(errPitchSim));
+    rmsErrSim(i) = rms(errPitchSim);
+    
+    avgErrExp(i) = rad2deg( abs(mean(errPitchExp)) );
+    maxErrExp(i) = rad2deg( max(abs(errPitchExp.Data)) );
+    rmsErrExp(i) = rad2deg( rms(errPitchExp.Data) );
+
+    % Plot results
+    fileNameCurrent = inputFiles{i};
+    
+    % Pitch response
+    figure('name', [ inputFiles{i} ' - pitch' ] )
+    hold on; grid on; box on;
+    stairs( pitchDesExp.Time, rad2deg(pitchDesExp.Data) )
+    stairs( pitchExp.Time, rad2deg(pitchExp.Data) )
+    stairs( pitch.Time, pitch.Data(:,1) )
+    xlim( [0 inf] )
+    %ylim( [-inf inf] )
+    xlabel( 'Time (s)' )
+    ylabel( [ 'Pitch ($^\circ$)' ] )
+    legend( { 'Des', 'Exp', 'Sim' }, 'location', 'best')
+    SetFigProp( outSize , fontSize );
+    
+    if ( printResults && ( i == indexToPrint ) )
+        fileName = fullfile( outFolder, 'PitchStep_PitchResponse' );
+        MatlabToLatexEps( fileName );
+    end
+
+    % PWM
+    figure('name', [ inputFiles{i} ' - pwm' ] )
+    hold on; grid on; box on;
+    col = get(gca,'colororder');
+    for j = 1:4
+        stairs( pwmExp.Time, pwmExp.Data(:,j), 'color', col(j,:) )
+    end
+    for j = 1:4
+        stairs( pwm.Time, 1000+1000.*pwm.Data(:,j), '--', 'color', col(j,:) )
+    end
+    xlim( [0 inf] )
+    ylim( [1400 1900] )
+    xlabel( 'Time (s)' )
+    ylabel( 'PWM magnitude (-)' )
+    hleg = legend( {'FL', 'BL', 'BR', 'FR'}, ...
+        'Orientation', 'horizontal', 'location', 'northoutside');
+    title( hleg, 'solid: experiment, dot: simulation' )
+    SetFigProp( outSize , fontSize );
+    legend('boxoff')
+    
+    if ( printResults && ( i == indexToPrint ) )
+        fileName = fullfile( outFolder, 'PitchStep_PWMResponse' );
+        MatlabToLatexEps( fileName );
+    end
 end
 
-% Get data
-tSim = q.Time - tDesOffset;
-qSim = q.Data;
-qSimN = length( qSim );
-qSim = [ ones(qSimN,1), ones(qSimN,1), -ones(qSimN,1), -ones(qSimN,1)] .* qSim;
-%[ eulSim.Roll, eulSim.Pitch, eulSim.Yaw ] = QuatToEuler( qSim );
-etaSim = [ ones(qSimN,1), -ones(qSimN,1), -ones(qSimN,1)] .* eta.Data;
-eulSim.Roll = etaSim(:,1); eulSim.Pitch = etaSim(:,2); eulSim.Yaw = etaSim(:,3);
-eulSim.Yaw = unwrap( eulSim.Yaw );
+% Print table of results
+line1 = '$e_\mathrm{RMS,exp}$ (\si{\degree}) & ';
+line2 = '$e_\mathrm{RMS,sim}$ (\si{\degree}) & ';
+line3 = '$e_\mathrm{max,exp}$ (\si{\degree}) & ';
+line4 = '$e_\mathrm{max,sim}$ (\si{\degree}) & ';
+steps = '& ';
 
-errorSim.Pitch = pitch.Data(:,2) - pitch.Data(:,1);
-avgErrSim = abs(mean(errorSim.Pitch));
-maxErrSim = max(abs(errorSim.Pitch));
-rmsErrSim = rms(errorSim.Pitch);
-
-tSimPwm = pwm.Time - tDesOffset;
-pwmSim = pwm.Data;
-% Reorder PWM to match experimental order
-% [ px4Pwm(3); px4Pwm(2); px4Pwm(4); px4Pwm(1) ];
-pwmSim = [ pwmSim(:,4) pwmSim(:,2) pwmSim(:,1) pwmSim(:,3) ];
-
-% Unwrap (need to write function to do this without DSP toolbox)
-eulExp.Yaw = unwrap( eulExp.Yaw );
-eulDes.Yaw = unwrap( eulDes.Yaw );
-
-if ( tDes(end) < tSim(end) )
-    eulDes.Roll(end+1) =  eulDes.Roll(end);
-    eulDes.Roll(end+1) =  eulDes.Pitch(end);
-    eulDes.Pitch(end+1) =  eulDes.Yaw(end);
-    tDes(end+1) = tSim(end);
+for i = 1:(length( avgErrSim )-1)
+    line1 = sprintf( '%s%.2f & ', line1, rmsErrExp(i) );
+    line2 = sprintf( '%s%.2f & ', line2, rmsErrSim(i) );
+    line3 = sprintf( '%s%.2f & ', line3, maxErrExp(i) );
+    line4 = sprintf( '%s%.2f & ', line4, maxErrSim(i) );
+    steps = sprintf( '%sStep %d & ', steps, i );
 end
 
-eulDes.Roll = eulDes.Roll( tDes >= 0 );
-eulDes.Pitch = eulDes.Pitch( tDes >= 0 );
-eulDes.Yaw = eulDes.Yaw( tDes >= 0 );
-tDes = tDes( tDes >= 0 );
+line1 = sprintf( '%s%.2f \\\\', line1, rmsErrExp(end) );
+line2 = sprintf( '%s%.2f \\\\', line2, rmsErrSim(end) );
+line3 = sprintf( '%s%.2f \\\\', line3, maxErrExp(end) );
+line4 = sprintf( '%s%.2f \\\\', line4, maxErrSim(end) );
+steps = sprintf( '%sStep %d \\\\', steps, i );
 
-% if ( (tDes(1) >= tExp(1)) && (tDes(end) <= tExp(end)) )
-%     tResample = tDes;
-% elseif ( (tDes(1) <= tExp(1)) && (tDes(end) >= tExp(end)) )
-%     tResample = tExp;
-% else
-    tResample = max([min(tDes), min(tExp) ]):median(diff(tExp)):min([max(tDes), max(tExp) ]);
-% end
+heading = sprintf( '\\begin{tabular}{%s}\n\\toprule\n%s\n\\midrule', ...
+    repmat( 'l', 1, length(maxErrExp)+1 ), steps );
 
-tResample = tResample( tResample >= 0 );
-
-errorExp.Pitch = resample(timeseries( eulDes.Pitch, tDes), tResample) - ...
-    resample(timeseries( eulExp.Pitch, tExp ), tResample) ;
-errorExp.Roll = resample(timeseries( eulDes.Roll, tDes), tResample) - ...
-    resample(timeseries( eulExp.Roll, tExp ), tResample);
-errorExp.Yaw = resample(timeseries( eulDes.Yaw, tDes), tResample) - ...
-    resample(timeseries( eulExp.Yaw, tExp ), tResample);
-avgErrExp = abs(rad2deg(mean(errorExp.Pitch.Data)));
-maxErrExp = rad2deg(max(abs(errorExp.Pitch.Data)));
-rmsErrExp = rad2deg(rms(errorExp.Pitch.Data));
-
-tableStr = sprintf('%f & %f & %f & %f & %f & %f \\\\', avgErrSim, avgErrExp, maxErrSim, maxErrExp, rmsErrSim, rmsErrExp);
-
-% Get axis to look at
-fileNameCurrent = inputFiles{n};
-% dashLoc = strfind( fileNameCurrent, '-' );
-% underscoreLoc = strfind( fileNameCurrent, '_' );
-% if isempty( dashLoc )
-%     dashLoc = strfind( fileNameCurrent, '+' );
-% end
-
-if ~isempty( strfind( fileNameCurrent, '+' ) )
-    legendLoc = 'southeast';
-else
-    legendLoc = 'northeast';
-end
-if ~isempty( strfind( fileNameCurrent, 'roll' ) )
-    ax = 'Roll';
-elseif ~isempty( strfind( fileNameCurrent, 'pitch' ) )
-    ax = 'Pitch';
-elseif ~isempty( strfind( fileNameCurrent, 'yaw' ) )
-    ax = 'Yaw';
-else
-    error('No axis')
-end
-% ax = fileNameCurrent( underscoreLoc+1:dashLoc-1 );
-% ax(1) = upper(ax(1));
-% Plot results
-% ind = 1;
-% for ax = { 'Roll', 'Pitch', 'Yaw' }
-%     subplot( 3, 1, ind )
-figure('name', inputFiles{n} )
-%for i = 1:2
-subplot(2,1,1)
-hold on; grid on; box on;
-stairs( tDes, rad2deg( eulDes.(char(ax)) ) )
-stairs( tExp, rad2deg( eulExp.(char(ax)) ) )
-stairs( tSim, rad2deg( eulSim.(char(ax)) ) )
-xlim( [0 inf] )
-%ylim( [-inf inf] )
-xlabel( 'Time (s)' )
-ylabel( [ ax ' (deg) ' ] )
-legend( { 'Des', 'Exp', 'Sim' }, 'location', legendLoc)
-%     ind = ind + 1;
-% end
-%end
-
-subplot(2,1,2)
-hold on; grid on; box on;
-col = get(gca,'colororder');
-for i = 1:4
-    stairs( tExpPwm, pwmExp(:,i), 'color', col(i,:) )
-    stairs( tSimPwm, 1000+1000.*pwmSim(:,i), '--', 'color', col(i,:) )
-end
-xlim( [0 inf] )
-xlabel( 'Time (s)' )
-ylabel( 'PWM magnitude (-)' )
-legend( {'Exp1', 'Sim1', 'Exp2', 'Sim2', 'Exp3', 'Sim3', 'Exp4', 'Sim4'} )
-
-SetFigProp( outSize , fontSize );
-if ( printResults )
-    fileName = [ outFolder '/' fileNameCurrent(1:end-4)];
-    MatlabToLatexEps( fileName );
-end
-
+tableStr = sprintf( '%s\n%s\n%s\n%s\n%s\n\\bottomrule\n\\end{tabular}', ...
+    heading, line1, line2, line3, line4 );
+    
+disp( tableStr )

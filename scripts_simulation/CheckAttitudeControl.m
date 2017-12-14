@@ -1,10 +1,9 @@
 %CHECKATTITUDECONTROL Send attitude step commands to system and record perf
 %   Written by: J.X.J. Bannwarth, 2017/08/21
-clearvars;
-close all;
+clearvars; close all; clc;
 
 %% Load model
-model = 'MultirotorSimPx4SeparateRotors';
+model = 'MultirotorSimPx4';
 dragModel = 'DragModelMomentDragNew';
 load_system(model);
 
@@ -13,22 +12,22 @@ project = simulinkproject;
 projectRoot = project.RootFolder;
 Simulation.TS_MAX = 0.01;
 InitializeModel
-%Motor.B([1 3]) = 1.4* Motor.B([1 3]);
-%Motor.B([2 4]) = 1.5* Motor.B([2 4]);
 Px4Bus;
 selfBus;
 mpc_self;
-% Uav.I(3,3) = 3 * Uav.I(3,3);
 
 %% Set up model
+% Set switches and comment out unneeded blocks
 UseWindProfile( model, false );
 UseEstimators( model, false );
 UsePositionController( model, false );
-set_param( [model '/att_thrustDesSwitch'], 'sw', '1' )
+
+% Block parameters
 set_param( [model '/Fixed wind input'], 'value', '[0 0 0]' );
 set_param( [model '/Drag model'], 'ModelName', dragModel );
 set_param( [model '/Motor model'], 'ModelName', 'MotorModelNew' );
 
+%% Prepare I/O
 % Get list of files to plot
 prefix = 'step_att_small';
 inputFiles = dir('data_validation');
@@ -40,47 +39,56 @@ for i = 1:length(inputFiles)
     end
 end
 inputFiles( logical(toRemove) ) = [];
-%inputFiles = { 'step_att_small_pitch-5_7.mat' };
+
+% Create folder for results with date (user can rename folder later anyway
+tTmp  = clock;
+outputFolder = fullfile( projectRoot, 'data_results', ...
+    sprintf( 'AttSim_%d-%02d-%02d_%02d-%02d-%02d', tTmp(1:5), floor(tTmp(6)) ));
+mkdir( outputFolder )
 
 %% Perform simulation(s)
 for n = 1:length( inputFiles )
+    clc; fprintf('Sim %d of %d...\n', n, length( inputFiles) )
+    
+    % Get and process input
     load( inputFiles{n} )
     PrepareAttitudeStepDataSingleAxis;
-    Simulation.T_END = qDesInput(end,1);
+    
+    % Set all simulation parameters
+    Simulation.T_END = AttInput.qDes(end,1);
     InitializeModel
     LoadPx4Parameters( model, params )
     set_param( [model '/Sensor Model/attitude_estimator_q'], ...
         'ATT_EXT_HDG_M', '2')
     set_param( [model '/Sensor Model/attitude_estimator_q'], ...
         'INIT_Q', [ '[' num2str( Initial.Q' ) ']' ] )
-    set_param( [model '/Drag model'], 'ModelName', dragModel );
+    
+    % Run simulation
     output = sim( model, 'SimulationMode', 'normal');
+    
+    % Add custom data to log
     userData.Simulation = Simulation;
     userData.Uav = Uav;
+    userData.Motor = Motor;
+    userData.Aero = Aero;
     userData.Initial = Initial;
     userData.Blocks.MotorModel = get_param( [model '/Motor model'], 'ModelName' );
-    userData.Blocks.DragModel = get_param( [model '/Drag model'], 'ModelName' );
-    userData.Params = params;    
+    userData.Blocks.DragModel  = get_param( [model '/Drag model'], 'ModelName' );
+    userData.InputCtrlFilename = inputFiles{n};
+    userData.Params = params;
+    userData.FlogOriginal = flogOriginal;
+    userData.AttInput = AttInput;
     output = output.setUserData( userData );
-    save( fullfile(projectRoot, 'data_results', [ inputFiles{n}(1:end-4) 'Sim.mat' ] ), 'output' );
     
-    tableStrs{n} = tableStr;
+    % Save to file
+    save( fullfile( outputFolder, [ inputFiles{n}(1:end-4) 'Sim.mat' ] ), 'output' );
 end
 
+% CheckAttitudeControlPlot;
 
-CheckAttitudeControlPlot;
-
-tableOut = '';
-for i = 1:length( tableStrs )
-    tableOut = sprintf( '%s%s\n', tableOut, tableStrs{i});
-end
-
-disp(tableOut)
-
-%% Format data
-% logsout = out.get('logsout');
-% clear output
-
-% Assign units manually
-% unitsLookupTable = readtable('SignalUnits.csv');
-% logsout = SetDatasetUnits(logsout, unitsLookupTable,   true);
+% tableOut = '';
+% for i = 1:length( tableStrs )
+%     tableOut = sprintf( '%s%s\n', tableOut, tableStrs{i});
+% end
+% 
+% disp(tableOut)

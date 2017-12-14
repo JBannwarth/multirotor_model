@@ -20,6 +20,8 @@ function UsePositionController( modelName, toUse )
         'IncludeCommented', 'on', 'Name', 'att_\w*Input');
     attSwitches = find_system( modelName, 'SearchDepth', '1', 'regexp', 'on', ...
         'IncludeCommented', 'on', 'Name', 'att_\w*Switch');
+    attFFBlocks = find_system( modelName, 'SearchDepth', '1', 'regexp', 'on', ...
+        'IncludeCommented', 'on', 'Name', 'att_\w*ff');
     
 %     for i = 1:length(posBlocks)
 %         set_param(posBlocks{i}, 'Commented', posComment)
@@ -27,6 +29,10 @@ function UsePositionController( modelName, toUse )
     
     for i = 1:length(attInputBlocks)
         set_param(attInputBlocks{i}, 'Commented', attComment)
+    end
+    
+    for i = 1:length(attFFBlocks)
+        set_param(attFFBlocks{i}, 'Commented', attComment)
     end
     
     for i = 1:length(attSwitches)

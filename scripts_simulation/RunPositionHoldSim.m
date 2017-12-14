@@ -4,25 +4,42 @@
 close all; clc;
 clear all; %#ok<CLALL>
 
-%% 1) Load input data
+%% 1) Prepare I/O
 useClosedContraptionData = false;
 
+project = simulinkproject; projectRoot = project.RootFolder;
 if ( useClosedContraptionData )
-    windFiles = { 'p5_z150_tfwt15', 'p5_z150_tfwt20', 'p5_z150_tfwt25', ...
-                  'p5_z150_tfwt30', 'p5_z150_tfwt35', 'p5_z150_tfwt40' };
+    inFolder = fullfile( projectRoot, 'data_wind', 'CobraCC' );
 else
-%     windFiles = { '170223_grid_30', '170223_grid_35', ...
-%                   '170223_grid_40', '170223_grid_45', '170223_grid_50' };
-    windFiles{1} = 'TurbSim_45_05';
+    inFolder = fullfile( projectRoot, 'data_wind', 'TurbSimOC' );
     Uav.M = 1.5; % UAV was a bit heavier at the time this data was taken
 end
 
-suffix = '';%'NoDrops';
-inFolder  = 'data_wind';
+windFiles = dir(inFolder);
+windFiles = {windFiles.name};
+% Only keep actual files
+toRemove = [];
+for i = 1:length(windFiles)
+    if ~contains( windFiles{i}, '.mat' )
+        toRemove(end+1) = i;
+    end
+end
+windFiles(toRemove) = [];
 
+% Create folder for results with date (user can rename folder later anyway
+if ( useClosedContraptionData )
+    fileName = 'CC';
+else
+    fileName = 'OC';
+end
+
+tTmp  = clock;
+outputFolder = fullfile( projectRoot, 'data_results', ...
+    sprintf( 'HoverSim_%d-%02d-%02d_%02d-%02d-%02d_%s', tTmp(1:5), floor(tTmp(6)), fileName ));
+mkdir( outputFolder )
 
 %% 2) Load model
-model = 'MultirotorSimPx4SeparateRotors';
+model = 'MultirotorSimPx4';
 load_system(model);
 
 %% 3) Set simulation parameters
@@ -38,8 +55,10 @@ set_param( [model '/Drag model'],  'ModelName', 'DragModelMomentDragNew' );
 set_param( [model '/Motor model'], 'ModelName', 'MotorModelNew' );
 
 %% 5) Loop over the number of iterations
-load( [ inFolder '/' windFiles{1} suffix '.mat' ] )
-Simulation.T_END = windInput.Time(end); %;( 2 * windInput.Time(end) ) - windInput.Time(1);
+load( fullfile( inFolder , windFiles{1} ) )
+Simulation.TS_MAX = 0.001;
+Simulation.TS_OUT = 0.01;
+Simulation.T_END = windInput.Time(end);
 InitializeModel;
 clearvars( 'windInput' )
 
@@ -55,7 +74,8 @@ if ( useClosedContraptionData )
     userData.Blocks.MotorModel = get_param( [model '/Motor model'], 'ModelName' );
     userData.Blocks.DragModel = get_param( [model '/Drag model'], 'ModelName' );
     userData.Params = Params;    
-    output(1) = output(1).setUserData( userData );
+    output = output.setUserData( userData );
+    save( fullfile( outputFolder, [ '0windspeed_output.mat'] ), 'output' )
     index = 1;
 else
     index = 0;
@@ -65,7 +85,7 @@ for i = 1:length( windFiles )
     fprintf( 'Simulating %d/%d\n', i, length(windFiles) );
     
     % Set-up wind profile
-    load( [ inFolder '/' windFiles{i} suffix '.mat' ] )
+    load( fullfile( inFolder , windFiles{i} ) )
 %     timeTmp = [windInput.time; windInput.time + windInput.time(end)];
 %     timeTmp = timeTmp - timeTmp(1);
 %     dataTmp = [windInput.Data; windInput.Data];
@@ -74,7 +94,7 @@ for i = 1:length( windFiles )
     % Set simulation parameters
     UseWindProfile( model, true );
     set_param( [model '/Varying wind input'], 'VariableName', 'windInput' );
-    output(index + i) = sim( model, 'SimulationMode', 'normal' );
+    output = sim( model, 'SimulationMode', 'normal' );
     
     % Add custom data
     userData.ClosedContraption = useClosedContraptionData;
@@ -84,20 +104,7 @@ for i = 1:length( windFiles )
     userData.Blocks.MotorModel = get_param( [model '/Motor model'], 'ModelName' );
     userData.Blocks.DragModel = get_param( [model '/Drag model'], 'ModelName' );
     userData.Params = Params;    
-    output(index + i) = output(index + i).setUserData( userData );
+    output = output.setUserData( userData );
+    
+    save( fullfile( outputFolder, windFiles{i} ), 'output' )
 end
-
-%% 6) Save data
-if ( useClosedContraptionData )
-    fileName = 'PosHoldClosedContraption';
-else
-    fileName = 'PosHoldOpenContraption';
-end
-
-save( ['data_results/' fileName num2str(Uav.M) 'TurbSimTest45' '.mat'], 'output' ) 
-
-%% 7) Plot data
-% PlotPositionHoldError;
-
-%% 8) Clean up
-% close_system(model, 0);
