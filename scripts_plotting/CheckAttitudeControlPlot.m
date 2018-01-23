@@ -7,6 +7,7 @@ close all; clearvars;
 project = simulinkproject; projectRoot = project.RootFolder;
 inFolder  = fullfile( projectRoot, 'data_results', 'AttSim_2017-12-08_11-57-02' );
 outFolder = fullfile( projectRoot, '..', 'journal_paper_1', 'fig' );
+outFolderRaw = fullfile( projectRoot, '..', 'journal_paper_1', 'fig', 'tikz', 'data_step' );
 indexToPrint = 8;
 fontSize  = 9;
 outSize   = [8 8];
@@ -37,6 +38,7 @@ end
 stepEnd = stepStart+min(stepLength) .* ones(size(stepLength));
 
 %% Plot data
+toSave = 8;
 tableStr = '';
 for i = 1:length( inputFiles )
     logsout = simData{i}.get('logsout');
@@ -116,6 +118,26 @@ for i = 1:length( inputFiles )
     if ( printResults && ( i == indexToPrint ) )
         fileName = fullfile( outFolder, 'PitchStep_PitchResponse' );
         MatlabToLatexEps( fileName );
+        if ( i == toSave )
+            % Exp
+            data = [ pitchExp.Time, rad2deg(pitchExp.Data), rad2deg(pitchDesExp.Data) ];
+            data = data(1:2:end,:);
+            fileID = fopen(fullfile(outFolderRaw, 'pitch_exp.csv'),'w');
+            fprintf(fileID, 't exp des\n');
+            fclose( fileID );
+            dlmwrite( fullfile(outFolderRaw, 'pitch_exp.csv'),  ...
+                data, ...
+                'precision', '%e', 'delimiter', ' ', '-append' )
+            
+            % Sim
+            data = [ pitch.Time, pitch.Data ];
+            fileID = fopen(fullfile(outFolderRaw, 'pitch_sim.csv'),'w');
+            fprintf(fileID, 't sim\n');
+            fclose( fileID );
+            dlmwrite( fullfile(outFolderRaw, 'pitch_sim.csv'),  ...
+                data, ...
+                'precision', '%e', 'delimiter', ' ', '-append' )
+        end
     end
 
     % PWM
@@ -141,6 +163,28 @@ for i = 1:length( inputFiles )
     if ( printResults && ( i == indexToPrint ) )
         fileName = fullfile( outFolder, 'PitchStep_PWMResponse' );
         MatlabToLatexEps( fileName );
+        
+        if ( i == toSave )
+%           % Exp
+            offsets = mean( getsampleusingtime( pwmExp, 0, 0.8 ) );
+            data = [ pwmExp.Time, pwmExp.Data - offsets ];
+            fileID = fopen(fullfile(outFolderRaw, 'pwm_exp.csv'),'w');
+            fprintf(fileID, 't fl bl br fr\n');
+            fclose( fileID );
+            dlmwrite( fullfile(outFolderRaw, 'pwm_exp.csv'),  ...
+                data, ...
+                'precision', '%e', 'delimiter', ' ', '-append' )
+            
+            % Sim
+            offsets = 1615;
+            data = [ pwm.Time, 1000+1000.*pwm.Data - offsets ];
+            fileID = fopen(fullfile(outFolderRaw, 'pwm_sim.csv'),'w');
+            fprintf(fileID, 't fl bl br fr\n');
+            fclose( fileID );
+            dlmwrite( fullfile(outFolderRaw, 'pwm_sim.csv'),  ...
+                data, ...
+                'precision', '%e', 'delimiter', ' ', '-append' )
+        end
     end
 end
 
