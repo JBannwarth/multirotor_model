@@ -3,6 +3,10 @@
 % level
 
 %% GEOMETRICAL PARAMETERS
+Uav.D_UAV = 0.456;
+Uav.D_PROP = 10 * 0.0254;
+Uav.A_UAV = (pi*Uav.D_UAV^2)/4;
+Uav.A_PROP = (pi*Uav.D_PROP^2)/4;
 Uav.L    = (0.456 / 2) * ones(4,1); % Distances from centre to motor axis [m]
 Uav.BETA = deg2rad(45:90:315)'; % Arm angles [rad]
 Uav.N_ROTORS = length(Uav.BETA); % Number of rotors [-]
@@ -46,3 +50,7 @@ Uav.C_DM = 0.25*0.681;   % drag coefficient for rotations about x, y, z
 
 % Air density [kg/m^3]
 Uav.RHO_AIR = 1.225;
+
+if ~isfield( Uav, 'PITCH_ONLY' )
+    Uav.PITCH_ONLY = 0;
+end

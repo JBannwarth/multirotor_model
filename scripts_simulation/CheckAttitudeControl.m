@@ -11,6 +11,7 @@ load_system(model);
 project = simulinkproject;
 projectRoot = project.RootFolder;
 Simulation.TS_MAX = 0.01;
+load( 'AeroBoth.mat' )
 InitializeModel
 Px4Bus;
 selfBus;
@@ -56,7 +57,10 @@ for n = 1:length( inputFiles )
     
     % Set all simulation parameters
     Simulation.T_END = AttInput.qDes(end,1);
+    load( 'AeroBoth.mat' )
     InitializeModel
+    Uav.PITCH_ONLY = 1;
+    Simulation.T_START_STEP = AttInput.tDesOffset;
     LoadPx4Parameters( model, params )
     set_param( [model '/Sensor Model/attitude_estimator_q'], ...
         'ATT_EXT_HDG_M', '2')

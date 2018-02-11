@@ -5,7 +5,7 @@ close all; clearvars;
 
 % Setup
 project = simulinkproject; projectRoot = project.RootFolder;
-inFolder  = fullfile( projectRoot, 'data_results', 'AttSim_2017-12-08_11-57-02' );
+inFolder  = fullfile( projectRoot, 'data_results', 'AttSim_2018-02-02_00-44-16' );
 outFolder = fullfile( projectRoot, '..', 'journal_paper_1', 'fig' );
 outFolderRaw = fullfile( projectRoot, '..', 'journal_paper_1', 'fig', 'tikz', 'data_step' );
 indexToPrint = 8;
@@ -41,6 +41,9 @@ stepEnd = stepStart+min(stepLength) .* ones(size(stepLength));
 toSave = 8;
 tableStr = '';
 for i = 1:length( inputFiles )
+    if ( i == toSave )
+;        disp('Saving')
+    end
     logsout = simData{i}.get('logsout');
     pwm     = logsout.get('pwm').Values;
     pitch   = logsout.get('pitch').Values;
@@ -166,7 +169,12 @@ for i = 1:length( inputFiles )
         
         if ( i == toSave )
 %           % Exp
-            offsets = mean( getsampleusingtime( pwmExp, 0, 0.8 ) );
+            offsetsTmp = mean( getsampleusingtime( pwmExp, 0, 0.8 ) );
+            offsets = offsetsTmp;
+%             offsets(1) = mean( offsetsTmp([1,3]));
+%             offsets(2) = mean( offsetsTmp([2,4]));
+%             offsets(3) = mean( offsetsTmp([1,3]));
+%             offsets(4) = mean( offsetsTmp([2,4]));
             data = [ pwmExp.Time, pwmExp.Data - offsets ];
             fileID = fopen(fullfile(outFolderRaw, 'pwm_exp.csv'),'w');
             fprintf(fileID, 't fl bl br fr\n');
@@ -176,8 +184,8 @@ for i = 1:length( inputFiles )
                 'precision', '%e', 'delimiter', ' ', '-append' )
             
             % Sim
-            offsets = 1615;
-            data = [ pwm.Time, 1000+1000.*pwm.Data - offsets ];
+            offsetsSim = 1634;
+            data = [ pwm.Time, 1000+1000.*pwm.Data - offsetsSim ];
             fileID = fopen(fullfile(outFolderRaw, 'pwm_sim.csv'),'w');
             fprintf(fileID, 't fl bl br fr\n');
             fclose( fileID );
@@ -216,3 +224,6 @@ tableStr = sprintf( '%s\n%s\n%s\n%s\n%s\n\\bottomrule\n\\end{tabular}', ...
     heading, line1, line2, line3, line4 );
     
 disp( tableStr )
+
+fprintf( 'Average RMS: %.2f (sim) %.2f (exp): %.2f%% diff\n', mean(rmsErrSim), mean(rmsErrExp), 100*(mean(rmsErrSim)-mean(rmsErrExp))/mean(rmsErrExp) )
+fprintf( 'Average peak: %.2f (sim) %.2f (exp): %.2f%% diff\n', mean(maxErrSim), mean(maxErrExp), 100*(mean(maxErrSim)-mean(maxErrExp))/mean(maxErrExp) )
