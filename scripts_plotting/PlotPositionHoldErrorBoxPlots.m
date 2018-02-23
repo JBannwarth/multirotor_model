@@ -145,6 +145,17 @@ if (printResults)
     dlmwrite( fullfile(outFolderRaw, 'example_exp.csv'),  ...
         data, ...
         'precision', '%e', 'delimiter', ' ', '-append' )
+    
+    outFolder2 = fullfile( '..', 'ConferencePaperAIM', 'fig', 'tikz', 'data_stationkeeping' );
+    fileID = fopen(fullfile(outFolder2, 'example_exp.csv'),'w');
+    fprintf(fileID, 't x y z\n');
+    fclose( fileID );
+    data = [ errExp(3).time, errExp(3).x, errExp(3).y, errExp(3).z ];
+    fprintf( 'x:%.4f y:%.4f z:%.4f', std(errExp(3).x), std(errExp(3).y), std(errExp(3).z) )
+    data = data(1:20:end,:);
+    dlmwrite( fullfile(outFolder2, 'example_exp.csv'),  ...
+        data, ...
+        'precision', '%e', 'delimiter', ' ', '-append' )
 end
 
 %% Plot data - Pos Error
