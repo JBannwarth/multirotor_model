@@ -9,7 +9,7 @@ project = simulinkproject; projectRoot = project.RootFolder;
 outFolder = fullfile( projectRoot, '..', 'journal_paper_1', 'fig' );
 outFolderRaw = fullfile( projectRoot, '..', 'journal_paper_1', 'fig', 'tikz', 'data_poshold' );
 inFolderExp = fullfile( projectRoot, 'data_validation', 'logsWideCropped' );
-inFolderSim = fullfile( projectRoot, 'data_results', 'HoverSim_2018-02-02_01-19-36_OC' );
+inFolderSim = fullfile( projectRoot, 'data_results', 'HoverSim_2018-06-07_15-58-12_OC' );
 fontSize  = 9;
 outSize   = [8 8];
 printResults = true;
