@@ -42,7 +42,7 @@ toSave = 8;
 tableStr = '';
 for i = 1:length( inputFiles )
     if ( i == toSave )
-;        disp('Saving')
+        disp('Saving')
     end
     logsout = simData{i}.get('logsout');
     pwm     = logsout.get('pwm').Values;
