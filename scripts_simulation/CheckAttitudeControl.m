@@ -11,7 +11,7 @@ load_system(model);
 project = simulinkproject;
 projectRoot = project.RootFolder;
 Simulation.TS_MAX = 0.01;
-load( 'AeroBoth.mat' )
+load( 'AeroBothAIAA_2.mat' )
 InitializeModel
 Px4Bus;
 selfBus;
@@ -57,7 +57,7 @@ for n = 1:length( inputFiles )
     
     % Set all simulation parameters
     Simulation.T_END = AttInput.qDes(end,1);
-    load( 'AeroBoth.mat' )
+    load( 'AeroBothAIAA_2.mat' )
     InitializeModel
     Uav.PITCH_ONLY = 1;
     Simulation.T_START_STEP = AttInput.tDesOffset;

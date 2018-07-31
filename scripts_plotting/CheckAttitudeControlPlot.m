@@ -5,7 +5,7 @@ close all; clearvars;
 
 % Setup
 project = simulinkproject; projectRoot = project.RootFolder;
-inFolder  = fullfile( projectRoot, 'data_results', 'AttSim_2018-02-02_00-44-16' );
+inFolder  = fullfile( projectRoot, 'data_results', 'AttSim_2018-07-16_20-35-18' );
 outFolder = fullfile( projectRoot, '..', 'journal_paper_1', 'fig' );
 outFolderRaw = fullfile( projectRoot, '..', 'journal_paper_1', 'fig', 'tikz', 'data_step' );
 indexToPrint = 8;
@@ -123,7 +123,7 @@ for i = 1:length( inputFiles )
         MatlabToLatexEps( fileName );
         if ( i == toSave )
             % Exp
-            data = [ pitchExp.Time, rad2deg(pitchExp.Data), rad2deg(pitchDesExp.Data) ];
+            data = [ pitchExp.Time, -rad2deg(pitchExp.Data), -rad2deg(pitchDesExp.Data) ];
             data = data(1:2:end,:);
             fileID = fopen(fullfile(outFolderRaw, 'pitch_exp.csv'),'w');
             fprintf(fileID, 't exp des\n');
@@ -133,7 +133,7 @@ for i = 1:length( inputFiles )
                 'precision', '%e', 'delimiter', ' ', '-append' )
             
             % Sim
-            data = [ pitch.Time, pitch.Data ];
+            data = [ pitch.Time, -pitch.Data ];
             fileID = fopen(fullfile(outFolderRaw, 'pitch_sim.csv'),'w');
             fprintf(fileID, 't sim\n');
             fclose( fileID );
@@ -184,7 +184,7 @@ for i = 1:length( inputFiles )
                 'precision', '%e', 'delimiter', ' ', '-append' )
             
             % Sim
-            offsetsSim = 1634;
+            offsetsSim = 1626;
             data = [ pwm.Time, 1000+1000.*pwm.Data - offsetsSim ];
             fileID = fopen(fullfile(outFolderRaw, 'pwm_sim.csv'),'w');
             fprintf(fileID, 't fl bl br fr\n');

@@ -24,7 +24,7 @@ UavQuadcopter460mm
 
 %% AERO PARAMETERS
 if ~exist( 'Aero', 'var' )
-    load( 'FitsCT1fixCT2zeroedCDRoterror.mat' );
+    load( 'AeroBodyOrientedAIAA_2.mat' );
 end
 
 %% ROTOR/MOTOR DYNAMICS
@@ -33,7 +33,7 @@ Uav.THRUST_HOVER = abs(Uav.G(3)) / 4;
 
 % Motor speed at hover thrust [rad/s]
 if strcmp( Aero.Type, 'Body oriented' )
-    Uav.OMEGA_HOVER = sqrt( Uav.THRUST_HOVER / (0.5*Uav.RHO_AIR*Aero.Cz2.coefs(1)) );
+    Uav.OMEGA_HOVER = sqrt( Uav.THRUST_HOVER / (0.5*Uav.RHO_AIR*Aero.Cz2.coefs(2)) );
 else
     Uav.OMEGA_HOVER = sqrt( Uav.THRUST_HOVER / (0.5*Uav.RHO_AIR*Aero.CT1.coefs(1)) );
 end

@@ -9,7 +9,7 @@ project = simulinkproject; projectRoot = project.RootFolder;
 outFolder = fullfile( projectRoot, '..', 'journal_paper_1', 'fig' );
 outFolderRaw = fullfile( projectRoot, '..', 'journal_paper_1', 'fig', 'tikz', 'data_poshold' );
 inFolderExp = fullfile( projectRoot, 'data_validation', 'logsWideCropped' );
-inFolderSim = fullfile( projectRoot, 'data_results', 'HoverSim_2018-06-07_15-58-12_OC' );
+inFolderSim = fullfile( projectRoot, 'data_results', 'HoverSim_2018-07-02_12-25-40_OC' );
 fontSize  = 9;
 outSize   = [8 8];
 printResults = true;
@@ -64,14 +64,14 @@ for i = 1:length( dataSim )
     errYTmp  = getsampleusingtime( logsout.get('posTrackingY').Values, tCutOff, tCutOffEnd);
     errZTmp  = getsampleusingtime( logsout.get('posTrackingZ').Values, tCutOff, tCutOffEnd);
     errSim(i).x = permute(errXTmp.Data, [3 1 2]);
-    errSim(i).y = permute(errYTmp.Data, [3 1 2]);
-    errSim(i).z = permute(errZTmp.Data, [3 1 2]);
+    errSim(i).y = -permute(errYTmp.Data, [3 1 2]);
+    errSim(i).z = -permute(errZTmp.Data, [3 1 2]);
     errSim(i).time = errXTmp.Time - errXTmp.Time(1);
     
     % Get pos error - Experiment
     errExp(i).x = flogs(i).vehicle_local_position_setpoint.x - flogs(i).vehicle_local_position.x;
-    errExp(i).y = -(flogs(i).vehicle_local_position_setpoint.y - flogs(i).vehicle_local_position.y);
-    errExp(i).z = -(flogs(i).vehicle_local_position_setpoint.z - flogs(i).vehicle_local_position.z);
+    errExp(i).y = (flogs(i).vehicle_local_position_setpoint.y - flogs(i).vehicle_local_position.y);
+    errExp(i).z = (flogs(i).vehicle_local_position_setpoint.z - flogs(i).vehicle_local_position.z);
     errExp(i).time = flogs(i).vehicle_local_position.time;
     
     % Get angles - Simulation
@@ -80,12 +80,12 @@ for i = 1:length( dataSim )
     yawTmp  = getsampleusingtime( logsout.get('yaw').Values, tCutOff, tCutOffEnd);
     
     angSim(i).roll  = rollTmp.Data(:,1);
-    angSim(i).pitch = pitchTmp.Data(:,1);
-    angSim(i).yaw   = yawTmp.Data(:,1);
+    angSim(i).pitch = -pitchTmp.Data(:,1);
+    angSim(i).yaw   = -yawTmp.Data(:,1);
     angSim(i).time  = rollTmp.Time - rollTmp.Time(1);
     angDesSim(i).roll  = rollTmp.Data(:,2);
-    angDesSim(i).pitch = pitchTmp.Data(:,2);
-    angDesSim(i).yaw   = yawTmp.Data(:,2);
+    angDesSim(i).pitch = -pitchTmp.Data(:,2);
+    angDesSim(i).yaw   = -yawTmp.Data(:,2);
     angDesSim(i).time  = rollTmp.Time - rollTmp.Time(1);
     
     % Get angles - Experiment
@@ -99,10 +99,10 @@ for i = 1:length( dataSim )
                    flogs(i).vehicle_attitude_setpoint.q_d_0_];
     
     [angExp(i).roll, angExp(i).pitch, angExp(i).yaw ] = QuatToEuler( quatTmp );
-    angExp(i).pitch = -angExp(i).pitch; angExp(i).yaw = -angExp(i).yaw;
+    %angExp(i).pitch = -angExp(i).pitch; angExp(i).yaw = -angExp(i).yaw;
     angExp(i).time = flogs(i).vehicle_attitude.time;
     [angDesExp(i).roll, angDesExp(i).pitch, angDesExp(i).yaw ] = QuatToEuler( quatDesTmp );
-    angDesExp(i).pitch = -angDesExp(i).pitch; angDesExp(i).yaw = -angDesExp(i).yaw;
+    %angDesExp(i).pitch = -angDesExp(i).pitch; angDesExp(i).yaw = -angDesExp(i).yaw;
     angDesExp(i).time = flogs(i).vehicle_attitude_setpoint.time;
 end
 
@@ -116,7 +116,7 @@ xlim([0 150])
 ylim([-0.2 0.2])
 SetFigProp( outSize, fontSize )
 if (printResults)
-    MatlabToLatexEps( fullfile( outFolder, 'Hover_ExRespSim' ), [], false );
+    %MatlabToLatexEps( fullfile( outFolder, 'Hover_ExRespSim' ), [], false );
     fileID = fopen(fullfile(outFolderRaw, 'example_sim.csv'),'w');
     fprintf(fileID, 't x y z\n');
     fclose( fileID );
@@ -136,7 +136,7 @@ xlim([0 150])
 ylim([-0.2 0.2])
 SetFigProp( outSize, fontSize )
 if (printResults)
-    MatlabToLatexEps( fullfile( outFolder, 'Hover_ExRespExp' ), [], false );
+    %MatlabToLatexEps( fullfile( outFolder, 'Hover_ExRespExp' ), [], false );
     fileID = fopen(fullfile(outFolderRaw, 'example_exp.csv'),'w');
     fprintf(fileID, 't x y z\n');
     fclose( fileID );
@@ -151,7 +151,7 @@ if (printResults)
     fprintf(fileID, 't x y z\n');
     fclose( fileID );
     data = [ errExp(3).time, errExp(3).x, errExp(3).y, errExp(3).z ];
-    fprintf( 'x:%.4f y:%.4f z:%.4f', std(errExp(3).x), std(errExp(3).y), std(errExp(3).z) )
+    fprintf( 'Ex resp., x:%.4f y:%.4f z:%.4f\n', std(errExp(3).x), std(errExp(3).y), std(errExp(3).z) )
     data = data(1:20:end,:);
     dlmwrite( fullfile(outFolder2, 'example_exp.csv'),  ...
         data, ...
@@ -226,7 +226,7 @@ for a = 1:length(ax)
     xticks( meanWindSpeedDisp )
     SetFigProp( outSize , fontSize );
     if (printResults)
-        MatlabToLatexEps( fullfile( outFolder, ['Hover_' ax{a} 'Error'] ), [], false );
+        %MatlabToLatexEps( fullfile( outFolder, ['Hover_' ax{a} 'Error'] ), [], false );
         fileID = fopen(fullfile(outFolderRaw, '..', ['HoverTest_' ax{a} 'Error.tex']),'w');
         if (a ~= length(ax))
             fprintf( fileID, header, '', ...
@@ -299,7 +299,7 @@ for a = 1:length(ax)
     xticks( meanWindSpeedDisp )
     SetFigProp( outSize , fontSize );
     if (printResults)
-        MatlabToLatexEps( fullfile( outFolder, ['Hover_' ax{a} ] ), [], false );
+        %MatlabToLatexEps( fullfile( outFolder, ['Hover_' ax{a} ] ), [], false );
         fileID = fopen(fullfile(outFolderRaw, '..', ['HoverTest_' ax{a} '.tex']),'w');
         if (a == 1)
             fprintf( fileID, header, '', ...
@@ -364,3 +364,36 @@ fclose( fileID );
 dlmwrite( fullfile(outFolderRaw, 'std_error.csv'),  ...
     data, ...
     'precision', '%e', 'delimiter', ' ', '-append' )
+
+% Display some results
+for i = 1:length(errExp)
+    meanErrExp.x(i) = mean(errExp(i).x);
+    meanErrExp.y(i) = mean(errExp(i).y);
+    meanErrExp.z(i) = mean(errExp(i).z);
+    meanStdExp.x(i) = std(errExp(i).x);
+    meanStdExp.y(i) = std(errExp(i).y);
+    meanStdExp.z(i) = std(errExp(i).z);
+    meanStdSim.x(i) = std(errSim(i).x);
+    meanStdSim.y(i) = std(errSim(i).y);
+    meanStdSim.z(i) = std(errSim(i).z);
+end
+    meanStdRatio.x = 100 .* ( meanStdSim.x - meanStdExp.x ) ./ meanStdExp.x;
+    meanStdRatio.y = 100 .* ( meanStdSim.y - meanStdExp.y ) ./ meanStdExp.y;
+    meanStdRatio.z = 100 .* ( meanStdSim.z - meanStdExp.z ) ./ meanStdExp.z;
+    
+fprintf('Mean error\n')
+fprintf('x || 3.1|% 2.4f, 3.6|% 2.4f, 4.1|% 2.4f, 4.7|% 2.4f, 5.2|% 2.4f\n', meanErrExp.x)
+fprintf('y || 3.1|% 2.4f, 3.6|% 2.4f, 4.1|% 2.4f, 4.7|% 2.4f, 5.2|% 2.4f\n', meanErrExp.y)
+fprintf('z || 3.1|% 2.4f, 3.6|% 2.4f, 4.1|% 2.4f, 4.7|% 2.4f, 5.2|% 2.4f\n', meanErrExp.z)
+fprintf('Mean std error\n')
+fprintf('x || 3.1|% 2.4f, 3.6|% 2.4f, 4.1|% 2.4f, 4.7|% 2.4f, 5.2|% 2.4f\n', meanStdExp.x)
+fprintf('y || 3.1|% 2.4f, 3.6|% 2.4f, 4.1|% 2.4f, 4.7|% 2.4f, 5.2|% 2.4f\n', meanStdExp.y)
+fprintf('z || 3.1|% 2.4f, 3.6|% 2.4f, 4.1|% 2.4f, 4.7|% 2.4f, 5.2|% 2.4f\n', meanStdExp.z)
+fprintf('Mean std error\n')
+fprintf('x-exp || 3.1|% 2.4f, 3.6|% 2.4f, 4.1|% 2.4f, 4.7|% 2.4f, 5.2|% 2.4f\n', meanStdExp.x)
+fprintf('x-sim || 3.1|% 2.4f, 3.6|% 2.4f, 4.1|% 2.4f, 4.7|% 2.4f, 5.2|% 2.4f\n', meanStdSim.x)
+
+fprintf('Diff std error\n')
+fprintf('x || 3.1|% 2.1f%%, 3.6|% 2.1f%%, 4.1|% 2.1f%%, 4.7|% 2.1f%%, 5.2|% 2.1f%% -- % 2.1f%%\n', [meanStdRatio.x mean(meanStdRatio.x)])
+fprintf('y || 3.1|% 2.1f%%, 3.6|% 2.1f%%, 4.1|% 2.1f%%, 4.7|% 2.1f%%, 5.2|% 2.1f%% -- % 2.1f%%\n', [meanStdRatio.y mean(meanStdRatio.y)])
+fprintf('z || 3.1|% 2.1f%%, 3.6|% 2.1f%%, 4.1|% 2.1f%%, 4.7|% 2.1f%%, 5.2|% 2.1f%% -- % 2.1f%%\n', [meanStdRatio.z mean(meanStdRatio.z)])
