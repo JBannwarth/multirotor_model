@@ -2,6 +2,7 @@ function SetFigProp(figSize, varargin)
 %SETFIGPROP Set figure proportions
 %   SetFigProp(figSize)
 %   SetFigProp(figSize, fontSize)
+%   Figsize = [width, height] (cm)
 %   Written by: Z.J. Chen
 %   Last modified by: J.X.J. Bannwarth, 11/10/2017
 
