@@ -4,14 +4,14 @@ clearvars; close all; clc;
 
 %% Load model
 model = 'MultirotorSimPx4';
-dragModel = 'DragModelMomentDragNew';
+dragModel = 'DragModelAIAAv3';
 load_system(model);
 
 %% Initialization
 project = simulinkproject;
 projectRoot = project.RootFolder;
 Simulation.TS_MAX = 0.01;
-load( 'AeroBothAIAA_2.mat' )
+load( 'AeroBothAIAA_3.mat' )
 InitializeModel
 Px4Bus;
 selfBus;
@@ -26,7 +26,7 @@ UsePositionController( model, false );
 % Block parameters
 set_param( [model '/Fixed wind input'], 'value', '[0 0 0]' );
 set_param( [model '/Drag model'], 'ModelName', dragModel );
-set_param( [model '/Motor model'], 'ModelName', 'MotorModelNew' );
+set_param( [model '/Motor model'], 'ModelName', 'MotorModelAIAAv3' );
 
 %% Prepare I/O
 % Get list of files to plot
@@ -57,7 +57,7 @@ for n = 1:length( inputFiles )
     
     % Set all simulation parameters
     Simulation.T_END = AttInput.qDes(end,1);
-    load( 'AeroBothAIAA_2.mat' )
+    load( 'AeroBothAIAA_3.mat' )
     InitializeModel
     Uav.PITCH_ONLY = 1;
     Simulation.T_START_STEP = AttInput.tDesOffset;

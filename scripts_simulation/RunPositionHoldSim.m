@@ -51,15 +51,15 @@ UseEstimators( model, true );
 UsePositionController( model, true );
 
 %% 4) Select submodels
-set_param( [model '/Drag model'],  'ModelName', 'DragModelMomentDragNew' );
-set_param( [model '/Motor model'], 'ModelName', 'MotorModelNew' );
+set_param( [model '/Drag model'],  'ModelName', 'DragModelAIAAv3' );
+set_param( [model '/Motor model'], 'ModelName', 'MotorModelAIAAv3' );
 
 %% 5) Loop over the number of iterations
 load( fullfile( inFolder , windFiles{1} ) )
 Simulation.TS_MAX = 0.001;
 Simulation.TS_OUT = 0.01;
 Simulation.T_END = windInput.Time(end);
-load( fullfile( projectRoot, 'data_misc', 'AeroBodyOrientedAIAA_2' ) );
+load( fullfile( projectRoot, 'data_misc', 'AeroBodyOrientedAIAA_3' ) );
 InitializeModel;
 clearvars( 'windInput' )
 
