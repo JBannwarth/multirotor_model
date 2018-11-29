@@ -1,15 +1,13 @@
-%INITIALIZEPARAMETERS
-% Initialises parameters for quadcopter model
+%INITIALIZEPARAMETERS Initialises parameters for quadcopter model
+%	Model properties based off of the quadcopter used for the ICUAS'16 paper:
+%	Bannwarth, J.X.J., Chen, Z.J., Stol, K.A. and MacDonald, B.A. (2016)
+%	Disturbance Accomodation Control for Wind Rejection of a Quacopter.
+%	Proceedings of ICUAS'16 (Arlington, VA, USA), June 7-10.
+%	The paper also contains a derivation of the equations of motion used in
+%	also attached simulink model.
 %
-% Model properties based off of the quadcopter used for the ICUAS'16 paper:
-% Bannwarth, J.X.J., Chen, Z.J., Stol, K.A. and MacDonald, B.A. (2016)
-% Disturbance Accomodation Control for Wind Rejection of a Quacopter.
-% Proceedings of ICUAS'16 (Arlington, VA, USA), June 7-10.
-% The paper also contains a derivation of the equations of motion used in
-% also attached simulink model.
-%
-% Written by: J.X.J. Bannwarth, J.Chen, and K.Stol
-% Last modified: 10/09/2017 by J.X.J. Bannwarth
+%	Written by:    J.X.J. Bannwarth, J.Chen, and K.Stol
+%	Last modified: J.X.J. Bannwarth, 2018/11/29
 
 % Clean up
 % clear variables; clc;
@@ -33,7 +31,7 @@ Uav.THRUST_HOVER = abs(Uav.G(3)) / 4;
 
 % Motor speed at hover thrust [rad/s]
 if strcmp( Aero.Type, 'Body oriented' )
-    Uav.OMEGA_HOVER = sqrt( Uav.THRUST_HOVER / (0.5*Uav.RHO_AIR*Aero.Cz2.coefs(2)) );
+    Uav.OMEGA_HOVER = sqrt( Uav.THRUST_HOVER / (0.5*Uav.RHO_AIR*Aero.Cz2.coefs(2)*Uav.D_PROP^2*Uav.A_PROP) );
 else
     Uav.OMEGA_HOVER = sqrt( Uav.THRUST_HOVER / (0.5*Uav.RHO_AIR*Aero.CT1.coefs(1)) );
 end
