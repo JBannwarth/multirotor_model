@@ -15,11 +15,6 @@ project = simulinkproject; projectRoot = project.RootFolder;
 uX = 5;
 uY = 0;
 useWind = true;
-if useWind
-    UMean = mean( windInput );
-    uX = UMean(1);
-    uY = 0;
-end
 
 %% Trim using Euler model
 model = 'MultirotorSimLin';
@@ -29,6 +24,12 @@ load_system( model )
 load( fullfile( projectRoot, 'data_misc', 'AeroBodyOrientedAIAA_3' ) );
 load( fullfile( projectRoot, 'data_wind', 'TurbSim_40_01' ) );
 InitializeModel
+
+if useWind
+    UMean = mean( windInput );
+    uX = UMean(1);
+    uY = 0;
+end
 
 % Select submodels
 set_param( [model '/Drag model'],  'ModelName', 'DragModelAIAAv3' );
