@@ -27,6 +27,7 @@
 
         Initially, an attempt at replicating the multirotor model used by Mass{\'e} et al.\ was made. Replicating the model would enable to ensure the controller has been implemented properly by comparing results with those presented in the paper. In addition, the propeller model could be reused in the `Aerodynamic Modelling' section of the thesis as a point of comparison. However, several issues listed in Section~\ref{sec:issues} arose. As a consequence, it was decided to instead implement the \Hinf\ controller on the model presented in our AIAA Journal paper~\cite{BannwarthEtAl2018}, which will be described in the first part of this report.
 
+    \newpage
     \section{Structure of the Controller}
 
         The controller block diagram is shown in Figure~\ref{fig:ctrl_block_diag}.
@@ -74,7 +75,7 @@
 
         The reference tracking component of the controller tries to minimise the error between the reference states \(\mathbf{r} = \begin{bmatrix} x_d & y_d & z_d  & \psi_d \end{bmatrix}^\top \) and the output states \(\mathbf{z} = \begin{bmatrix} x & y & z  & \psi \end{bmatrix}^\top \) in order to track a reference position and yaw angle. The gain matrix \(\mathbf{K}_i\) acts on the integrated error while \(\mathbf{K}_p\) acts on the error.
 
-        In order to take advantage of the decoupling between the axes of the UAV, Mass{\'e} et all set most elements of the gain matrices to 0. We go further and force gains pertaining to the \(x\)/roll axis to be the same as those pertaining to the \(y\)/pitch axis in order to both ensure the UAV performs equally well regardless of its yaw angle and to simplify the gain tuning procedure. In effect, this was almost already the case for the gain matrices presented by Mass{\'e} et al.\ and as such should not make a large difference. The gain matrices thus take the following forms:
+        In order to take advantage of the decoupling between the axes of the UAV, Mass{\'e} et al.\ set most elements of the gain matrices to 0. We go further and force gains pertaining to the \(x\)/roll axis to be the same as those pertaining to the \(y\)/pitch axis in order to both ensure the UAV performs equally well regardless of its yaw angle and simplify the gain tuning procedure. In effect, this was almost already the case for the gain matrices presented by Mass{\'e} et al.\ and as such should not make a large difference. The gain matrices thus take the following forms:
         %
         \begin{align}
             \mathbf{SOF}_1 =
@@ -107,14 +108,36 @@
             \end{bmatrix}.
         \end{align}
 
-        These matrices are tuned using the \verb|systune| algorithm in MATLAB, through the use of the Simulink Control System Tuner. This algorithm takes as inputs a list of control objectives, in this case wind disturbance rejection, closed-loop pole confinement, open-loop stability margin, and step tracking performance. It then linearises the system and uses structured \Hinf\ techniques to compute the gains. This is an optimisation problem that can have multiple local minima, and as a consquence the starting point will have an influence on the outcome. Figure~\ref{fig:ctrl_systemtuner.png} shows an example of the Control System Tuner software, with plots of the various control system objectives.
+        These matrices are tuned using the \verb|systune| algorithm in MATLAB, through the use of the Simulink Control System Tuner. This algorithm takes as inputs a list of control objectives, in this case wind disturbance rejection, closed-loop pole confinement, open-loop stability margin, and step tracking performance. It then linearises the system and uses structured \Hinf\ techniques to compute the gains. This is an optimisation problem that can have multiple local minima, and as a consquence the starting point will have an influence on the outcome. Figure~\ref{fig:ctrl_systemtuner} shows an example of the Control System Tuner software, with plots of the various control system objectives.
 
         \begin{figure}[h!]
             \centering%
-            \includegraphics[width=16cm]{ctrl_systemtuner.png}%
-            \caption{Simulink Control System Tuner window.}\label{fig:ctrl_systemtuner.png}
+            \includegraphics[width=15cm]{ctrl_systemtuner.png}%
+            \caption{Simulink Control System Tuner window.}\label{fig:ctrl_systemtuner}
         \end{figure}
 
+    \newpage
+    \section{Preliminary Results}
+
+        This section presents closed loop responses to demonstrate that the controller implementation works. The control system was tuned at a wind speed of \SI{5}{\metre\per\second} using the Control System Tuner and the control design objectives given by Mass{\'e} et al. The pole location design objective was set as a hard requirement in order to reduce the agressiveness of the controller. For each test, a separate Simulink model using a Euler angles plant is first used to trim the system at the current wind speed. The full quaternion model with the controller is then used to obtain the system response.
+
+        Figure shows the response of the system when subjected to a fixed \SI{5}{\metre\per\second} wind speed along the \(x\)-axis. A constant \SI{5}{\degree\per\second} ramp reference is commanded to the yaw axis, and \SI{1}{metre} step commands are applied to the \(x\), \(y\), and \(z\) axes at \SI{10}{\second}. As can be seen, the system remains stable. There is some steady state error in the yaw tracking, which indicates the system is not Type 2. The postition responses seem to settle within \SI{5}{\second}, but some error remains in the \(x\)-axis. This is likely due to control system tuning and could be improved upon. The motor input shows large spikes after the step even though the system remains stable. This is not ideal, and could be dealt with through tuning. However, it would likely be better to do away with step position references and instead compute a path to the desired location, as higher gains can be used when tracking a slope rather than a large step.
+
+        \begin{figure}[h!]
+            \centering%
+            \includegraphics{result_step_track.pdf}
+            \caption{Tracking performance and normalised control input when subjecting the UAV to a fixed \SI{5}{\metre\per\second} wind speed as well as abritrary reference inputs.}\label{fig:result_step_track}
+        \end{figure}
+
+        Figure~\ref{fig:result_dist_rej} shows the response of the system when subjected to a wind profile recorded in the Univeristy of Auckland's twisted flow wind tunnel with a mean wind speed of \SI{4.2}{\metre\per\second}. The system successfully rejects disturbances and the motor input stays well within its limits. Performance is found to be in the same order of magnitude as that presented in the AIAA paper~\cite{BannwarthEtAl2018}, although more thorough comparisons would be required for a fairer comparison. Furthermore, the controller implementation is continuous whereas that used in~\cite{BannwarthEtAl2018}. In addition, due to the hard requirement on the closed-loop pole placement, the system is less aggressive than it could be. However, the results presented are appropriate for the purpose of learning the tools.
+
+        \begin{figure}[h!]
+            \centering%
+            \includegraphics{result_dist_rej.pdf}
+            \caption{Tracking performance and normalised control input when subjecting the UAV to a wind profile recorded in the wind tunnel with a mean wind speed of \SI{4.2}{\metre\per\second}.}\label{fig:result_dist_rej}
+        \end{figure}
+
+    \newpage
     \section{Issues with Model Implementation}\label{sec:issues}
 
         Several issues arose while implementing the quadcopter model presented by Mass{\'e} et al. They are listed in this section as a matter of record.
@@ -145,7 +168,7 @@
             \begin{figure}[h!]
                 \centering%
                 \includegraphics{aero_fm.pdf}%
-                \caption{Aerodynamic forces and moments predicted by the propeller model. The solid markers and lines represent Khan et al.'s experimental and simulation results respectively, and the stars represent Bannwarth et al.'s results. These results are expressed in the UAV frame with an incident angle of the wind of \SI{90}{\degree}, which means that the \(y\) and \(z\) axes are inverted compared to the propeller frame.}\label{fig:aero_fm}
+                \caption{Aerodynamic forces and moments predicted by the propeller model for various wind speed speeds, rotational speed, and propeller tilt. The solid markers and lines represent Khan et al.'s experimental and simulation results respectively, and the stars represent Bannwarth et al.'s results. These results are expressed in the UAV frame with an incident angle of the wind of \SI{90}{\degree}, which means that the \(y\) and \(z\) axes are inverted compared to the propeller frame.}\label{fig:aero_fm}
             \end{figure}
 
             Finally, a small mistake was found in the forces and moment equations. As an example, the equation for the axial thrust generated by the rotor is given as
@@ -184,6 +207,20 @@
             There is a number of small mistakes in the controller implementation details presented in the paper. For example, some of the gain matrices presented for the \Hinf\ controller have incorrect signs, and the given state feedback \(\mathbf{SOF}_2\) matrix has a form indicating it should be applied to the vector \(\mathbf{y}_2 = \begin{bmatrix} \dot{z} & z & p & \phi & q & \theta & r & \psi \end{bmatrix}^\top\), whereas the paper previously states that \(\mathbf{y}_2 = \begin{bmatrix} \dot{z} & p & q & r & z & \phi & \theta & \psi \end{bmatrix}^\top\).
 
             In addition, the paper provides a state-space model for the system and states it is used for the controller synthesis procedure. However, the state-space model does not have a disturbance input, which is necessary to synthesise a \Hinf\ controller. It is likely that Mass{\'e} et al.\ used Simulink's Control System Tuner which automatically performs a linearisation of the system dynamics, however they do not explicitely say so. This means that there is no need to replicate the state-space model provided in the paper, as numerically linearising the non-linear model using Simulink's tools is necessary anyway.
+
+    \newpage
+    \section{Conclusions}
+
+        The controller presented by Mass{\'e} et al.\ was implemented in Simulink and tested. The outcomes of this study are listed below.
+
+        \begin{itemize}
+            \item A better understanding of Khan and Nahon's propeller model was obtained, even if the results could not be replicated fully. It would be good to include this model in the thesis as a point of comparison with the model developed in~\cite{BannwarthEtAl2018}, but this would require further work.
+            \item The author learnt how to use the Simulink Control System Tuner, which could be a good way to tune both the existing PX4 flight controller gains and any future controller developed.
+            \item Basic knowledge of structured \Hinf\ control theory was obtained. Along with the Control System tuner, this methodology could be used to easily create a horizontal thrust controller for the canted-rotor octocopter.
+            \item A method to trim the UAV system was devised, which will enable for more efficient tuning and simulation in the future.
+        \end{itemize}
+
+        The next step will consist of implementing one or two more controllers from literature on the current UAV model in order to explore other methodogies. Of special interest would be controllers for UAVs with cantable rotors. Subsequently, the most promising method will be used for developing a horizontal thrust controller for the canted rotor octocopter.
 
     \bibliographystyle{ieeetran}
     \bibliography{bibliography}

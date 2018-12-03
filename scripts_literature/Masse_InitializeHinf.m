@@ -14,7 +14,7 @@ project = simulinkproject; projectRoot = project.RootFolder;
 %% Configuration
 uX = 5;
 uY = 0;
-useWind = true;
+useWind = false;
 
 %% Trim using Euler model
 model = 'MultirotorSimLin';
