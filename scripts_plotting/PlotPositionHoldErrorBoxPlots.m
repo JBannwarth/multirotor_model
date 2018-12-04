@@ -60,12 +60,12 @@ for i = 1:length( dataSim )
     Simulation = dataSim{i}.getSimulationMetadata.UserData.Simulation;
     tCutOff = 100;
     tCutOffEnd = tCutOff + 600;
-    errXTmp = getsampleusingtime( logsout.get('posTrackingX').Values, tCutOff, tCutOffEnd);
+    errXTmp  = getsampleusingtime( logsout.get('posTrackingX').Values, tCutOff, tCutOffEnd);
     errYTmp  = getsampleusingtime( logsout.get('posTrackingY').Values, tCutOff, tCutOffEnd);
     errZTmp  = getsampleusingtime( logsout.get('posTrackingZ').Values, tCutOff, tCutOffEnd);
     errSim(i).x = permute(errXTmp.Data, [3 1 2]);
-    errSim(i).y = -permute(errYTmp.Data, [3 1 2]);
-    errSim(i).z = -permute(errZTmp.Data, [3 1 2]);
+    errSim(i).y = permute(errYTmp.Data, [3 1 2]);
+    errSim(i).z = permute(errZTmp.Data, [3 1 2]);
     errSim(i).time = errXTmp.Time - errXTmp.Time(1);
     
     % Get pos error - Experiment
@@ -75,17 +75,17 @@ for i = 1:length( dataSim )
     errExp(i).time = flogs(i).vehicle_local_position.time;
     
     % Get angles - Simulation
-    rollTmp = getsampleusingtime( logsout.get('roll').Values, tCutOff, tCutOffEnd);
+    rollTmp   = getsampleusingtime( logsout.get('roll').Values, tCutOff, tCutOffEnd);
     pitchTmp  = getsampleusingtime( logsout.get('pitch').Values, tCutOff, tCutOffEnd);
-    yawTmp  = getsampleusingtime( logsout.get('yaw').Values, tCutOff, tCutOffEnd);
+    yawTmp    = getsampleusingtime( logsout.get('yaw').Values, tCutOff, tCutOffEnd);
     
     angSim(i).roll  = rollTmp.Data(:,1);
-    angSim(i).pitch = -pitchTmp.Data(:,1);
-    angSim(i).yaw   = -yawTmp.Data(:,1);
+    angSim(i).pitch = pitchTmp.Data(:,1);
+    angSim(i).yaw   = yawTmp.Data(:,1);
     angSim(i).time  = rollTmp.Time - rollTmp.Time(1);
     angDesSim(i).roll  = rollTmp.Data(:,2);
-    angDesSim(i).pitch = -pitchTmp.Data(:,2);
-    angDesSim(i).yaw   = -yawTmp.Data(:,2);
+    angDesSim(i).pitch = pitchTmp.Data(:,2);
+    angDesSim(i).yaw   = yawTmp.Data(:,2);
     angDesSim(i).time  = rollTmp.Time - rollTmp.Time(1);
     
     % Get angles - Experiment

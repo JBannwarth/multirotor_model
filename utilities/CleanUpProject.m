@@ -22,6 +22,8 @@ rmpath(fullfile(projectRoot, 'data_wind'))
 rmpath(fullfile(projectRoot, 'scripts_quat'))
 rmpath(fullfile(projectRoot, 'scripts_literature'))
 rmpath(fullfile(projectRoot, 'models_literature'))
+rmpath(fullfile(projectRoot, 'models_archive'))
+rmpath(fullfile(projectRoot, 'models_test'))
 
 % Reset the location where generated code and other temporary files are
 % created (slprj) to the default:

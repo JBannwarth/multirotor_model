@@ -5,13 +5,13 @@ close all; clearvars;
 
 % Setup
 project = simulinkproject; projectRoot = project.RootFolder;
-inFolder  = fullfile( projectRoot, 'data_results', 'AttSim_2018-09-28_17-36-46' );
+inFolder  = fullfile( projectRoot, 'data_results', 'AttSim_2018-12-03_18-02-24' );
 outFolder = fullfile( projectRoot, '..', 'journal_paper_1', 'fig' );
 outFolderRaw = fullfile( projectRoot, '..', 'journal_paper_1', 'fig', 'tikz', 'data_step' );
 indexToPrint = 8;
 fontSize  = 9;
 outSize   = [8 8];
-printResults = true;
+printResults = false;
 
 % Get data - might require a lot of memory
 inputFiles = dir( inFolder );
@@ -81,9 +81,9 @@ for i = 1:length( inputFiles )
     pitchDesExpT = flog.vehicle_attitude_setpoint.time - stepStart(i);
     
     % Rearrange PWM and change axes to match sim
-    pwmExp      = [ pwmExp(:,3), pwmExp(:,2), pwmExp(:,4), pwmExp(:,1) ];
-    pitchExp    = - pitchExp;
-    pitchDesExp = - pitchDesExp;
+    pwmExp      = [ pwmExp(:,1), pwmExp(:,4), pwmExp(:,2), pwmExp(:,3) ];
+%     pitchExp    = - pitchExp;
+%     pitchDesExp = - pitchDesExp;
     
     % Resample
     TResample   = 1/250;
@@ -123,7 +123,7 @@ for i = 1:length( inputFiles )
         MatlabToLatexEps( fileName );
         if ( i == toSave )
             % Exp
-            data = [ pitchExp.Time, -rad2deg(pitchExp.Data), -rad2deg(pitchDesExp.Data) ];
+            data = [ pitchExp.Time, rad2deg(pitchExp.Data), rad2deg(pitchDesExp.Data) ];
             data = data(1:2:end,:);
             fileID = fopen(fullfile(outFolderRaw, 'pitch_exp.csv'),'w');
             fprintf(fileID, 't exp des\n');
@@ -133,7 +133,7 @@ for i = 1:length( inputFiles )
                 'precision', '%e', 'delimiter', ' ', '-append' )
             
             % Sim
-            data = [ pitch.Time, -pitch.Data ];
+            data = [ pitch.Time, pitch.Data ];
             fileID = fopen(fullfile(outFolderRaw, 'pitch_sim.csv'),'w');
             fprintf(fileID, 't sim\n');
             fclose( fileID );

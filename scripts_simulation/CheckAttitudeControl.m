@@ -54,6 +54,7 @@ for n = 1:length( inputFiles )
     % Get and process input
     load( inputFiles{n} )
     PrepareAttitudeStepDataSingleAxis;
+    Initial.Q = AttInput.qDes(1,2:end)';
     
     % Set all simulation parameters
     Simulation.T_END = AttInput.qDes(end,1);

@@ -14,7 +14,7 @@ project = simulinkproject; projectRoot = project.RootFolder;
 %% Configuration
 uX = 5;
 uY = 0;
-useWind = false;
+useWind = true;
 
 %% Trim using Euler model
 model = 'MultirotorSimLin';
@@ -88,10 +88,10 @@ Simulation.TS_OUT = 0.01;
 Simulation.T_END = 30;
 InitializeModel
 
-Upsilon = [ 0.25,  0.25, -0.25,  0.25 ;
-            0.25,  0.25,  0.25, -0.25 ;
-            0.25, -0.25,  0.25,  0.25 ;
-            0.25, -0.25, -0.25, -0.25 ];
+Upsilon = [ -0.25, -0.25,  0.25, -0.25 ;
+            -0.25, -0.25, -0.25,  0.25 ;
+            -0.25,  0.25, -0.25, -0.25 ;
+            -0.25,  0.25,  0.25,  0.25 ];
 
 % Initialize all matrices (not used)
 SOF2     = [eye(4), eye(4)];

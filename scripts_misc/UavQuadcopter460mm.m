@@ -10,7 +10,7 @@ Uav.A_PROP = (pi*Uav.D_PROP^2)/4;
 Uav.L    = (0.456 / 2) * ones(4,1); % Distances from centre to motor axis [m]
 Uav.BETA = deg2rad(45:90:315)'; % Arm angles [rad]
 Uav.N_ROTORS = length(Uav.BETA); % Number of rotors [-]
-Uav.ROTOR_DIRECTION = (-1).^(1:Uav.N_ROTORS); % 1 = CCW, -1 = CW [-]
+Uav.ROTOR_DIRECTION = (-1).^((1:Uav.N_ROTORS)); % 1 = CCW, -1 = CW [-]
 % Rotation matrices from motor to body frame for each rotor
 % E.g. Non-rotated rotors (rotors parallel to body z-axis)
 %      [ 1 0 0 | 1 0 0 | 1 0 0 | 1 0 0
@@ -35,7 +35,7 @@ if ~isfield( Uav, 'M' )
 end
 
 % Gravity vector
-Uav.G   = Uav.M * [0; 0; -GRAVITY]; % [N]
+Uav.G   = Uav.M * [0; 0; GRAVITY]; % [N]
 
 % Frame inertia (from trifilar pendulum tests) [kgm^2]
 Uav.I = diag( [0.0175, 0.0175, 0.0250] );

@@ -28,7 +28,7 @@ margin = 0.02* abs(eulDes.(ax)(maxInd) - eulDes.(ax)(1) );
 stepIndex = find( abs(eulDes.(ax) - eulDes.(ax)(1)) < margin, 1, 'last' );
 
 qDes = EulerToQuat( [eulDes.Roll, eulDes.Pitch, eulDes.Yaw] );
-Initial.Q = [1 1 -1 -1]' .* EulerToQuat( initEuler )';
+Initial.Q = [1 1 1 1]' .* EulerToQuat( initEuler )';
 
 AttInput.tDes = tDes - tExp(1);
 tExp = tExp - tExp(1);
