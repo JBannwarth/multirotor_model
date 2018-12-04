@@ -1,5 +1,6 @@
-function SetFigProp(figSize, varargin)
+function SetFigProp(varargin)
 %SETFIGPROP Set figure proportions
+%   SetFigProp()
 %   SetFigProp(figSize)
 %   SetFigProp(figSize, fontSize)
 %   Figsize = [width, height] (cm)
@@ -7,9 +8,13 @@ function SetFigProp(figSize, varargin)
 %   Last modified by: J.X.J. Bannwarth, 11/10/2017
 
     fontSize = 12;
-    if (length(varargin) == 1)
-        fontSize = varargin{1};
-    elseif (length(varargin) > 1)
+    figSize  = [8, 8];
+    if ~isempty(varargin)
+       figSize = varargin{1}; 
+    end
+    if (length(varargin) == 2)
+        fontSize = varargin{2};
+    elseif (length(varargin) > 2)
         error('Too many input')
     end
          

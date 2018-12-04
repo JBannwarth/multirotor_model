@@ -76,7 +76,7 @@ if ( useClosedContraptionData )
     userData.Blocks.DragModel = get_param( [model '/Drag model'], 'ModelName' );
     userData.Params = Params;    
     output = output.setUserData( userData );
-    save( fullfile( outputFolder, [ '0windspeed_output.mat'] ), 'output' )
+    save( fullfile( outputFolder, ['0windspeed_output.mat'] ), 'output' )
     index = 1;
 else
     index = 0;
@@ -87,10 +87,6 @@ for i = 1:length( windFiles )
     
     % Set-up wind profile
     load( fullfile( inFolder , windFiles{i} ) )
-%     timeTmp = [windInput.time; windInput.time + windInput.time(end)];
-%     timeTmp = timeTmp - timeTmp(1);
-%     dataTmp = [windInput.Data; windInput.Data];
-%     windInput = timeseries( dataTmp, timeTmp );
     
     % Set simulation parameters
     UseWindProfile( model, true );
