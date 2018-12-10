@@ -1,9 +1,12 @@
+%RUNSTEADYSTATEHOVERANGLES Find steady state angles for various wind speeds
+%   Written by:    J.X.J. Bannwarth, 2017
+%   Last Modified: J.X.J. Bannwarth, 2018/12/10
 clear all; %#ok<CLALL>
 
 %% 1) Load model and initialize
-TestControllerInitOnly;
 Simulation.T_END = 30;
-
+TestControllerInitOnly;
+load( 'AeroBothAIAA_3.mat' )
 model = 'MultirotorSimPx4';
 load_system(model);
 
@@ -27,13 +30,12 @@ for i = 1:length(windSpeedX)
     UseWindProfile( model, false );
     set_param( [model '/Fixed wind input'], 'value', windVelString{i} );
     output = sim(model, 'SimulationMode', 'normal');
-    pitch = output.get('pitch');
-    pitchSS(i) = pitch(end,1);
-    
+    pitch = output.get('logsout').get('pitch').Values.Data(:,1);
+    pitchSS(i) = mean(pitch(round(length(pitch)/2):end,1));
 end
 
 %% 4) Plot data
-CompareSteadyStateHoverAngles;
+PlotSteadyStateHoverAngles;
 
 %% 5) Clean up
 set_param( [model '/Varying wind input'], 'commented', 'off' );

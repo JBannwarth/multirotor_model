@@ -1,6 +1,6 @@
 %RUNPOSITIONHOLDSIM Run simulation for position hold case
 %   Written by:    J.X.J. Bannwarth, 2017
-%   Last Modified: J.X.J. Bannwarth, 2017/09/19
+%   Last Modified: J.X.J. Bannwarth, 2018/12/10
 close all; clc;
 clear all; %#ok<CLALL>
 
