@@ -1,6 +1,7 @@
 function R = QuatToRot( q )
-% QUATERNIONTOROTATIONMATRIXMAT Convert quaternion to rotation matrix
-% Written by: J.X.J. Bannwarth, 27/03/17
+%QUATTOROT Convert quaternion to rotation matrix
+%   Written by:    J.X.J. Bannwarth, 2017/03/27
+%   Last modified: J.X.J. Bannwarth, 2018/12/11
     W = q(1);
     X = q(2);
     Y = q(3);
@@ -33,5 +34,4 @@ function R = QuatToRot( q )
     R = [m00 m01 m02;
          m10 m11 m12;
          m20 m21 m22];
-    
 end
