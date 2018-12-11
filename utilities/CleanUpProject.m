@@ -9,7 +9,6 @@ function clean_up_project()
 % Remove folders from path
 project = simulinkproject;
 projectRoot = project.RootFolder;
-rmpath(fullfile(projectRoot, 'ccode'))
 rmpath(fullfile(projectRoot, 'libraries'))
 rmpath(fullfile(projectRoot, 'scripts_misc'))
 rmpath(fullfile(projectRoot, 'scripts_test'))
