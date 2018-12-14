@@ -278,7 +278,4 @@ TSWLatexianTemp*
 data_results/*
 data_wind/*
 !data_wind/turb_5ms.mat
-data_validation/step_*
-data_validation/tfwt_*
-data_validation/ExpFlight*
-data_validation/logs*
+data_validation/*
