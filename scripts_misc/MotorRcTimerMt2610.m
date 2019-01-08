@@ -13,7 +13,7 @@ current = 15.2; % A
 Motor.K = 7.59588e-6;%1.125770894557940e-05;%9.556410042213521e-06;%(thrust*GRAVITY) / ( (voltage - current*Motor.R) / Motor.K_E )^2;
 
 % Rotor drag coefficient
-Motor.B = 4.4335282346e-7 .*ones(4,1);
+Motor.B = 4.4335282346e-7 .*ones(1,4);
 
 % Masses
 Motor.M_M = 0.054; % Motor
@@ -38,5 +38,6 @@ Motor.I_R(:,:,1) = (Motor.I_M + Motor.I_P);
 Motor.I_R(:,:,2) = (Motor.I_M + Motor.I_P);
 Motor.I_R(:,:,3) = (Motor.I_M + Motor.I_P);
 Motor.I_R(:,:,4) = (Motor.I_M + Motor.I_P);
+Motor.I_R_ZZ = reshape( Motor.I_R(3,3,:), [1, size(Motor.I_R,3)]);
 
 clear thrust voltage current
