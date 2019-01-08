@@ -1,7 +1,7 @@
 clear all; %#ok<CLALL>
 
 %% Create input profile
-InitializeParameters
+InitializeParametersQuadcopterAIAAv3
 Simulation.TS_MAX = 0.01;
 Simulation.T_END = 100;
 Input.PWM_IN = SinusoidInputPWM([0; 0; 0; 0], [0, 0, 0, 0], ...

@@ -11,7 +11,7 @@ load_system(model);
 project = simulinkproject;
 projectRoot = project.RootFolder;
 Simulation.TS_MAX = 0.01;
-load( 'AeroBothAIAA_3.mat' )
+load( 'AeroBothAIAAv3.mat' )
 InitializeModel
 Px4Bus;
 selfBus;

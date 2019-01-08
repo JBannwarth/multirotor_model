@@ -1,4 +1,4 @@
-%INITIALIZEPARAMETERS Initialises parameters for quadcopter model
+%INITIALIZEPARAMETERSQUADCOPTERAIAAV3 Initialises parameters for quadcopter model
 %	Model properties based off of the quadcopter used for the ICUAS'16 paper:
 %	Bannwarth, J.X.J., Chen, Z.J., Stol, K.A. and MacDonald, B.A. (2016)
 %	Disturbance Accomodation Control for Wind Rejection of a Quacopter.
@@ -7,7 +7,7 @@
 %	also attached simulink model.
 %
 %	Written by:    J.X.J. Bannwarth, J.Chen, and K.Stol
-%	Last modified: J.X.J. Bannwarth, 2018/11/29
+%	Last modified: J.X.J. Bannwarth, 2019/01/09
 
 % Clean up
 % clear variables; clc;

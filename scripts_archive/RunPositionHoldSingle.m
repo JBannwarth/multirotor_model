@@ -1,7 +1,7 @@
 clear all;
 
 %% Initialization
-InitializeParameters
+InitializeParametersQuadcopterAIAAv3
 
 Simulation.TS_MAX = 0.01;
 Simulation.T_END = 120;
@@ -13,7 +13,7 @@ Px4Bus;
 selfBus;
 mpc_self;
 
-InitializeParameters;
+InitializeParametersQuadcopterAIAAv3;
 
 load turb_5ms
 

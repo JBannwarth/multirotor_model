@@ -1,8 +1,10 @@
 %INITIALIZEMODEL Load parameters
 %   Written by:    J.X.J. Bannwarth, 2017
-%   Last Modified: J.X.J. Bannwarth, 2018/11/29
+%   Last Modified: J.X.J. Bannwarth, 2019/01/09
 %% Load UAV parameters
-InitializeParameters
+if ~exist( 'Uav', 'var' )
+    InitializeParametersQuadcopterAIAAv3
+end
 
 %% Set simulation parameters
 if (~exist('Simulation', 'var')) || (~isfield( Simulation, 'TS_MAX' ))
@@ -27,7 +29,7 @@ end
 
 if ~exist( 'model', 'var' )
     % Default
-    model = 'MultirotorSimPx4SeparateRotors';
+    model = 'MultirotorSimPx4';
     %error( 'Need to define variable ''model'' before calling this function' );
 end
 
