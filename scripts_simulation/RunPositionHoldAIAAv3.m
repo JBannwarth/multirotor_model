@@ -59,7 +59,7 @@ load( fullfile( inFolder , windFiles{1} ) )
 Simulation.TS_MAX = 0.001;
 Simulation.TS_OUT = 0.01;
 Simulation.T_END = windInput.Time(end);
-load( fullfile( projectRoot, 'data_misc', 'AeroBodyOrientedAIAA_3' ) );
+load( fullfile( projectRoot, 'data_misc', 'AeroBodyOrientedAIAAv3' ) );
 InitializeModel;
 clearvars( 'windInput' )
 

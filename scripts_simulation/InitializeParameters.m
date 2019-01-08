@@ -22,7 +22,7 @@ UavQuadcopter460mm
 
 %% AERO PARAMETERS
 if ~exist( 'Aero', 'var' )
-    load( 'AeroBodyOrientedAIAA_2.mat' );
+    load( 'AeroBothAIAAv3.mat' );
 end
 
 %% ROTOR/MOTOR DYNAMICS

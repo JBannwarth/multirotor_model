@@ -58,7 +58,7 @@ for n = 1:length( inputFiles )
     
     % Set all simulation parameters
     Simulation.T_END = AttInput.qDes(end,1);
-    load( 'AeroBothAIAA_3.mat' )
+    load( 'AeroBothAIAAv3.mat' )
     InitializeModel
     Uav.PITCH_ONLY = 1;
     Simulation.T_START_STEP = AttInput.tDesOffset;
