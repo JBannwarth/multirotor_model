@@ -41,6 +41,7 @@ mkdir( outputFolder )
 %% 2) Load model
 model = 'MultirotorSimPx4';
 load_system(model);
+SwitchRotorNumber( model, 4 );
 
 %% 3) Set simulation parameters
 load( 'DefaultPx4Params.mat' )

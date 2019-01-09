@@ -1,12 +1,5 @@
-%INITIALIZEPARAMETERSQUADCOPTERAIAAV3 Initialises parameters for quadcopter model
-%	Model properties based off of the quadcopter used for the ICUAS'16 paper:
-%	Bannwarth, J.X.J., Chen, Z.J., Stol, K.A. and MacDonald, B.A. (2016)
-%	Disturbance Accomodation Control for Wind Rejection of a Quacopter.
-%	Proceedings of ICUAS'16 (Arlington, VA, USA), June 7-10.
-%	The paper also contains a derivation of the equations of motion used in
-%	also attached simulink model.
-%
-%	Written by:    J.X.J. Bannwarth, J.Chen, and K.Stol
+%INITIALIZEPARAMETERSOCTOCOPTER Initialises parameters for octocopter model
+%	Written by:    J.X.J. Bannwarth, 2019/01/09
 %	Last modified: J.X.J. Bannwarth, 2019/01/09
 
 % Clean up
@@ -17,8 +10,8 @@
 GRAVITY = 9.80665; % [m/s^2]
 
 % Call the appropriate components
-MotorRcTimerMt2610
 UavOctocopter500mm
+MotorRcTimerMt2610OctoTmp
 
 %% AERO PARAMETERS
 if ~exist( 'Aero', 'var' )

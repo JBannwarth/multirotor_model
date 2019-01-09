@@ -5,7 +5,6 @@
 %	Proceedings of ICUAS'16 (Arlington, VA, USA), June 7-10.
 %	The paper also contains a derivation of the equations of motion used in
 %	also attached simulink model.
-%
 %	Written by:    J.X.J. Bannwarth, J.Chen, and K.Stol
 %	Last modified: J.X.J. Bannwarth, 2019/01/09
 
@@ -17,8 +16,8 @@
 GRAVITY = 9.80665; % [m/s^2]
 
 % Call the appropriate components
-MotorRcTimerMt2610
 UavQuadcopter460mm
+MotorRcTimerMt2610
 
 %% AERO PARAMETERS
 if ~exist( 'Aero', 'var' )
