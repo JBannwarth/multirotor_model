@@ -1,5 +1,6 @@
-%CHECKATTITUDECONTROL Send attitude step commands to system and record perf
-%   Written by: J.X.J. Bannwarth, 2017/08/21
+%RUNPITCHSTEPAIAAV3 Send pitch step commands to system and record perf
+%   Written by:    J.X.J. Bannwarth, 2017/08/21
+%   Last modified: J.X.J. Bannwarth, 2019/01/09
 clearvars; close all; clc;
 
 %% Load model

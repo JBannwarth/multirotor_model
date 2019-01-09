@@ -1,5 +1,5 @@
-function clean_up_project()
-%clean_up_project   Clean up local customizations of the environment
+function CleanUpProject()
+%CleanUpProject   Clean up local customizations of the environment
 % 
 %   Clean up the environment for the current project. This function undoes
 %   the settings applied in "set_up_project". It is set to Run at Shutdown.
@@ -15,6 +15,7 @@ rmpath(fullfile(projectRoot, 'scripts_test'))
 rmpath(fullfile(projectRoot, 'scripts_simulation'))
 rmpath(fullfile(projectRoot, 'scripts_plotting'))
 rmpath(fullfile(projectRoot, 'scripts_data'))
+rmpath(fullfile(projectRoot, 'scripts_init'))
 rmpath(fullfile(projectRoot, 'data_misc'))
 rmpath(fullfile(projectRoot, 'data_validation'))
 rmpath(fullfile(projectRoot, 'data_wind'))
