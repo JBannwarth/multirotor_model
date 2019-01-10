@@ -6,7 +6,7 @@ clear all; %#ok<CLALL>
 %% 1) Load model and initialize
 Simulation.T_END = 30;
 TestControllerInitOnly;
-load( 'AeroBothAIAA_3.mat' )
+load( 'AeroBothAIAAv3.mat' )
 model = 'MultirotorSimPx4';
 load_system(model);
 
