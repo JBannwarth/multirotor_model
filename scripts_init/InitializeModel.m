@@ -1,8 +1,8 @@
 %INITIALIZEMODEL Load parameters
 %   Written by:    J.X.J. Bannwarth, 2017
-%   Last Modified: J.X.J. Bannwarth, 2019/01/09
+%   Last Modified: J.X.J. Bannwarth, 2019/01/10
 %% Load UAV parameters
-if ~exist( 'Uav', 'var' )
+if ~exist( 'GRAVITY', 'var' )
     InitializeParametersQuadcopterAIAAv3
 end
 
@@ -22,7 +22,7 @@ if ~isfield( Simulation, 'T_START_STEP' )
 end
 
 %% Set initial orientation
-if ~isfield( Initial, 'Q' )      % Initial orientation (quaternion)
+if ~exist( 'Initial', 'var' ) || ~isfield( Initial, 'Q' )      % Initial orientation (quaternion)
     init_eta = [0, 0, 0];
     Initial.Q = EulerToQuat(init_eta)';
 end

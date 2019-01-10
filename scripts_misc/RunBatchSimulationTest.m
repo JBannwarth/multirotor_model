@@ -40,7 +40,7 @@ end
 parfor idx=1:iterations
     disp('blop')
     set_param([model '/Motor model'],'Modelname',motorModels{idx});
-    simout(idx) = sim(model, 'SimulationMode', 'normal');
+    simout(idx) = parsim(model, 'SimulationMode', 'normal');
     
     testStruct = struct('Motormodel', motorModels{idx});
     

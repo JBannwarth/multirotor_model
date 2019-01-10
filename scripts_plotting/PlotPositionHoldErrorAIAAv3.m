@@ -1,6 +1,6 @@
 %PLOTPOSITIONHOLDERRORAIAAV3 Plot position hold error
 %   Written by:    J.X.J. Bannwarth, 2017/09/19
-%   Last Modified: J.X.J. Bannwarth, 2018/12/10
+%   Last Modified: J.X.J. Bannwarth, 2019/01/10
 clearvars;
 close all;
 
@@ -8,8 +8,8 @@ close all;
 project = simulinkproject; projectRoot = project.RootFolder;
 outFolder = fullfile( projectRoot, '..', 'journal_paper_1', 'fig' );
 outFolderRaw = fullfile( projectRoot, '..', 'journal_paper_1', 'fig', 'tikz', 'data_poshold' );
-inFolderExp = fullfile( projectRoot, 'data_validation', 'logsWideCropped' );
-inFolderSim = fullfile( projectRoot, 'data_results', 'HoverSim_2018-12-10_14-20-33_OC' );
+inFolderExp = fullfile( projectRoot, 'data_validation', 'HoverExpLogsOCAIAAv3' );
+inFolderSim = fullfile( projectRoot, 'data_results', 'HoverSim_2019-01-10_13-50-39_OC' );
 fontSize  = 9;
 outSize   = [8 8];
 printResults = false;

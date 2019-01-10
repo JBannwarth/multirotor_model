@@ -5,7 +5,7 @@ close all; clearvars;
 
 % Setup
 project = simulinkproject; projectRoot = project.RootFolder;
-inFolder  = fullfile( projectRoot, 'data_results', 'AttSim_2018-12-03_18-02-24' );
+inFolder  = fullfile( projectRoot, 'data_results', 'AttSim_2019-01-10_13-33-33' );
 outFolder = fullfile( projectRoot, '..', 'journal_paper_1', 'fig' );
 outFolderRaw = fullfile( projectRoot, '..', 'journal_paper_1', 'fig', 'tikz', 'data_step' );
 indexToPrint = 8;
