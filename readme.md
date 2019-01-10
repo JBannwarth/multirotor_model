@@ -28,13 +28,9 @@ In order to keep the size of the repository small, big data files are stored in 
 ### AIAA Journal Paper Data
 
 
-> [Aerodynamic Force Modeling of Multirotor Unmanned Aerial Vehicles](https://doi.org/10.2514/1.J057165)
+> Jérémie X. J. Bannwarth, Z. Jeremy Chen, Karl A. Stol, Bruce A. MacDonald, and Peter J. Richards (2018). [Aerodynamic Force Modeling of Multirotor Unmanned Aerial Vehicles](https://doi.org/10.2514/1.J057165) AIAA Journal 0 0:0, 1-10.
 
-> Jérémie X. J. Bannwarth, Z. Jeremy Chen, Karl A. Stol, Bruce A. MacDonald, and Peter J. Richards
-
-> AIAA Journal 0 0:0, 1-10
-
-The data used for above paper is available in the `UAV Wind Project` Google Drive (request access from me), under the following two folders:
+The data used for above paper is available in the `UAV Wind Project` Google Drive (request access from me), under the following there folders:
 
 - Data to put inside the `data_validation` subfolder
     - Step data to put in the root of `data_validation`: `2018-12-14 All Validation Data for Github`
