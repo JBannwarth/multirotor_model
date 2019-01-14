@@ -104,9 +104,12 @@ Upsilon = [ -0.25, -0.25,  0.25, -0.25 ;
             -0.25,  0.25, -0.25, -0.25 ;
             -0.25,  0.25,  0.25,  0.25 ];
 
-c = cosd(22.5)./(4*cosd(22.5)+4*sind(22.5));
-s = sind(22.5)./(4*cosd(22.5)+4*sind(22.5));
-Upsilon = [ -1/8, -c,  s, -1/8 ; 
+% Use PX4-style weigthing - rotors further apart from the axis of rotation
+% are given a higher control command (likely because of the higher moment
+% sensitivity)
+c = cosd(22.5) ./ (4*cosd(22.5)+4*sind(22.5));
+s = sind(22.5) ./ (4*cosd(22.5)+4*sind(22.5));
+Upsilon = [ -1/8, -c,  s, -1/8 ;
             -1/8, -s,  c,  1/8 ;
             -1/8, -s, -c, -1/8 ;
             -1/8, -c, -s,  1/8 ;
