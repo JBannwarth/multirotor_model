@@ -6,7 +6,7 @@
 %   International Conference on Unmanned Aircraft Systems (ICUAS) (2018):
 %   1408-1417.
 %   Written by:    J.X.J. Bannwarth, 2018/11/26
-%	Last modified: J.X.J. Bannwarth, 2018/11/29
+%	Last modified: J.X.J. Bannwarth, 2019/01/14
 
 clearvars
 project = simulinkproject; projectRoot = project.RootFolder;
@@ -15,15 +15,25 @@ project = simulinkproject; projectRoot = project.RootFolder;
 uX = 5;
 uY = 0;
 useWind = true;
+layout = 'octo';
 
 %% Trim using Euler model
 model = 'MultirotorSimLin';
 load_system( model )
 
 % Get wind data and aero parameters
-load( fullfile( projectRoot, 'data_misc', 'AeroBodyOrientedAIAA_3' ) );
-load( fullfile( projectRoot, 'data_wind', 'TurbSim_40_01' ) );
-InitializeModel
+load( fullfile( projectRoot, 'data_misc', 'AeroBodyOrientedAIAAv3' ) );
+load( fullfile( projectRoot, 'data_wind', 'TurbSimOC', 'TurbSim_40_01' ) );
+
+switch layout 
+    case 'octo' 
+        InitializeParametersOctocopter
+        InitializeModel
+    case 'quad'
+        InitializeModel
+    otherwise
+        InitializeModel
+end
 
 if useWind
     UMean = mean( windInput );
@@ -40,7 +50,7 @@ opspec = operspec( model );
 % States:  1 - omega, 2 - eta, 3 - nuBody, 4 - xiDot, 5 - xi
 % Inputs:  1 - w, 2 - u_m
 % Outputs: 1 - y
-opspec.States(1).Min   = [0 0 0 0];
+opspec.States(1).Min   = zeros(1,Uav.N_ROTORS);
 opspec.States(2).Known = [0 0 1];
 opspec.States(3).Known = [1 1 1];
 opspec.States(4).Known = [1 1 1];
@@ -48,7 +58,7 @@ opspec.States(5).Known = [1 1 1];
 
 opspec.Inputs(1).u     = [uX uY 0];
 opspec.Inputs(1).Known = [1 1 1];
-opspec.Inputs(2).Min   = [0 0 0 0];
+opspec.Inputs(2).Min   = zeros(1,Uav.N_ROTORS);
 
 op = findop( model, opspec );
 
@@ -88,10 +98,22 @@ Simulation.TS_OUT = 0.01;
 Simulation.T_END = 30;
 InitializeModel
 
+% Cols: thrust, roll, pitch, yaw
 Upsilon = [ -0.25, -0.25,  0.25, -0.25 ;
             -0.25, -0.25, -0.25,  0.25 ;
             -0.25,  0.25, -0.25, -0.25 ;
             -0.25,  0.25,  0.25,  0.25 ];
+
+c = cosd(22.5)./(4*cosd(22.5)+4*sind(22.5));
+s = sind(22.5)./(4*cosd(22.5)+4*sind(22.5));
+Upsilon = [ -1/8, -c,  s, -1/8 ; 
+            -1/8, -s,  c,  1/8 ;
+            -1/8, -s, -c, -1/8 ;
+            -1/8, -c, -s,  1/8 ;
+            -1/8,  c, -s, -1/8 ;
+            -1/8,  s, -c,  1/8 ;
+            -1/8,  s,  c, -1/8 ;
+            -1/8,  c,  s,  1/8 ];
 
 % Initialize all matrices (not used)
 SOF2     = [eye(4), eye(4)];

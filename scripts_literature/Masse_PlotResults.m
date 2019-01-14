@@ -1,6 +1,6 @@
 %MASSE_PLOTRESULTS Plot results from Masse et al.'s simulation
 %   Written by:    J.X.J. Bannwarth, 2018/11/30
-%	Last modified: J.X.J. Bannwarth, 2018/12/03
+%	Last modified: J.X.J. Bannwarth, 2019/01/14
 rVec = out.get('r');
 zVec = out.get('z');
 uVec = out.get('u_m');
@@ -26,7 +26,11 @@ legend( {'ref', 'act' }, 'Orientation', 'horizontal', 'Location', 'best' )
 subplot(1,2,2); hold on; grid on; box on
 plot( uVec.Time, uVec.Data )
 ylabel('Normalised motor input (-)'); xlabel('Time(s)')
-legend( {'FL', 'BL', 'BR', 'FR' })
+if size(uVec.Data,2) == 8
+    legend( {'FRO', 'FRI', 'BRI', 'BRO', 'BLO', 'BLI', 'FLI', 'FLO' })
+else
+    legend( {'FR', 'BR', 'BL', 'FL' })
+end
 
 SetFigProp([17 13])
 MatlabToLatexEps( fullfile( 'work', 'MasseResults' ) );

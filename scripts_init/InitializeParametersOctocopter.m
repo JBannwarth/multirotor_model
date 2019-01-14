@@ -11,7 +11,7 @@ GRAVITY = 9.80665; % [m/s^2]
 
 % Call the appropriate components
 UavOctocopter500mm
-MotorRcTimerMt2610OctoTmp
+MotorRcTimerMt2610
 
 %% AERO PARAMETERS
 if ~exist( 'Aero', 'var' )
