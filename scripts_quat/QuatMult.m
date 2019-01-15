@@ -1,7 +1,7 @@
 function [ qOut ] = QuatMult( q1, q2 )
-%QUATMULT Multiply quatrenion q1 by quaternion q2
-%   Written by: J.X.J. Bannwarth, 28/03/2017
-    
+%QUATMULT Multiply quaternion q1 by quaternion q2
+%   Written by:    J.X.J. Bannwarth, 2017/03/28
+%   Last modified: J.X.J. Bannwarth, 2017/01/15
     size1 = size( q1 );
     size2 = size( q2 );
     
