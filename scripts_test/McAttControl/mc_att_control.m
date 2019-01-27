@@ -4,82 +4,84 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
     %   Based on code from PX4 Firmware (retrieved 2019/01/15, v1.82):
     %       https://github.com/PX4/Firmware/blob/master/src/modules/mc_att_control/mc_att_control_main.cpp
     %   Written:       J.X.J. Bannwarth, 2019/01/18
-    %   Last modified: J.X.J. Bannwarth, 2019/01/21
+    %   Last modified: J.X.J. Bannwarth, 2019/01/22
 
     %% Public, tunable properties (equivalent to those available on PX4)
     properties (Nontunable)
-        acro_expo_rp        (1,1) {mustBeGreaterThanOrEqual(acro_expo_rp        ,    0), mustBeLessThanOrEqual(acro_expo_rp        ,    1)                                     } =  0.69; % MC_ACRO_EXPO [0-1]
-        acro_expo_y         (1,1) {mustBeGreaterThanOrEqual(acro_expo_y         ,    0), mustBeLessThanOrEqual(acro_expo_y         ,    1)                                     } =  0.69; % MC_ACRO_EXPO_Y [0-1]
-        acro_pitch_max      (1,1) {mustBeGreaterThanOrEqual(acro_pitch_max      ,    0), mustBeLessThanOrEqual(acro_pitch_max      , 1800)                                     } =   720; % MC_ACRO_P_MAX [0-1800]
-        acro_roll_max       (1,1) {mustBeGreaterThanOrEqual(acro_roll_max       ,    0), mustBeLessThanOrEqual(acro_roll_max       , 1800)                                     } =   720; % MC_ACRO_R_MAX [0-1800]
-        acro_superexpo_rp   (1,1) {mustBeGreaterThanOrEqual(acro_superexpo_rp   ,    0), mustBeLessThanOrEqual(acro_superexpo_rp   , 0.95)                                     } =   0.7; % MC_ACRO_SUPEXPO [0-0.95]
-        acro_superexpo_y    (1,1) {mustBeGreaterThanOrEqual(acro_superexpo_y    ,    0), mustBeLessThanOrEqual(acro_superexpo_y    , 0.95)                                     } =   0.7; % MC_ACRO_SUPEXPOY [0-0.95]
-        acro_yaw_max        (1,1) {mustBeGreaterThanOrEqual(acro_yaw_max        ,    0), mustBeLessThanOrEqual(acro_yaw_max        , 1800)                                     } =   540; % MC_ACRO_Y_MAX [0-1800]
-        airmode             (1,1) {mustBeGreaterThanOrEqual(airmode             ,    0), mustBeLessThanOrEqual(airmode             ,    2), mustBeInteger(airmode             )} =     0; % MC_AIRMODE [0-2]
-        d_term_cutoff_freq  (1,1) {mustBeGreaterThanOrEqual(d_term_cutoff_freq  ,    0), mustBeLessThanOrEqual(d_term_cutoff_freq  , 1000)                                     } =    30; % MC_DTERM_CUTOFF [0-1000]
-        pitch_rate_d        (1,1) {mustBeGreaterThanOrEqual(pitch_rate_d        ,    0)                                                                                        } = 0.003; % MC_PITCHRATE_D [>0]
-        pitch_rate_ff       (1,1) {mustBeGreaterThanOrEqual(pitch_rate_ff       ,    0)                                                                                        } =     0; % MC_PITCHRATE_FF [>0]
-        pitch_rate_i        (1,1) {mustBeGreaterThanOrEqual(pitch_rate_i        ,    0)                                                                                        } =  0.05; % MC_PITCHRATE_I [>0]
-        pitch_rate_max      (1,1) {mustBeGreaterThanOrEqual(pitch_rate_max      ,    0), mustBeLessThanOrEqual(pitch_rate_max      , 1800)                                     } =   220; % MC_PITCHRATE_MAX [0-1800]
-        pitch_rate_p        (1,1) {mustBeGreaterThanOrEqual(pitch_rate_p        ,    0), mustBeLessThanOrEqual(pitch_rate_p        ,  0.6)                                     } =  0.15; % MC_PITCHRATE_P [0-0.6]
-        pitch_p             (1,1) {mustBeGreaterThanOrEqual(pitch_p             ,    0), mustBeLessThanOrEqual(pitch_p             ,   12)                                     } =   6.5; % MC_PITCH_P [0-12]
-        pitch_rate_integ_lim(1,1) {mustBeGreaterThanOrEqual(pitch_rate_integ_lim,    0), mustBeLessThanOrEqual(pitch_rate_integ_lim,    2)                                     } =   0.3; % MC_PR_INT_LIM [0-2]
-        rattitude_thres     (1,1) {mustBeGreaterThanOrEqual(rattitude_thres     ,    0)                                                                                        } =   0.8; % MC_RATT_TH [>0]
-        roll_rate_d         (1,1) {mustBeGreaterThanOrEqual(roll_rate_d         ,    0), mustBeLessThanOrEqual(roll_rate_d         , 0.01)                                     } = 0.003; % MC_ROLLRATE_D [0-0.01]
-        roll_rate_ff        (1,1) {mustBeGreaterThanOrEqual(roll_rate_ff        ,    0)                                                                                        } =     0; % MC_ROLLRATE_FF [>0]
-        roll_rate_i         (1,1) {mustBeGreaterThanOrEqual(roll_rate_i         ,    0)                                                                                        } =  0.05; % MC_ROLLRATE_I [>0]
-        roll_rate_max       (1,1) {mustBeGreaterThanOrEqual(roll_rate_max       ,    0)                                                                                        } =   220; % MC_ROLLRATE_MAX [>0]
-        roll_rate_p         (1,1) {mustBeGreaterThanOrEqual(roll_rate_p         ,    0), mustBeLessThanOrEqual(roll_rate_p         ,  0.5)                                     } =  0.15; % MC_ROLLRATE_P [0-0.5]
-        roll_p              (1,1) {mustBeGreaterThanOrEqual(roll_p              ,    0), mustBeLessThanOrEqual(roll_p              ,   12)                                     } =   6.5; % MC_ROLL_P [0-12]
-        roll_rate_integ_lim (1,1) {mustBeGreaterThanOrEqual(roll_rate_integ_lim ,    0)                                                                                        } =   0.3; % MC_RR_INT_LIM [>0]
-        tpa_breakpoint_d    (1,1) {mustBeGreaterThanOrEqual(tpa_breakpoint_d    ,    0), mustBeLessThanOrEqual(tpa_breakpoint_d    ,    1)                                     } =     1; % MC_TPA_BREAK_D [0-1]
-        tpa_breakpoint_i    (1,1) {mustBeGreaterThanOrEqual(tpa_breakpoint_i    ,    0), mustBeLessThanOrEqual(tpa_breakpoint_i    ,    1)                                     } =     1; % MC_TPA_BREAK_I [0-1]
-        tpa_breakpoint_p    (1,1) {mustBeGreaterThanOrEqual(tpa_breakpoint_p    ,    0), mustBeLessThanOrEqual(tpa_breakpoint_p    ,    1)                                     } =     1; % MC_TPA_BREAK_P [0-1]
-        tpa_rate_d          (1,1) {mustBeGreaterThanOrEqual(tpa_rate_d          ,    0), mustBeLessThanOrEqual(tpa_rate_d          ,    1)                                     } =     0; % MC_TPA_RATE_D [0-1]
-        tpa_rate_i          (1,1) {mustBeGreaterThanOrEqual(tpa_rate_i          ,    0), mustBeLessThanOrEqual(tpa_rate_i          ,    1)                                     } =     0; % MC_TPA_RATE_I [0-1]
-        tpa_rate_p          (1,1) {mustBeGreaterThanOrEqual(tpa_rate_p          ,    0), mustBeLessThanOrEqual(tpa_rate_p          ,    1)                                     } =     0; % MC_TPA_RATE_P [0-1]
-        yaw_rate_d          (1,1) {mustBeGreaterThanOrEqual(yaw_rate_d          ,    0)                                                                                        } =     0; % MC_YAWRATE_D [>0]
-        yaw_rate_ff         (1,1) {mustBeGreaterThanOrEqual(yaw_rate_ff         ,    0)                                                                                        } =     0; % MC_YAWRATE_FF [>0]
-        yaw_rate_i          (1,1) {mustBeGreaterThanOrEqual(yaw_rate_i          ,    0)                                                                                        } =   0.1; % MC_YAWRATE_I [>0]
-        yaw_rate_max        (1,1) {mustBeGreaterThanOrEqual(yaw_rate_max        ,    0), mustBeLessThanOrEqual(yaw_rate_max        , 1800)                                     } =   200; % MC_YAWRATE_MAX [0-1800]
-        yaw_rate_p          (1,1) {mustBeGreaterThanOrEqual(yaw_rate_p          ,    0), mustBeLessThanOrEqual(yaw_rate_p          ,  0.6)                                     } =   0.2; % MC_YAWRATE_P [0-0.6]
-        yaw_auto_max        (1,1) {mustBeGreaterThanOrEqual(yaw_auto_max        ,    0), mustBeLessThanOrEqual(yaw_auto_max        ,  360)                                     } =    45; % MC_YAWRAUTO_MAX [0-360]
-        yaw_p               (1,1) {mustBeGreaterThanOrEqual(yaw_p               ,    0), mustBeLessThanOrEqual(yaw_p               ,    5)                                     } =   2.8; % MC_YAW_P [0-5]
-        yaw_rate_integ_lim  (1,1) {mustBeGreaterThanOrEqual(yaw_rate_integ_lim  ,    0)                                                                                        } =   0.3; % MC_YR_INT_LIM [>0]
-        man_throttle_min    (1,1) {mustBeGreaterThanOrEqual(man_throttle_min    ,    0), mustBeLessThanOrEqual(man_throttle_min    ,    1)                                     } =  0.08; % MPC_MANTHR_MIN [0-1]
-        man_tilt_max_deg    (1,1) {mustBeGreaterThanOrEqual(man_tilt_max_deg    ,    0), mustBeLessThanOrEqual(man_tilt_max_deg    ,   90)                                     } =    35; % MPC_MAN_TILT_MAX [0-90]
-        yaw_rate_scaling    (1,1) {mustBeGreaterThanOrEqual(yaw_rate_scaling    ,    0), mustBeLessThanOrEqual(yaw_rate_scaling    ,  400)                                     } =   200; % MPC_MAN_Y_MAX [0-400]
-        throttle_hover      (1,1) {mustBeGreaterThanOrEqual(throttle_hover      ,  0.1), mustBeLessThanOrEqual(throttle_hover      ,  0.8)                                     } =   0.5; % MPC_THR_HOVER [0.1-0.8]
-        throttle_max        (1,1) {mustBeGreaterThanOrEqual(throttle_max        ,    0), mustBeLessThanOrEqual(throttle_max        ,    1)                                     } =     1; % MPC_THR_MAX [0-1]
-        board_rotation_param(1,1) {mustBeGreaterThanOrEqual(board_rotation_param,    0), mustBeLessThanOrEqual(board_rotation_param,   34), mustBeInteger(board_rotation_param)} =     0; % SENS_BOARD_ROT [0-34]
-        board_offset_x      (1,1) {                                                                                                                                            } =     0; % SENS_BOARD_X_OFF 
-        board_offset_y      (1,1) {                                                                                                                                            } =     0; % SENS_BOARD_Y_OFF 
-        board_offset_z      (1,1) {                                                                                                                                            } =     0; % SENS_BOARD_Z_OFF
-        bat_scale_en        (1,1) {mustBeGreaterThanOrEqual(bat_scale_en        ,    0), mustBeLessThanOrEqual(bat_scale_en        ,    1), mustBeInteger(bat_scale_en        )} =     0; % MC_BAT_SCALE_EN [0-1]
-        throttle_curve      (1,1) {mustBeGreaterThanOrEqual(throttle_curve      ,    0), mustBeLessThanOrEqual(throttle_curve      ,    1), mustBeInteger(throttle_curve      )} =     0; % MPC_THR_CURVE [0-1]
-        loop_update_rate_hz (1,1) {mustBeGreaterThanOrEqual(loop_update_rate_hz ,   50), mustBeLessThanOrEqual(loop_update_rate_hz , 5000)                                     } =   250; % Loop update rate Hz [50-5000]
+        acro_expo_rp                  (1,1) {mustBeGreaterThanOrEqual(acro_expo_rp                 ,    0), mustBeLessThanOrEqual(acro_expo_rp                 ,    1)                                              } =  0.69; % MC_ACRO_EXPO [0-1]
+        acro_expo_y                   (1,1) {mustBeGreaterThanOrEqual(acro_expo_y                  ,    0), mustBeLessThanOrEqual(acro_expo_y                  ,    1)                                              } =  0.69; % MC_ACRO_EXPO_Y [0-1]
+        acro_pitch_max                (1,1) {mustBeGreaterThanOrEqual(acro_pitch_max               ,    0), mustBeLessThanOrEqual(acro_pitch_max               , 1800)                                              } =   720; % MC_ACRO_P_MAX [0-1800]
+        acro_roll_max                 (1,1) {mustBeGreaterThanOrEqual(acro_roll_max                ,    0), mustBeLessThanOrEqual(acro_roll_max                , 1800)                                              } =   720; % MC_ACRO_R_MAX [0-1800]
+        acro_superexpo_rp             (1,1) {mustBeGreaterThanOrEqual(acro_superexpo_rp            ,    0), mustBeLessThanOrEqual(acro_superexpo_rp            , 0.95)                                              } =   0.7; % MC_ACRO_SUPEXPO [0-0.95]
+        acro_superexpo_y              (1,1) {mustBeGreaterThanOrEqual(acro_superexpo_y             ,    0), mustBeLessThanOrEqual(acro_superexpo_y             , 0.95)                                              } =   0.7; % MC_ACRO_SUPEXPOY [0-0.95]
+        acro_yaw_max                  (1,1) {mustBeGreaterThanOrEqual(acro_yaw_max                 ,    0), mustBeLessThanOrEqual(acro_yaw_max                 , 1800)                                              } =   540; % MC_ACRO_Y_MAX [0-1800]
+        airmode                       (1,1) {mustBeGreaterThanOrEqual(airmode                      ,    0), mustBeLessThanOrEqual(airmode                      ,    2), mustBeInteger(airmode                      )} =     0; % MC_AIRMODE [0-2]
+        d_term_cutoff_freq            (1,1) {mustBeGreaterThanOrEqual(d_term_cutoff_freq           ,    0), mustBeLessThanOrEqual(d_term_cutoff_freq           , 1000)                                              } =    30; % MC_DTERM_CUTOFF [0-1000]
+        pitch_rate_d                  (1,1) {mustBeGreaterThanOrEqual(pitch_rate_d                 ,    0)                                                                                                          } = 0.003; % MC_PITCHRATE_D [>0]
+        pitch_rate_ff                 (1,1) {mustBeGreaterThanOrEqual(pitch_rate_ff                ,    0)                                                                                                          } =     0; % MC_PITCHRATE_FF [>0]
+        pitch_rate_i                  (1,1) {mustBeGreaterThanOrEqual(pitch_rate_i                 ,    0)                                                                                                          } =  0.05; % MC_PITCHRATE_I [>0]
+        pitch_rate_max                (1,1) {mustBeGreaterThanOrEqual(pitch_rate_max               ,    0), mustBeLessThanOrEqual(pitch_rate_max               , 1800)                                              } =   220; % MC_PITCHRATE_MAX [0-1800]
+        pitch_rate_p                  (1,1) {mustBeGreaterThanOrEqual(pitch_rate_p                 ,    0), mustBeLessThanOrEqual(pitch_rate_p                 ,  0.6)                                              } =  0.15; % MC_PITCHRATE_P [0-0.6]
+        pitch_p                       (1,1) {mustBeGreaterThanOrEqual(pitch_p                      ,    0), mustBeLessThanOrEqual(pitch_p                      ,   12)                                              } =   6.5; % MC_PITCH_P [0-12]
+        pitch_rate_integ_lim          (1,1) {mustBeGreaterThanOrEqual(pitch_rate_integ_lim         ,    0), mustBeLessThanOrEqual(pitch_rate_integ_lim         ,    2)                                              } =   0.3; % MC_PR_INT_LIM [0-2]
+        rattitude_thres               (1,1) {mustBeGreaterThanOrEqual(rattitude_thres              ,    0)                                                                                                          } =   0.8; % MC_RATT_TH [>0]
+        roll_rate_d                   (1,1) {mustBeGreaterThanOrEqual(roll_rate_d                  ,    0), mustBeLessThanOrEqual(roll_rate_d                  , 0.01)                                              } = 0.003; % MC_ROLLRATE_D [0-0.01]
+        roll_rate_ff                  (1,1) {mustBeGreaterThanOrEqual(roll_rate_ff                 ,    0)                                                                                                          } =     0; % MC_ROLLRATE_FF [>0]
+        roll_rate_i                   (1,1) {mustBeGreaterThanOrEqual(roll_rate_i                  ,    0)                                                                                                          } =  0.05; % MC_ROLLRATE_I [>0]
+        roll_rate_max                 (1,1) {mustBeGreaterThanOrEqual(roll_rate_max                ,    0)                                                                                                          } =   220; % MC_ROLLRATE_MAX [>0]
+        roll_rate_p                   (1,1) {mustBeGreaterThanOrEqual(roll_rate_p                  ,    0), mustBeLessThanOrEqual(roll_rate_p                  ,  0.5)                                              } =  0.15; % MC_ROLLRATE_P [0-0.5]
+        roll_p                        (1,1) {mustBeGreaterThanOrEqual(roll_p                       ,    0), mustBeLessThanOrEqual(roll_p                       ,   12)                                              } =   6.5; % MC_ROLL_P [0-12]
+        roll_rate_integ_lim           (1,1) {mustBeGreaterThanOrEqual(roll_rate_integ_lim          ,    0)                                                                                                          } =   0.3; % MC_RR_INT_LIM [>0]
+        tpa_breakpoint_d              (1,1) {mustBeGreaterThanOrEqual(tpa_breakpoint_d             ,    0), mustBeLessThanOrEqual(tpa_breakpoint_d             ,    1)                                              } =     1; % MC_TPA_BREAK_D [0-1]
+        tpa_breakpoint_i              (1,1) {mustBeGreaterThanOrEqual(tpa_breakpoint_i             ,    0), mustBeLessThanOrEqual(tpa_breakpoint_i             ,    1)                                              } =     1; % MC_TPA_BREAK_I [0-1]
+        tpa_breakpoint_p              (1,1) {mustBeGreaterThanOrEqual(tpa_breakpoint_p             ,    0), mustBeLessThanOrEqual(tpa_breakpoint_p             ,    1)                                              } =     1; % MC_TPA_BREAK_P [0-1]
+        tpa_rate_d                    (1,1) {mustBeGreaterThanOrEqual(tpa_rate_d                   ,    0), mustBeLessThanOrEqual(tpa_rate_d                   ,    1)                                              } =     0; % MC_TPA_RATE_D [0-1]
+        tpa_rate_i                    (1,1) {mustBeGreaterThanOrEqual(tpa_rate_i                   ,    0), mustBeLessThanOrEqual(tpa_rate_i                   ,    1)                                              } =     0; % MC_TPA_RATE_I [0-1]
+        tpa_rate_p                    (1,1) {mustBeGreaterThanOrEqual(tpa_rate_p                   ,    0), mustBeLessThanOrEqual(tpa_rate_p                   ,    1)                                              } =     0; % MC_TPA_RATE_P [0-1]
+        yaw_rate_d                    (1,1) {mustBeGreaterThanOrEqual(yaw_rate_d                   ,    0)                                                                                                          } =     0; % MC_YAWRATE_D [>0]
+        yaw_rate_ff                   (1,1) {mustBeGreaterThanOrEqual(yaw_rate_ff                  ,    0)                                                                                                          } =     0; % MC_YAWRATE_FF [>0]
+        yaw_rate_i                    (1,1) {mustBeGreaterThanOrEqual(yaw_rate_i                   ,    0)                                                                                                          } =   0.1; % MC_YAWRATE_I [>0]
+        yaw_rate_max                  (1,1) {mustBeGreaterThanOrEqual(yaw_rate_max                 ,    0), mustBeLessThanOrEqual(yaw_rate_max                 , 1800)                                              } =   200; % MC_YAWRATE_MAX [0-1800]
+        yaw_rate_p                    (1,1) {mustBeGreaterThanOrEqual(yaw_rate_p                   ,    0), mustBeLessThanOrEqual(yaw_rate_p                   ,  0.6)                                              } =   0.2; % MC_YAWRATE_P [0-0.6]
+        yaw_auto_max                  (1,1) {mustBeGreaterThanOrEqual(yaw_auto_max                 ,    0), mustBeLessThanOrEqual(yaw_auto_max                 ,  360)                                              } =    45; % MC_YAWRAUTO_MAX [0-360]
+        yaw_p                         (1,1) {mustBeGreaterThanOrEqual(yaw_p                        ,    0), mustBeLessThanOrEqual(yaw_p                        ,    5)                                              } =   2.8; % MC_YAW_P [0-5]
+        yaw_rate_integ_lim            (1,1) {mustBeGreaterThanOrEqual(yaw_rate_integ_lim           ,    0)                                                                                                          } =   0.3; % MC_YR_INT_LIM [>0]
+        man_throttle_min              (1,1) {mustBeGreaterThanOrEqual(man_throttle_min             ,    0), mustBeLessThanOrEqual(man_throttle_min             ,    1)                                              } =  0.08; % MPC_MANTHR_MIN [0-1]
+        man_tilt_max_deg              (1,1) {mustBeGreaterThanOrEqual(man_tilt_max_deg             ,    0), mustBeLessThanOrEqual(man_tilt_max_deg             ,   90)                                              } =    35; % MPC_MAN_TILT_MAX [0-90]
+        yaw_rate_scaling              (1,1) {mustBeGreaterThanOrEqual(yaw_rate_scaling             ,    0), mustBeLessThanOrEqual(yaw_rate_scaling             ,  400)                                              } =   200; % MPC_MAN_Y_MAX [0-400]
+        throttle_hover                (1,1) {mustBeGreaterThanOrEqual(throttle_hover               ,  0.1), mustBeLessThanOrEqual(throttle_hover               ,  0.8)                                              } =   0.5; % MPC_THR_HOVER [0.1-0.8]
+        throttle_max                  (1,1) {mustBeGreaterThanOrEqual(throttle_max                 ,    0), mustBeLessThanOrEqual(throttle_max                 ,    1)                                              } =     1; % MPC_THR_MAX [0-1]
+        board_rotation_param          (1,1) {mustBeGreaterThanOrEqual(board_rotation_param         ,    0), mustBeLessThanOrEqual(board_rotation_param         ,   34), mustBeInteger(board_rotation_param         )} =     0; % SENS_BOARD_ROT [0-34]
+        board_offset_x                (1,1) {                                                                                                                                                                       } =     0; % SENS_BOARD_X_OFF 
+        board_offset_y                (1,1) {                                                                                                                                                                       } =     0; % SENS_BOARD_Y_OFF 
+        board_offset_z                (1,1) {                                                                                                                                                                       } =     0; % SENS_BOARD_Z_OFF
+        bat_scale_en                  (1,1) {mustBeGreaterThanOrEqual(bat_scale_en                 ,    0), mustBeLessThanOrEqual(bat_scale_en                 ,    1), mustBeInteger(bat_scale_en                 )} =     0; % MC_BAT_SCALE_EN [0-1]
+        throttle_curve                (1,1) {mustBeGreaterThanOrEqual(throttle_curve               ,    0), mustBeLessThanOrEqual(throttle_curve               ,    1), mustBeInteger(throttle_curve               )} =     0; % MPC_THR_CURVE [0-1]
+        vehicle_status_is_rotary_wing (1,1) {mustBeGreaterThanOrEqual(vehicle_status_is_rotary_wing,    0), mustBeLessThanOrEqual(vehicle_status_is_rotary_wing,    1), mustBeInteger(vehicle_status_is_rotary_wing)} =     1; % IS_ROTARY_WING [0-1]
+        vehicle_status_is_vtol        (1,1) {mustBeGreaterThanOrEqual(vehicle_status_is_vtol       ,    0), mustBeLessThanOrEqual(vehicle_status_is_vtol       ,    1), mustBeInteger(vehicle_status_is_vtol       )} =     0; % IS_VTOL [0-1]
+        loop_update_rate_hz           (1,1) {mustBeGreaterThanOrEqual(loop_update_rate_hz          ,   50), mustBeLessThanOrEqual(loop_update_rate_hz          , 5000)                                              } =   250; % Loop update rate Hz [50-5000]
     end
 
     %% Pre-computed constants
     properties(Access = private)
-        attitude_p               (3,1) = zeros(3,1); % P gain for attitude control
-        auto_rate_max            (3,1) = zeros(3,1); % attitude rate limits in auto modes
-        board_rotation           (3,3) = eye  (3,3); % Rotation matrix for the orientation that the board is mounted
-        acro_rate_max            (3,1) = zeros(3,1); % Max attitude rates in acro mode
-        mc_rate_max              (3,1) = zeros(3,1); % Attitude rate limits in stabilized modes
-        rate_d                   (3,1) = zeros(3,1); % D gain for angular rate error
-        rate_ff                  (3,1) = zeros(3,1); % Feedforward gain for desired rates
-        rate_i                   (3,1) = zeros(3,1); % I gain for angular rate error
-        rate_int_lim             (3,1) = zeros(3,1); % Integrator state limit for rate loop
-        rate_p                   (3,1) = zeros(3,1); % P gain for angular rate error
-        man_tilt_max             (1,1) = 0; % Maximum tilt allowed for manual flight [rad]
-        lp_filters_d_a1          (1,1) = 0; % Filter constants
-        lp_filters_d_a2          (1,1) = 0; % Filter constants
-        lp_filters_d_b0          (1,1) = 0; % Filter constants
-        lp_filters_d_b1          (1,1) = 0; % Filter constants
-        lp_filters_d_b2          (1,1) = 0; % Filter constants
-        lp_filters_d_cutoff_freq (1,1) = 0; % Filter constants
-        dt                       (1,1) = 0; % sampling time
+        attitude_p                    (3,1) = zeros(3,1); % P gain for attitude control
+        auto_rate_max                 (3,1) = zeros(3,1); % attitude rate limits in auto modes
+        board_rotation                (3,3) = eye  (3,3); % Rotation matrix for the orientation that the board is mounted
+        acro_rate_max                 (3,1) = zeros(3,1); % Max attitude rates in acro mode
+        mc_rate_max                   (3,1) = zeros(3,1); % Attitude rate limits in stabilized modes
+        rate_d                        (3,1) = zeros(3,1); % D gain for angular rate error
+        rate_ff                       (3,1) = zeros(3,1); % Feedforward gain for desired rates
+        rate_i                        (3,1) = zeros(3,1); % I gain for angular rate error
+        rate_int_lim                  (3,1) = zeros(3,1); % Integrator state limit for rate loop
+        rate_p                        (3,1) = zeros(3,1); % P gain for angular rate error
+        man_tilt_max                  (1,1) = 0; % Maximum tilt allowed for manual flight [rad]
+        lp_filters_d_a1               (1,1) = 0; % Filter constants
+        lp_filters_d_a2               (1,1) = 0; % Filter constants
+        lp_filters_d_b0               (1,1) = 0; % Filter constants
+        lp_filters_d_b1               (1,1) = 0; % Filter constants
+        lp_filters_d_b2               (1,1) = 0; % Filter constants
+        lp_filters_d_cutoff_freq      (1,1) = 0; % Filter constants
+        dt                            (1,1) = 0; % sampling time
     end
     
     %% Discrete states
@@ -102,124 +104,184 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
             % Perform one-time calculations, such as computing constants
             obj.dt = 1 / obj.loop_update_rate_hz;
             LowPassFilter2pVectorSetCutOffFrequency( obj, obj.loop_update_rate_hz, obj.d_term_cutoff_freq );
+            LowPassFilter2pVectorReset( obj, zeros(3,1) );
+            
+            % Gains
+            obj.attitude_p     = [ obj.roll_p             ; obj.pitch_p             ; obj.yaw_p              ];
+            obj.rate_p         = [ obj.roll_rate_p        ; obj.pitch_rate_p        ; obj.yaw_rate_p         ];
+            obj.rate_i         = [ obj.roll_rate_i        ; obj.pitch_rate_i        ; obj.yaw_rate_i         ];
+            obj.rate_int_lim   = [ obj.roll_rate_integ_lim; obj.pitch_rate_integ_lim; obj.yaw_rate_integ_lim ];
+            obj.rate_d         = [ obj.roll_rate_d        ; obj.pitch_rate_d        ; obj.yaw_rate_d         ];
+            obj.rate_ff        = [ obj.roll_rate_ff       ; obj.pitch_rate_ff       ; obj.yaw_rate_ff        ];
+            
+            % Angular rate limits
+            obj.mc_rate_max   = deg2rad( [ obj.roll_rate_max; obj.pitch_rate_max; obj.yaw_rate_max ] );
+            obj.auto_rate_max = deg2rad( [ obj.roll_rate_max; obj.pitch_rate_max; obj.yaw_auto_max ] );
+            obj.acro_rate_max = deg2rad( [ obj.acro_roll_max; obj.acro_pitch_max; obj.acro_yaw_max ] );
+            
+            obj.man_tilt_max = deg2rad( obj.man_tilt_max_deg );
+            % In the original code the board rotation is calculated here,
+            % but not necessary in simulation
         end
         
-        function num = getNumOutputsImpl(~)
-            num = 2;
+        function num = getNumOutputsImpl( ~ )
+            num = 1;
         end
         
-        function num = getNumInputsImpl(~)
+        function num = getNumInputsImpl( ~ )
             % Inputs:
-            %   - v_att
-            %   - sensor_gyro (3,1)
-            %   - battery_status_scale (1,1)
-            %   - landing_gear (1,1)
-            %   - saturation_status_flags (6,1)
-            %   - vehicle_land_detected
-            %   - manual_control_sp
-            %   - v_rates_sp
-            %   - v_control_mode
-            num = 3;
+            num = 8;
+        end
+        
+        function num = getOutputSizeImpl( ~ )
+            num = [8,1];
         end
 
         %% Main function
-        function actuators_control = stepImpl( obj, v_control_mode_flags, sensor_gyro, manual_control_sp, v_rates_sp )
-            % Implement algorithm. Calculate y as a function of input u and
-            % discrete states.
-            % y = u;
+        function actuators_control = stepImpl( obj, ...
+                v_control_mode_flags, ...
+                sensor_gyro_in, ...
+                manual_control_sp_in, ...
+                v_rates_sp_in, ...
+                vehicle_land_detected_in, ...
+                saturation_status_in, ...
+                v_att_in, ...
+                v_att_sp_in )
             
             % Initialize output
             actuators_control = zeros(8,1);
+            att_control = zeros(3,1);
+            
+            sensor_gyro = sensor_gyro_in(1:3,1);
             
             % Assign control modes
-            v_control_mode.flag.armed                       = v_control_mode_flags(1);
-            v_control_mode.flag_control_altitude_enabled    = v_control_mode_flags(2);
-            v_control_mode.flag_control_attitude_enabled    = v_control_mode_flags(3);
-            v_control_mode.flag_control_auto_enabled        = v_control_mode_flags(4);
-            v_control_mode.flag_control_manual_enabled      = v_control_mode_flags(5);
-            v_control_mode.flag_control_position_enabled    = v_control_mode_flags(6);
-            v_control_mode.flag_control_rates_enabled       = v_control_mode_flags(7);
-            v_control_mode.flag_control_rattitude_enabled   = v_control_mode_flags(8);
-            v_control_mode.flag_control_termination_enabled = v_control_mode_flags(9);
-            v_control_mode.flag_control_velocity_enabled    = v_control_mode_flags(10);
+            v_control_mode.flag_armed                       = v_control_mode_flags(1);  % is set whenever the writing thread stores new data
+            v_control_mode.flag_control_altitude_enabled    = v_control_mode_flags(2);  % true if rate/attitude stabilization is enabled
+            v_control_mode.flag_control_attitude_enabled    = v_control_mode_flags(3);  % true if attitude stabilization is mixed in
+            v_control_mode.flag_control_auto_enabled        = v_control_mode_flags(4);  % true if onboard autopilot should act
+            v_control_mode.flag_control_manual_enabled      = v_control_mode_flags(5);  % true if manual input is mixed in
+            v_control_mode.flag_control_position_enabled    = v_control_mode_flags(6);  % true if position is controlled
+            v_control_mode.flag_control_rates_enabled       = v_control_mode_flags(7);  % true if rates are stabilized
+            v_control_mode.flag_control_rattitude_enabled   = v_control_mode_flags(8);  % true if rate/attitude stabilization is enabled
+            v_control_mode.flag_control_termination_enabled = v_control_mode_flags(9);  % true if flighttermination is enabled
+            v_control_mode.flag_control_velocity_enabled    = v_control_mode_flags(10); % true if horizontal velocity (implies direction) is controlled
             
             % Assign control modes
-            manual_control_sp.r = manual_control_sp(1);
-            manual_control_sp.x = manual_control_sp(2);
-            manual_control_sp.y = manual_control_sp(3);
-            manual_control_sp.z = manual_control_sp(4);
+            manual_control_sp.r = manual_control_sp_in(1);
+            manual_control_sp.x = manual_control_sp_in(2);
+            manual_control_sp.y = manual_control_sp_in(3);
+            manual_control_sp.z = manual_control_sp_in(4);
             
-            % Rates SP
-            v_rates_sp.roll    = v_rates_sp(1);
-            v_rates_sp.pitch   = v_rates_sp(2);
-            v_rates_sp.yaw     = v_rates_sp(3);
-            v_rates_sp.thrust  = v_rates_sp(4:6);
+            % Assign land detected
+            vehicle_land_detected.landed       = vehicle_land_detected_in(1);
+            vehicle_land_detected.maybe_landed = vehicle_land_detected_in(2);
+            
+            % Assign rate setpoints
+            v_rates_sp.roll    = v_rates_sp_in(1);
+            v_rates_sp.pitch   = v_rates_sp_in(2);
+            v_rates_sp.yaw     = v_rates_sp_in(3);
+            v_rates_sp.thrust_body  = v_rates_sp_in(4:6);
+            
+            % Assign saturation status
+            saturation_status.flags.roll_pos  = saturation_status_in(1);
+            saturation_status.flags.pitch_pos = saturation_status_in(2);
+            saturation_status.flags.yaw_pos   = saturation_status_in(3);
+            saturation_status.flags.roll_neg  = saturation_status_in(4);
+            saturation_status.flags.pitch_neg = saturation_status_in(5);
+            saturation_status.flags.yaw_neg   = saturation_status_in(6);
+            
+            % Assign v_att
+            v_att = struct( 'q', zeros(4,1), 'quat_reset_counter', 0, 'delta_q_reset', 0 );
+            v_att.q                   = v_att_in(1:4);
+            v_att.quat_reset_counter  = v_att_in(5);
+            v_att.delta_q_reset       = v_att_in(6);
+
+            
+            v_att_sp = struct( 'yaw_sp_move_rate', 0         , ...
+                'roll_body'       , 0         , ...
+                'pitch_body'      , 0         , ...
+                'yaw_body'        , 0         , ...
+                'thrust_body'     , zeros(3,1), ...
+                'q_d'             , zeros(4,1), ...
+                'q_d_valid'       , 0 );
+            v_att_sp.q_d              = v_att_sp_in(1:4,1);
+            v_att_sp.thrust_body      = v_att_sp_in(5:7,1);
+            v_att_sp.yaw_sp_move_rate = v_att_sp_in(8,1);
+            
+            % Assume the attitude is always updated
+            attitude_updated = 1;
+            if v_control_mode.flag_control_manual_enabled
+                manual_control_updated = 1;
+            else
+                manual_control_updated = 0;
+            end
             
             % Run the rate controller immediately after a gyro update (does not
             % matter for simulation)
             if (v_control_mode.flag_control_rates_enabled)
-                att_control = control_attitude_rates( obj, sensor_gyro );
+                att_control = control_attitude_rates( obj, sensor_gyro, v_control_mode, vehicle_land_detected, saturation_status );
                 % Publish actuator controls
+                actuators_control = publish_actuator_controls( obj, att_control );
                 % Publish rate controller status
             end
             
             % Vehicle attitude poll
-            if obj.prev_quat_reset_counter ~= obj.v_att.quat_reset_counter
-                tmp = obj.man_yaw_sp + QuatToEuler( obj.v_att.delta_q_reset );
+            if obj.prev_quat_reset_counter ~= v_att.quat_reset_counter
+                tmp = obj.man_yaw_sp + mc_att_control.QuatToEuler( v_att.delta_q_reset );
                 obj.man_yaw_sp = obj.man_yaw_sp + tmp(3);
             end
-            obj.prev_quat_reset_counter = obj.v_att.quat_reset_counter;
+            obj.prev_quat_reset_counter = v_att.quat_reset_counter;
             
             % Check if we are in rattitude mode and the pilot is above the
             % threshold on pitch or roll (yaw can rotate 360 in normal att
             % control). If both are true don't even bother running the attitude
             % controllers
             if (v_control_mode.flag_control_rattitude_enabled)
-                v_control_mode.flag_control_attitude_enabled = ...
+                v_control_mode.flag_control_attitude_enabled = double( ...
                     abs(manual_control_sp.y) <= obj.rattitude_thres && ...
-                    abs(manual_control_sp.x) <= obj.rattitude_thres;
+                    abs(manual_control_sp.x) <= obj.rattitude_thres );
             end
             
-            attitude_setpoint_generated = false;
+            attitude_setpoint_generated = 0;
             
-            if (v_control_mode.flag_control_attitude_enabled && obj.vehicle_status.is_rotary_wing)
-                if (attitude_updated)
+            if (v_control_mode.flag_control_attitude_enabled && obj.vehicle_status_is_rotary_wing)
+                if ( attitude_updated )
                     % Generate the attitude setpoint from stick inputs if we are in
                     % Manual/Stabilized mode
                     if (v_control_mode.flag_control_manual_enabled && ...
                             ~v_control_mode.flag_control_altitude_enabled && ...
                             ~v_control_mode.flag_control_velocity_enabled && ...
                             ~v_control_mode.flag_control_position_enabled)
-                        generate_attitude_setpoint( obj, obj.reset_yaw_sp, manual_control_sp );
-                        attitude_setpoint_generated = true;
+                        v_att_sp = generate_attitude_setpoint( obj, obj.reset_yaw_sp, manual_control_sp, v_att );
+                        attitude_setpoint_generated = 1;
                     end
-                    control_attitude( obj, v_control_mode );
-                    % Publish rates
+                    control_attitude( obj, v_control_mode, v_att, v_att_sp );
+                    % Publish rates setpoints
                 end
             else
                 % Attitude controller disabled, poll rates setpoint topic
-                if (v_control_mode.flag_control_manual_enabled && obj.vehicle_status.is_rotary_wing)
+                if (v_control_mode.flag_control_manual_enabled && obj.vehicle_status_is_rotary_wing)
                     if (manual_control_updated)
                         % Manual rates control - ACRO mode
                         man_rate_sp = [ ...
-                            SuperExpo( manual_control_sp.y, obj.acro_expo_rp, obj.acro_superexpo_rp );
-                            SuperExpo( -manual_control_sp.x, obj.acro_expo_rp, obj.acro_superexpo_rp );
-                            SuperExpo( manual_control_sp.r, obj.acro_expo_y, obj.acro_superexpo_y ) ];
+                            mc_att_control.SuperExpo( manual_control_sp.y, obj.acro_expo_rp, obj.acro_superexpo_rp );
+                            mc_att_control.SuperExpo( -manual_control_sp.x, obj.acro_expo_rp, obj.acro_superexpo_rp );
+                            mc_att_control.SuperExpo( manual_control_sp.r, obj.acro_expo_y, obj.acro_superexpo_y ) ];
                         obj.rates_sp = man_rate_sp .* obj.acro_rate_max;
                         obj.thrust_sp = manual_control_sp.z;
-                        % Publish rates
+                        % Publish rates setpoints
                     end
                 else
                     % attitude controller disabled, poll rates setpoint topic
-                    obj.rates_sp(1) = obj.v_rates_sp.roll;
-                    obj.rates_sp(2) = obj.v_rates_sp.pitch;
-                    obj.rates_sp(3) = obj.v_rates_sp.yaw;
-                    obj.thrust_sp = -obj.v_rates_sp.thrust_body(3);
+                    obj.rates_sp(1) = v_rates_sp.roll;
+                    obj.rates_sp(2) = v_rates_sp.pitch;
+                    obj.rates_sp(3) = v_rates_sp.yaw;
+                    obj.thrust_sp = -v_rates_sp.thrust_body(3);
                 end
             end
             
             if ( v_control_mode.flag_control_termination_enabled )
-                if (~obj.vehicle_status.is_vtol)
+                if (~obj.vehicle_status_is_vtol)
                     obj.rates_sp = obj.rates_sp .* 0;
                     obj.rates_int = obj.rates_int .* 0;
                     obj.thrust_sp = 0.0;
@@ -230,44 +292,63 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
             end
             
             if ( attitude_updated )
-                obj.reset_yaw_sp = (~attitude_setpoint_generated && ~v_control_mode.flag_control_rattitude_enabled) || ...
-                    obj.vehicle_land_detected.landed || ...
-                    (obj.vehicle_status.is_vtol && ~obj.vehicle_status.is_rotary_wing); % VTOL in FW mode
+                obj.reset_yaw_sp = double( (~attitude_setpoint_generated && ~v_control_mode.flag_control_rattitude_enabled) || ...
+                    vehicle_land_detected.landed || ...
+                    (obj.vehicle_status_is_vtol && ~obj.vehicle_status_is_rotary_wing) ); % VTOL in FW mode
             end
+            
         end
 
         function resetImpl( obj )
             % Initialize / reset discrete-state properties
+            obj.rates_int                    = zeros(3,1);
+            obj.rates_prev                   = zeros(3,1);
+            obj.rates_prev_filtered          = zeros(3,1);
+            obj.rates_sp                     = zeros(3,1);
+            obj.thrust_sp                    = 0;
+            obj.man_yaw_sp                   = 0;
+            obj.gear_state_initialized       = 0;
+            obj.lp_filters_d_delay_element_1 = zeros(3,1);
+            obj.lp_filters_d_delay_element_2 = zeros(3,1);
+            obj.prev_quat_reset_counter      = 0;
+            obj.reset_yaw_sp                 = 0;
         end
 
-        function icon = getIconImpl(~)
+        function icon = getIconImpl( ~ )
             % Define icon for System block
             icon = ["mc_att_control","v1.8"];
             % icon = ["My","System"]; % Example: multi-line text icon
         end
         
-        function sts = getSampleTimeImpl(obj)
+        function sts = getSampleTimeImpl( obj )
             sts = createSampleTime(obj, 'Type','Discrete', ...
                 'SampleTime', 1/obj.loop_update_rate_hz, ...
                 'OffsetTime', 0);
         end
         
         %% mc_att_control_main.cpp - Main control functions
-        function generate_attitude_setpoint( obj, reset_yaw_sp, manual_control_sp )
+        function attitude_setpoint = generate_attitude_setpoint( obj, reset_yaw_sp, manual_control_sp, v_att )
             %GENERATE_ATTITUDE_SETPOINT Generate attitude setpoint (manual control)
             %   Based on code from PX4 Firmware (retrieved 2019/01/15, v1.82):
             %       https://github.com/PX4/Firmware/blob/master/src/modules/mc_att_control/mc_att_control_main.cpp
             %   Written:       J.X.J. Bannwarth, 2019/01/15
             %   Last modified: J.X.J. Bannwarth, 2019/01/15
             
-            eul = QuatToEuler( obj.v_att.q );
+            eul = mc_att_control.QuatToEuler( v_att.q ); % 
             yaw = eul(3);
+            attitude_setpoint = struct( 'yaw_sp_move_rate', 0         , ...
+                                        'roll_body'       , 0         , ...
+                                        'pitch_body'      , 0         , ...
+                                        'yaw_body'        , 0         , ...
+                                        'thrust_body'     , zeros(3,1), ...
+                                        'q_d'             , zeros(4,1), ...
+                                        'q_d_valid'       , 0 );
             if reset_yaw_sp
                 obj.man_yaw_sp = yaw;
             elseif ( manual_control_sp.z > 0.05 || strcmp( obj.airmode, 'roll_pitch_yaw' ) )
                 yaw_rate = obj.yaw_rate_scaling;
-                attitude_setpoint.yaw_sp_move_rate = obj.manula_control_sp.r * yaw_rate;
-                obj.man_yaw_sp = WrapPi( obj.man_yaw_sp + attitude_setpoint.yaw_sp_move_rate*obj.dt );
+                attitude_setpoint.yaw_sp_move_rate = manual_control_sp.r * yaw_rate;
+                obj.man_yaw_sp = mc_att_control.WrapPi( obj.man_yaw_sp + attitude_setpoint.yaw_sp_move_rate*obj.dt );
             end
             
             % Input mapping for roll & pitch setpoints
@@ -292,8 +373,8 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
                 v = v * obj.man_tilt_max / v_norm;
             end
             
-            q_sp_rpy = AxisAngleToQuat( [ v(1); v(2) ] );
-            euler_sp = QuatToEuler( q_sp_rpy );
+            q_sp_rpy = mc_att_control.AxisAngleToQuat( [ v(1); v(2); 0 ] );
+            euler_sp = mc_att_control.QuatToEuler( q_sp_rpy ); %
             attitude_setpoint.roll_body  = euler_sp(1);
             attitude_setpoint.pitch_body = euler_sp(2);
             % The axis angle can change the yaw as well (noticeable at higher tilt angles).
@@ -302,7 +383,7 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
             %   yaw = atan(-2 * sin(b) * cos(b) * sin^2(a/2) / (1 - 2 * cos^2(b) * sin^2(a/2))).
             attitude_setpoint.yaw_body = obj.man_yaw_sp + euler_sp(3);
             
-            if obj.vehicle_status.is_vtol
+            if obj.vehicle_status_is_vtol
                 % Construct attitude setpoint rotation matrix. Modify the setpoints
                 % for roll and pitch such that they reflect the user's intention
                 % even if a large yaw error (yaw_sp - yaw) is present. In the
@@ -320,18 +401,18 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
                 % the same as when not yawing
                 
                 % Calculate our current yaw error
-                yaw_error = WrapPi(attitude_setpoint.yaw_body - yaw);
+                yaw_error = mc_att_control.WrapPi(attitude_setpoint.yaw_body - yaw);
                 
                 % Compute the vector obtained by rotating a z unit vector by the rotation
                 % given by the roll and pitch commands of the user
                 zB = [0.0; 0.0; 1.0];
-                R_sp_roll_pitch = EulerToDcm( [attitude_setpoint.roll_body; attitude_setpoint.pitch_body; 0.0] );
+                R_sp_roll_pitch = mc_att_control.EulerToDcm( [attitude_setpoint.roll_body; attitude_setpoint.pitch_body; 0.0] );
                 z_roll_pitch_sp = R_sp_roll_pitch * zB;
                 
                 % Transform the vector into a new frame which is rotated around the z axis
                 % by the current yaw error. this vector defines the desired tilt when we look
                 % into the direction of the desired heading
-                R_yaw_correction = EulerToDcm( [0.0; 0.0; -yaw_error] );
+                R_yaw_correction = mc_att_control.EulerToDcm( [0.0; 0.0; -yaw_error] );
                 z_roll_pitch_sp = R_yaw_correction * z_roll_pitch_sp;
                 
                 % Use the formula z_roll_pitch_sp = R_tilt * [0;0;1]
@@ -342,17 +423,17 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
             end
             
             % Publish the setpoint
-            q_sp = EulerToQuat( [ attitude_setpoint.roll_body;
+            q_sp = mc_att_control.EulerToQuat( [ attitude_setpoint.roll_body;
                 attitude_setpoint.pitch_body;
                 attitude_setpoint.yaw_body ] );
             attitude_setpoint.q_d = q_sp;
-            attitude_setpoint.q_d_valid = true;
+            attitude_setpoint.q_d_valid = 1;
             
-            attitude_setpoint.thrust_body(3) = -apply_throttle_curve( manual_control_sp.z );
+            attitude_setpoint.thrust_body(3) = -apply_throttle_curve( obj, manual_control_sp.z );
             % attitude_setpoint.timestamp = time;
         end
         
-        function control_attitude( obj, v_control_mode )
+        function control_attitude( obj, v_control_mode, v_att, v_att_sp )
             %CONTROL_ATTITUDE Attitude controller
             %   Based on code from PX4 Firmware (retrieved 2019/01/15, v1.82):
             %       https://github.com/PX4/Firmware/blob/master/src/modules/mc_att_control/mc_att_control_main.cpp
@@ -362,28 +443,28 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
             %   Last modified: J.X.J. Bannwarth, 2019/01/15
             
             % Physical thrust axis is the negative of body z axis
-            obj.thrust_sp = -obj.v_att_sp.thrust_body(3);
+            obj.thrust_sp = -v_att_sp.thrust_body(3);
             
             % Prepare yaw weight from the ratio between roll/pitch and yaw gains
             attitude_gain = obj.attitude_p;
             roll_pitch_gain = ( attitude_gain(1) + attitude_gain(2) ) / 2;
-            yaw_w = constrain( attitude_gain(3) / roll_pitch_gain, 0, 1 );
+            yaw_w = mc_att_control.constrain( attitude_gain(3) / roll_pitch_gain, 0, 1 );
             attitude_gain(2) = roll_pitch_gain;
             
             % Get estimated and desired vehicle attitude
-            q  = obj.v_att.q;
-            qd = obj.v_att_sp.q_d;
+            q  = v_att.q;
+            qd = v_att_sp.q_d;
             
             % Ensure input quaternions are exactly normalized because
             % acosf(1.00001) == NaN
-            q = normalize( q );
-            qd = normalize( qd );
+            q = mc_att_control.normalize( q );
+            qd = mc_att_control.normalize( qd );
             
             % Calculate reduced desired attitude neglecting vehicle's yaw to
             % prioritize roll and pitch
-            e_z   = QuatToDcmZ( q );
-            e_z_d = QuatToDcmZ( qd );
-            qd_red = VecsToQuat( e_z, e_z_d );
+            e_z   = mc_att_control.QuatToDcmZ( q );
+            e_z_d = mc_att_control.QuatToDcmZ( qd );
+            qd_red = mc_att_control.VecsToQuat( e_z, e_z_d );
             
             if ( abs(qd_red(2)) > (1 - 1e-5) ) || ( abs(qd_red(3)) > (1 - 1e-5) )
                 % In the infinitesimal corner case where the vehicle and thrust have
@@ -395,29 +476,30 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
             else
                 % Transform rotation from current to desired thrust vector into a
                 % world frame reduced desired attitude
-                qd_red = qd_red * q;
+                qd_red = mc_att_control.QuatMult( qd_red, q );
             end
             
             % Mix full and reduced desired attitude
-            q_mix = QuatMult( InvertQuat(qd_red), qd );
-            q_mix = q_mix * SignNoZero( q_mix(1) );
+            q_mix = mc_att_control.QuatMult( mc_att_control.InvertQuat(qd_red), qd );
+            q_mix = q_mix * mc_att_control.SignNoZero( q_mix(1) );
             
             % Catch numerical problems with the domain of acosf and asinf
-            q_mix(1) = constrain( q_mix(1), -1, 1 );
-            q_mix(4) = constrain( q_mix(4), -1, 1 );
-            qd = qd_red * [ cos( yaw_w * acos(q_mix(1)) );
-                0;
-                0;
-                sin( yaw_w * asin(q_mix(4)) ) ];
+            q_mix(1) = mc_att_control.constrain( q_mix(1), -1, 1 );
+            q_mix(4) = mc_att_control.constrain( q_mix(4), -1, 1 );
+            qd = mc_att_control.QuatMult( qd_red, ...
+                [ cos( yaw_w * acos(q_mix(1)) );
+                  0;
+                  0;
+                  sin( yaw_w * asin(q_mix(4)) ) ] );
             
             % Quaternion attitude control law, qe is rotation from q to qd
-            qe = QuatMult( InvertQuat(q), qd );
+            qe = mc_att_control.QuatMult( mc_att_control.InvertQuat(q), qd );
             
             % Using sin(alpha/2) scaled rotation axis as attitude error (see
             % quaternion definition by axis angle)
             % Also taking care of the antipodal unit quaternion ambiguity
             % qe(2:4) corresponds to the imaginary part of the quaternion
-            eq = 2 .* SignNoZero(qe(1)) .* qe(2:4);
+            eq = 2 .* mc_att_control.SignNoZero(qe(1)) .* qe(2:4);
             
             % calculate angular rates setpoint
             obj.rates_sp = eq .* attitude_gain;
@@ -432,21 +514,21 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
             % This yields a vector representing the commanded rotation around the
             % world z-axis expressed in the body frame such that it can be added to
             % the rates setpoint.
-            obj.rates_sp = obj.rates_sp + QuatToDcmZ( InvertQuat(q) ) * obj.v_att_sp.yaw_sp_move_rate;
+            obj.rates_sp = obj.rates_sp + mc_att_control.QuatToDcmZ( mc_att_control.InvertQuat(q) ) * v_att_sp.yaw_sp_move_rate;
             
             % limit rates
             for i = 1:3
                 if (( v_control_mode.flag_control_velocity_enabled || ...
                         v_control_mode.flag_control_auto_enabled ) && ...
                         ~v_control_mode.flag_control_manual_enabled )
-                    obj.rates_sp(i) = constrain(obj.rates_sp(i), -obj.auto_rate_max(i), obj.auto_rate_max(i));
+                    obj.rates_sp(i) = mc_att_control.constrain(obj.rates_sp(i), -obj.auto_rate_max(i), obj.auto_rate_max(i));
                 else
-                    obj.rates_sp(i) = constrain(obj.rates_sp(i), -obj.mc_rate_max(i), obj.mc_rate_max(i));
+                    obj.rates_sp(i) = mc_att_control.constrain(obj.rates_sp(i), -obj.mc_rate_max(i), obj.mc_rate_max(i));
                 end
             end
         end
         
-        function att_control = control_attitude_rates( obj, sensor_gyro )
+        function att_control = control_attitude_rates( obj, sensor_gyro, v_control_mode, vehicle_land_detected, saturation_status )
             %CONTROL_ATTITUDE_RATES Attitude rates controller
             %   Input: obj.rates_sp, obj.thrust_sp
             %   Output: att_control
@@ -456,7 +538,7 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
             %   Last modified: J.X.J. Bannwarth, 2019/01/21
             
             % Reset integral if disarmed */
-            if (~v_control_mode.flag_armed || obj.vehicle_status.is_rotary_wing)
+            if (~v_control_mode.flag_armed || obj.vehicle_status_is_rotary_wing)
                 obj.rates_int = zeros(3,1);
             end
             
@@ -474,15 +556,15 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
             % rates(2) = rates(2) - obj.sensor_bias.gyro_y_bias;
             % rates(3) = rates(3) - obj.sensor_bias.gyro_z_bias;
             
-            rates_p_scaled = obj.rate_p .* pid_attenuations( obj.tpa_breakpoint_p, obj.tpa_rate_p, obj.thrust_sp );
-            rates_i_scaled = obj.rate_i .* pid_attenuations( obj.tpa_breakpoint_i, obj.tpa_rate_i, obj.thrust_sp );
-            rates_d_scaled = obj.rate_d .* pid_attenuations( obj.tpa_breakpoint_d, obj.tpa_rate_d, obj.thrust_sp );
+            rates_p_scaled = obj.rate_p .* mc_att_control.pid_attenuations( obj.tpa_breakpoint_p, obj.tpa_rate_p, obj.thrust_sp );
+            rates_i_scaled = obj.rate_i .* mc_att_control.pid_attenuations( obj.tpa_breakpoint_i, obj.tpa_rate_i, obj.thrust_sp );
+            rates_d_scaled = obj.rate_d .* mc_att_control.pid_attenuations( obj.tpa_breakpoint_d, obj.tpa_rate_d, obj.thrust_sp );
             
             % Angular rates error
             rates_err = obj.rates_sp - rates;
             
             % Apply low-pass filtering to the rates for D-term
-            [ rates_filtered, obj.lp_filters_d ] = LowPassFilter2pVector3Apply( rates, obj.lp_filters_d );
+            rates_filtered = LowPassFilter2pVector3Apply( obj, rates );
             
             att_control = rates_p_scaled .* rates_err + ...
                 obj.rates_int - ...
@@ -493,19 +575,19 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
             obj.rates_prev_filtered = rates_filtered;
             
             % update integral only if we are not landed */
-            if (~obj.vehicle_land_detected.maybe_landed && ~obj.vehicle_land_detected.landed)
+            if (~vehicle_land_detected.maybe_landed && ~vehicle_land_detected.landed)
                 for i = 1:3
                     % Check for positive control saturation
                     positive_saturation = ...
-                        ((i == 1) && obj.saturation_status.flags.roll_pos) || ...
-                        ((i == 2) && obj.saturation_status.flags.pitch_pos) || ...
-                        ((i == 3) && obj.saturation_status.flags.yaw_pos);
+                        ((i == 1) && saturation_status.flags.roll_pos) || ...
+                        ((i == 2) && saturation_status.flags.pitch_pos) || ...
+                        ((i == 3) && saturation_status.flags.yaw_pos);
                     
                     % Check for negative control saturation
                     negative_saturation = ...
-                        ((i == 1) && obj.saturation_status.flags.roll_neg) || ...
-                        ((i == 2) && obj.saturation_status.flags.pitch_neg) || ...
-                        ((i == 3) && obj.saturation_status.flags.yaw_neg);
+                        ((i == 1) && saturation_status.flags.roll_neg) || ...
+                        ((i == 2) && saturation_status.flags.pitch_neg) || ...
+                        ((i == 3) && saturation_status.flags.yaw_neg);
                     
                     % prevent further positive control saturation
                     if (positive_saturation)
@@ -528,9 +610,8 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
             
             % explicitly limit the integrator state */
             for i = 1:3
-                obj.rates_int(i) = constrain( obj.rates_int(i), -obj.rate_int_lim(i), obj.rate_int_lim(i) );
+                obj.rates_int(i) = mc_att_control.constrain( obj.rates_int(i), -obj.rate_int_lim(i), obj.rate_int_lim(i) );
             end
-            
         end
         
         %% mc_att_control_main.cpp - Secondary functions
@@ -554,22 +635,8 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
                     end
             end
         end
-        
-        function pidAttenuationPerAxis = pid_attenuations( tpa_breakpoint, tpa_rate, thrust_sp )
-            %PID_ATTENUATIONS Throttle PID attenuation
-            %   Function visualization available here https://www.desmos.com/calculator/gn4mfoddje
-            %   Input: tpa_breakpoint, tpa_rate, obj.thrust_sp
-            %   Based on code from PX4 Firmware:
-            %       https://github.com/PX4/Firmware/blob/master/src/modules/mc_att_control/mc_att_control_main.cpp
-            %   Written:       J.X.J. Bannwarth, 2019/01/16
-            %   Last modified: J.X.J. Bannwarth, 2019/01/16
-            TPA_RATE_LOWER_LIMIT = 0.05;
-            tpa = 1.0 - tpa_rate * (abs(thrust_sp) - tpa_breakpoint) / (1.0 - tpa_breakpoint);
-            tpa = max([TPA_RATE_LOWER_LIMIT, min([1.0, tpa])]);
-            pidAttenuationPerAxis = [ tpa; tpa; 1.0 ];
-        end
-        
-        function actuators_control = publish_actuator_controls(obj, att_control) % NEED TO CHECK
+
+        function actuators_control = publish_actuator_controls( obj, att_control ) % NEED TO CHECK
             %PUBLISH_ACTUATOR_CONTROLS Perform checks before outputing commands
             %   Based on code from PX4 Firmware:
             %       https://github.com/PX4/Firmware/blob/master/src/modules/mc_att_control/mc_att_control_main.cpp
@@ -588,19 +655,21 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
             if isfinite( obj.thrust_sp )
                 actuators_control(4) = obj.thrust_sp;
             end
-            if isfinite( landing_gear_landing_gear )
-                actuators_control(8) = landing_gear_landing_gear;
-            end
+%             if isfinite( landing_gear_landing_gear )
+%                 actuators_control(8) = landing_gear_landing_gear;
+%             end
+            actuators_control(8) = 0; % Bypass landing gear
             % actuators_timestamp = time;
             % actuators_timestamp_sample = sensor_gyro_timestamp;
             
             % Scale effort by battery status
-            if ( obj.bat_scale_en && battery_status_scale > 0.0)
+            if ( obj.bat_scale_en && battery_status_scale > 0.0 )
                 for i = 1:4
                     actuators_control(i) = actuators.control * battery_status_scale;
                 end
             end
             
+            actuators_0_circuit_breaker_enabled = 0; % Assume we don't want to suppress the output
             if (actuators_0_circuit_breaker_enabled)
                 actuators_control = 0 * actuators_control;
             end
@@ -643,15 +712,15 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
             end
             
             fr = sample_freq / obj.lp_filters_d_cutoff_freq;
-            ohm = tanf( pi / fr);
-            c = 1.0 + 2.0 * cosf( pi / 4.0) * ohm + ohm * ohm;
+            ohm = tan( pi / fr);
+            c = 1.0 + 2.0 * cos( pi / 4.0) * ohm + ohm * ohm;
             
             obj.lp_filters_d_b0 = ohm * ohm / c;
             obj.lp_filters_d_b1 = 2.0 * obj.lp_filters_d_b0;
             obj.lp_filters_d_b2 = obj.lp_filters_d_b0;
             
             obj.lp_filters_d_a1 = 2.0 * (ohm * ohm - 1.0) / c;
-            obj.lp_filters_d_a2 = (1.0 - 2.0 * cosf(pi / 4.0) * ohm + ohm * ohm) / c;
+            obj.lp_filters_d_a2 = (1.0 - 2.0 * cos(pi / 4.0) * ohm + ohm * ohm) / c;
         end
         
         function output = LowPassFilter2pVectorReset( obj, sample )
@@ -672,11 +741,29 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
             
             output = LowPassFilter2pVector3Apply( obj, sample );
         end
-        
-        %% Accessory functions
+    end
+    
+    %% Static functions
+    methods(Static)
+        % Static secondary function
+        function pidAttenuationPerAxis = pid_attenuations( tpa_breakpoint, tpa_rate, thrust_sp )
+            %PID_ATTENUATIONS Throttle PID attenuation
+            %   Function visualization available here https://www.desmos.com/calculator/gn4mfoddje
+            %   Input: tpa_breakpoint, tpa_rate, obj.thrust_sp
+            %   Based on code from PX4 Firmware:
+            %       https://github.com/PX4/Firmware/blob/master/src/modules/mc_att_control/mc_att_control_main.cpp
+            %   Written:       J.X.J. Bannwarth, 2019/01/16
+            %   Last modified: J.X.J. Bannwarth, 2019/01/16
+            TPA_RATE_LOWER_LIMIT = 0.05;
+            tpa = 1.0 - tpa_rate * (abs(thrust_sp) - tpa_breakpoint) / (1.0 - tpa_breakpoint);
+            tpa = max([TPA_RATE_LOWER_LIMIT, min([1.0, tpa])]);
+            pidAttenuationPerAxis = [ tpa; tpa; 1.0 ];
+        end
+
         % Angle/orientation functions
         function euler = QuatToEuler( quat )
-            euler = DcmToEuler( QuatToDcm( quat ) );
+            quat_tmp = ones(4,1).*quat;
+            euler = mc_att_control.DcmToEuler( mc_att_control.QuatToDcm( quat_tmp ) );
         end
         
         function euler = DcmToEuler( dcm )
@@ -779,6 +866,29 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
             dcm(3,3) = cosPhi * cosThe;
         end
         
+        function quat = EulerToQuat( eul )
+            %EULERTOQUAT Convert Euler angles to a quaternion
+            %   Based on code from PX4 Firmware:
+            %       https://github.com/PX4/Matrix/blob/master/matrix/Dcm.hpp
+            %   Written:       J.X.J. Bannwarth, 2019/01/15
+            %   Last modified: J.X.J. Bannwarth, 2019/01/22
+            roll  = eul(1);
+            pitch = eul(2);
+            yaw   = eul(3);
+
+            cosPhi_2   = cos(roll / 2.0);
+            sinPhi_2   = sin(roll / 2.0);
+            cosTheta_2 = cos(pitch / 2.0);
+            sinTheta_2 = sin(pitch / 2.0);
+            cosPsi_2   = cos(yaw / 2.0);
+            sinPsi_2   = sin(yaw / 2.0);
+
+            quat = [ cosPhi_2 .* cosTheta_2 .* cosPsi_2 + sinPhi_2 .* sinTheta_2 .* sinPsi_2;
+                     sinPhi_2 .* cosTheta_2 .* cosPsi_2 - cosPhi_2 .* sinTheta_2 .* sinPsi_2;
+                     cosPhi_2 .* sinTheta_2 .* cosPsi_2 + sinPhi_2 .* cosTheta_2 .* sinPsi_2;
+                     cosPhi_2 .* cosTheta_2 .* sinPsi_2 - sinPhi_2 .* sinTheta_2 .* cosPsi_2 ];
+        end
+        
         function quat = AxisAngleToQuat( axisAngle )
             %AXISANGLETOQUAT Convert axis angle representation to quaternion
             %   axisAngle = [x; y; z]*angle where [x; y; z] is a unit vector
@@ -840,7 +950,7 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
             quat(2) = cr(1);
             quat(3) = cr(2);
             quat(4) = cr(3);
-            quat = normalize( quat );
+            quat = mc_att_control.normalize( quat );
         end
         
         function quatInv = InvertQuat( quat )
@@ -935,9 +1045,9 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
             %       https://github.com/PX4/Firmware/blob/master/src/lib/mathlib/math/Functions.hpp
             %   Written:       J.X.J. Bannwarth, 2019/01/17
             %   Last modified: J.X.J. Bannwarth, 2019/01/17
-            x = constrain(value, - 1, 1);
-            gc = constrain(g, 0, 0.99);
-            out = Expo(x, e) * (1 - gc) / (1 - abs(x) * gc);
+            x = mc_att_control.constrain(value, - 1, 1);
+            gc = mc_att_control.constrain(g, 0, 0.99);
+            out = mc_att_control.Expo(x, e) * (1 - gc) / (1 - abs(x) * gc);
         end
         
         function out = Expo( value, e )
@@ -952,8 +1062,8 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
             %       https://github.com/PX4/Firmware/blob/master/src/lib/mathlib/math/Functions.hpp
             %   Written:       J.X.J. Bannwarth, 2019/01/17
             %   Last modified: J.X.J. Bannwarth, 2019/01/17
-            x = constrain( value, -1, 1 );
-            ec = constrain( e, 0, 1 );
+            x = mc_att_control.constrain( value, -1, 1 );
+            ec = mc_att_control.constrain( e, 0, 1 );
             out = (1 - ec) * x + ec * x * x * x;
         end
     end

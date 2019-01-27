@@ -1,0 +1,49 @@
+MC_ACRO_EXPO;0.69;0;1;-;Acro mode Expo factor for Roll and Pitch
+MC_ACRO_EXPO_Y;0.69;0;1;-;Acro mode Expo factor for Yaw
+MC_ACRO_P_MAX;720.0;0.0;1800.0;deg/s;Max acro pitch rate
+MC_ACRO_R_MAX;720.0;0.0;1800.0;deg/s;Max acro roll rate
+MC_ACRO_SUPEXPO;0.7;0;0.95;-;Acro mode SuperExpo factor for Roll and Pitch
+MC_ACRO_SUPEXPOY;0.7;0;0.95;-;Acro mode SuperExpo factor for Yaw
+MC_ACRO_Y_MAX;540.0;0.0;1800.0;deg/s;Max acro yaw rate
+MC_AIRMODE;0;0;2;switch;Multicopter air-mode
+MC_BAT_SCALE_EN;0;0;1;boolean;Battery power level scaler
+MC_DTERM_CUTOFF;30.;0;1000;-;Cutoff frequency for the low pass filter on the D-term in the rate controller
+MC_PITCHRATE_D;0.003;0.0;9999;-;Pitch rate D gain
+MC_PITCHRATE_FF;0.0;0.0;9999;-;Pitch rate feedforward
+MC_PITCHRATE_I;0.05;0.0;9999;-;Pitch rate I gain
+MC_PITCHRATE_MAX;220.0;0.0;1800.0;deg/s;Max pitch rate
+MC_PITCHRATE_P;0.15;0.0;0.6;-;Pitch rate P gain
+MC_PITCH_P;6.5;0.0;12;1/s;Roll rate integrator limit
+MC_PR_INT_LIM;0.30;0.0;2;-;Pitch rate integrator limit
+MC_RATT_TH;0.8;0.0;9999;-;Threshold for Rattitude mode
+MC_ROLLRATE_D;0.003;0;0.01;-;Roll rate D gain
+MC_ROLLRATE_FF;0.0;0.0;9999;-;Roll rate feedforward
+MC_ROLLRATE_I;0.05;0.0;9999;-;Roll rate I gain
+MC_ROLLRATE_MAX;220.0;0.0;9999;-;Max roll rate
+MC_ROLLRATE_P;0.15;0.0;0.5;-;Roll rate P gain
+MC_ROLL_P;6.5;0.0;12;1/s;Roll P gain
+MC_RR_INT_LIM;0.3;0.0;9999;-;Roll rate integrator limit
+MC_TPA_BREAK_D;1.0;0.0;1.0;-;TPA D Breakpoint
+MC_TPA_BREAK_I;1.0;0.0;1.0;-;TPA I Breakpoint
+MC_TPA_BREAK_P;1.0;0.0;1.0;-;TPA P Breakpoint
+MC_TPA_RATE_D;0.0;0.0;1.0;-;TPA Rate D
+MC_TPA_RATE_I;0.0;0.0;1.0;-;TPA Rate I
+MC_TPA_RATE_P;0.0;0.0;1.0;-;TPA Rate P
+MC_YAWRATE_D;0.0;0.0;9999;-;Yaw rate D gain
+MC_YAWRATE_FF;0.0;0.0;9999;-;Yaw rate feedforward
+MC_YAWRATE_I;0.1;0.0;9999;-;Yaw rate I gain
+MC_YAWRATE_MAX;200.0;0.0;1800.0;deg/s;Max yaw rate
+MC_YAWRATE_P;0.2;0.0;0.6;-;Yaw rate P gain
+MC_YAWRAUTO_MAX;45.0;0.0;360.0;deg/s;Max yaw rate in auto mode
+MC_YAW_P;2.8;0.0;5;1/s;Pitch rate P gain
+MC_YR_INT_LIM;0.30;0.0;9999;-;Yaw rate integrator limit
+MPC_MANTHR_MIN;0.08;0;1;-;Minimum manual thrust
+MPC_MAN_TILT_MAX;35;0;90;deg;Maximal tilt angle in manual or altitude mode
+MPC_MAN_Y_MAX;200;0;400;deg/s;Max manual yaw rate
+MPC_THR_CURVE;0;0;1;boolean;Thrust curve in Manual Mode
+MPC_THR_HOVER;0.5;0.1;0.8;norm;Hover thrust
+MPC_THR_MAX;1.0;0.0;1.0;norm;Maximum thrust in auto thrust control
+SENS_BOARD_ROT;0;0;34;switch;Board rotation
+SENS_BOARD_X_OFF;0;9999;9999;deg;Board rotation X (Roll) offset
+SENS_BOARD_Y_OFF;0;9999;9999;deg;Board rotation Y (Pitch) offset
+SENS_BOARD_Z_OFF;0;9999;9999;deg;Board rotation Z (Yaw) offset
