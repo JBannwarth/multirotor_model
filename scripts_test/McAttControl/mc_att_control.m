@@ -440,7 +440,7 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
             %   Input: 'vehicle_attitude_setpoint' (depending on mode)
             %   Output: obj.rates_sp, obj.thrust_sp
             %   Written:       J.X.J. Bannwarth, 2019/01/15
-            %   Last modified: J.X.J. Bannwarth, 2019/01/15
+            %   Last modified: J.X.J. Bannwarth, 2019/01/29
             
             % Physical thrust axis is the negative of body z axis
             obj.thrust_sp = -v_att_sp.thrust_body(3);
@@ -449,7 +449,7 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
             attitude_gain = obj.attitude_p;
             roll_pitch_gain = ( attitude_gain(1) + attitude_gain(2) ) / 2;
             yaw_w = mc_att_control.constrain( attitude_gain(3) / roll_pitch_gain, 0, 1 );
-            attitude_gain(2) = roll_pitch_gain;
+            attitude_gain(3) = roll_pitch_gain;
             
             % Get estimated and desired vehicle attitude
             q  = v_att.q;
@@ -665,7 +665,7 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
             % Scale effort by battery status
             if ( obj.bat_scale_en && battery_status_scale > 0.0 )
                 for i = 1:4
-                    actuators_control(i) = actuators.control * battery_status_scale;
+                    actuators_control(i) = actuators.control(i) * battery_status_scale;
                 end
             end
             
