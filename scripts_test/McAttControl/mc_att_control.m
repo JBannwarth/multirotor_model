@@ -1,10 +1,25 @@
-classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matlab.system.mixin.SampleTime
-    %MC_ATT_CONTROL Run the PX4 Firmware attitude controller (v1.82)
+classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
+        matlab.system.mixin.SampleTime & matlab.system.mixin.Propagates
+    %MC_ATT_CONTROL PX4 Firmware attitude controller (v1.82)
+    %   Original description:
+    %   This implements the multicopter attitude and rate controller. It
+    %   takes attitude setpoints (vehicle_attitude_setpoint) or rate
+    %   setpoints (in acro mode via manual_control_setpoint topic) as
+    %   inputs and outputs actuator control messages.
+    %   The controller has two loops: a P loop for angular error and a PID
+    %   loop for angular rate error.
+    %   Publication documenting the implemented Quaternion Attitude Control:
+    %       Nonlinear Quadrocopter Attitude Control (2013)
+    %       by Dario Brescianini, Markus Hehn and Raffaello D'Andrea
+    %       Institute for Dynamic Systems and Control (IDSC), ETH Zurich
+    %       https://www.research-collection.ethz.ch/bitstream/handle/20.500.11850/154099/eth-7387-01.pdf
+    %   To reduce control latency, the module directly polls on the gyro
+    %   topic published by the IMU driver.
     %
     %   Based on code from PX4 Firmware (retrieved 2019/01/15, v1.82):
     %       https://github.com/PX4/Firmware/blob/master/src/modules/mc_att_control/mc_att_control_main.cpp
     %   Written:       J.X.J. Bannwarth, 2019/01/18
-    %   Last modified: J.X.J. Bannwarth, 2019/01/22
+    %   Last modified: J.X.J. Bannwarth, 2019/01/30
 
     %% Public, tunable properties (equivalent to those available on PX4)
     properties (Nontunable)
@@ -60,6 +75,7 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
         vehicle_status_is_rotary_wing (1,1) {mustBeGreaterThanOrEqual(vehicle_status_is_rotary_wing,    0), mustBeLessThanOrEqual(vehicle_status_is_rotary_wing,    1), mustBeInteger(vehicle_status_is_rotary_wing)} =     1; % IS_ROTARY_WING [0-1]
         vehicle_status_is_vtol        (1,1) {mustBeGreaterThanOrEqual(vehicle_status_is_vtol       ,    0), mustBeLessThanOrEqual(vehicle_status_is_vtol       ,    1), mustBeInteger(vehicle_status_is_vtol       )} =     0; % IS_VTOL [0-1]
         loop_update_rate_hz           (1,1) {mustBeGreaterThanOrEqual(loop_update_rate_hz          ,   50), mustBeLessThanOrEqual(loop_update_rate_hz          , 5000)                                              } =   250; % Loop update rate Hz [50-5000]
+        simple_mode                   (1,1) {mustBeGreaterThanOrEqual(simple_mode                  ,    0), mustBeLessThanOrEqual(simple_mode                  ,    1), mustBeInteger(simple_mode                  )} =     1; % Simple mode [0-1]
     end
 
     %% Pre-computed constants
@@ -128,43 +144,134 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
             num = 1;
         end
         
-        function num = getNumInputsImpl( ~ )
+        function num = getNumInputsImpl( obj )
             % Inputs:
-            num = 8;
+            if obj.simple_mode
+                num = 5;
+            else
+                num = 8;
+            end
         end
         
         function num = getOutputSizeImpl( ~ )
-            num = [8,1];
+            num = [8 1];
+        end
+        
+        function dataout = getOutputDataTypeImpl(~)
+            dataout = 'double';
+        end
+        
+        function cplxout = isOutputComplexImpl(~)
+            cplxout = false;
+        end
+        
+        function fixedout = isOutputFixedSizeImpl(~)
+            fixedout = true;
         end
 
+        function [sz,dt,cp] = getDiscreteStateSpecificationImpl( ~, name )
+            % Return size, data type, and complexity of discrete-state
+            % specified in name
+            switch name
+                case 'rates_int'
+                    sz = [3 1];
+                    dt = "double";
+                    cp = false;
+                case 'rates_prev'
+                    sz = [3 1];
+                    dt = "double";
+                    cp = false;
+                case 'rates_prev_filtered'
+                    sz = [3 1];
+                    dt = "double";
+                    cp = false;
+                case 'rates_sp'
+                    sz = [3 1];
+                    dt = "double";
+                    cp = false;
+                case 'thrust_sp'
+                    sz = [1 1];
+                    dt = "double";
+                    cp = false;
+                case 'man_yaw_sp'
+                    sz = [1 1];
+                    dt = "double";
+                    cp = false;
+                case 'gear_state_initialized'
+                    sz = [1 1];
+                    dt = "double";
+                    cp = false;
+                case 'lp_filters_d_delay_element_1'
+                    sz = [3 1];
+                    dt = "double";
+                    cp = false;
+                case 'lp_filters_d_delay_element_2'
+                    sz = [3 1];
+                    dt = "double";
+                    cp = false;
+                case 'prev_quat_reset_counter'
+                    sz = [1 1];
+                    dt = "double";
+                    cp = false;
+                case 'reset_yaw_sp'
+                    sz = [1 1];
+                    dt = "double";
+                    cp = false;
+                otherwise
+                    error(['Error: Incorrect State Name: ', name.']);
+            end
+        end
+    
         %% Main function
-        function actuators_control = stepImpl( obj, ...
-                v_control_mode_flags, ...
-                sensor_gyro_in, ...
-                manual_control_sp_in, ...
-                v_rates_sp_in, ...
-                vehicle_land_detected_in, ...
-                saturation_status_in, ...
-                v_att_in, ...
-                v_att_sp_in )
-            
+        function actuators_control = stepImpl( obj, varargin )           
             % Initialize output
             actuators_control = zeros(8,1);
-            att_control = zeros(3,1);
+            att_control       = zeros(3,1);
             
+            % Assign inputs based on which mode we are operating in
+            % This is not a PX4 feature and was added purely to reduce the
+            % number of input signals in the simulation model
+            if obj.simple_mode
+                % In simple mode, we assume the attitude controller is
+                % receiving attitude, thrust, and yaw rate commands from a
+                % position controller. In addition, we assume no saturation
+                % occurs
+                v_control_mode_flags_in  = [ 1; 1; 1; 1; 0; 1; 1; 0; 0; 0 ];
+                vehicle_land_detected_in = zeros(2,1);
+                saturation_status_in     = zeros(6,1);
+                manual_control_sp_in     = zeros(4,1);
+                v_rates_sp_in            = zeros(6,1);
+                v_att_in                 = [ varargin{4}; 0; 0 ];
+                v_att_sp_in              = [ varargin{1}; 0; 0; varargin{2}; varargin{3} ];
+                sensor_gyro_in           = varargin{5};
+            else
+                % In normal mode, all the features of the controller
+                % are available by setting the appropriate control flags
+                % (see below for a description of each element)
+                v_control_mode_flags_in  = varargin{1};
+                vehicle_land_detected_in = varargin{2};
+                saturation_status_in     = varargin{3};
+                manual_control_sp_in     = varargin{4};
+                v_att_sp_in              = varargin{5};
+                v_rates_sp_in            = varargin{6};
+                v_att_in                 = varargin{7};
+                sensor_gyro_in           = varargin{8};
+            end
+            
+            % Assign input
             sensor_gyro = sensor_gyro_in(1:3,1);
             
             % Assign control modes
-            v_control_mode.flag_armed                       = v_control_mode_flags(1);  % is set whenever the writing thread stores new data
-            v_control_mode.flag_control_altitude_enabled    = v_control_mode_flags(2);  % true if rate/attitude stabilization is enabled
-            v_control_mode.flag_control_attitude_enabled    = v_control_mode_flags(3);  % true if attitude stabilization is mixed in
-            v_control_mode.flag_control_auto_enabled        = v_control_mode_flags(4);  % true if onboard autopilot should act
-            v_control_mode.flag_control_manual_enabled      = v_control_mode_flags(5);  % true if manual input is mixed in
-            v_control_mode.flag_control_position_enabled    = v_control_mode_flags(6);  % true if position is controlled
-            v_control_mode.flag_control_rates_enabled       = v_control_mode_flags(7);  % true if rates are stabilized
-            v_control_mode.flag_control_rattitude_enabled   = v_control_mode_flags(8);  % true if rate/attitude stabilization is enabled
-            v_control_mode.flag_control_termination_enabled = v_control_mode_flags(9);  % true if flighttermination is enabled
-            v_control_mode.flag_control_velocity_enabled    = v_control_mode_flags(10); % true if horizontal velocity (implies direction) is controlled
+            v_control_mode.flag_armed                       = v_control_mode_flags_in(1);  % is set whenever the writing thread stores new data
+            v_control_mode.flag_control_altitude_enabled    = v_control_mode_flags_in(2);  % true if rate/attitude stabilization is enabled
+            v_control_mode.flag_control_attitude_enabled    = v_control_mode_flags_in(3);  % true if attitude stabilization is mixed in
+            v_control_mode.flag_control_auto_enabled        = v_control_mode_flags_in(4);  % true if onboard autopilot should act
+            v_control_mode.flag_control_manual_enabled      = v_control_mode_flags_in(5);  % true if manual input is mixed in
+            v_control_mode.flag_control_position_enabled    = v_control_mode_flags_in(6);  % true if position is controlled
+            v_control_mode.flag_control_rates_enabled       = v_control_mode_flags_in(7);  % true if rates are stabilized
+            v_control_mode.flag_control_rattitude_enabled   = v_control_mode_flags_in(8);  % true if rate/attitude stabilization is enabled
+            v_control_mode.flag_control_termination_enabled = v_control_mode_flags_in(9);  % true if flighttermination is enabled
+            v_control_mode.flag_control_velocity_enabled    = v_control_mode_flags_in(10); % true if horizontal velocity (implies direction) is controlled
             
             % Assign control modes
             manual_control_sp.r = manual_control_sp_in(1);
@@ -196,8 +303,8 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
             v_att.quat_reset_counter  = v_att_in(5);
             v_att.delta_q_reset       = v_att_in(6);
 
-            
-            v_att_sp = struct( 'yaw_sp_move_rate', 0         , ...
+            % Assign v_att_sp
+            v_att_sp = struct( 'yaw_sp_move_rate', 0, ...
                 'roll_body'       , 0         , ...
                 'pitch_body'      , 0         , ...
                 'yaw_body'        , 0         , ...
@@ -219,7 +326,8 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
             % Run the rate controller immediately after a gyro update (does not
             % matter for simulation)
             if (v_control_mode.flag_control_rates_enabled)
-                att_control = control_attitude_rates( obj, sensor_gyro, v_control_mode, vehicle_land_detected, saturation_status );
+                att_control = control_attitude_rates( obj, sensor_gyro, ...
+                    v_control_mode, vehicle_land_detected, saturation_status );
                 % Publish actuator controls
                 actuators_control = publish_actuator_controls( obj, att_control );
                 % Publish rate controller status
@@ -257,6 +365,10 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
                     end
                     control_attitude( obj, v_control_mode, v_att, v_att_sp );
                     % Publish rates setpoints
+                    v_rates_sp.roll  = obj.rates_sp(1);
+                    v_rates_sp.pitch = obj.rates_sp(2);
+                    v_rates_sp.yaw   = obj.rates_sp(3);
+                    v_rates_sp.thrust_body = [ 0; 0; -obj.thrust_sp ];
                 end
             else
                 % Attitude controller disabled, poll rates setpoint topic
@@ -270,6 +382,10 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
                         obj.rates_sp = man_rate_sp .* obj.acro_rate_max;
                         obj.thrust_sp = manual_control_sp.z;
                         % Publish rates setpoints
+                        v_rates_sp.roll  = obj.rates_sp(1);
+                        v_rates_sp.pitch = obj.rates_sp(2);
+                        v_rates_sp.yaw   = obj.rates_sp(3);
+                        v_rates_sp.thrust_body = [ 0; 0; -obj.thrust_sp ];
                     end
                 else
                     % attitude controller disabled, poll rates setpoint topic
@@ -316,8 +432,27 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
 
         function icon = getIconImpl( ~ )
             % Define icon for System block
-            icon = ["mc_att_control","v1.8"];
-            % icon = ["My","System"]; % Example: multi-line text icon
+            icon = ["mc_att_control","","v1.82"];
+        end
+
+        function varargout = getInputNamesImpl(obj)
+            % Return input port names for System block
+            if obj.simple_mode
+                varargout = { 'qDes', ...
+                    'thrustDes',  ...
+                    'yawRateDes', ...
+                    'qMeasured',  ...
+                    'nuBody' };
+            else
+                varargout = { 'v_control_mode_flags',  ...
+                    'vehicle_land_detected', ...
+                    'saturation_status',     ...
+                    'manual_control_sp',     ...
+                    'v_att_sp',              ...
+                    'v_rates_sp',            ...
+                    'v_att_in',              ...
+                    'sensor_gyro' };
+            end
         end
         
         function sts = getSampleTimeImpl( obj )
@@ -481,7 +616,7 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
             
             % Mix full and reduced desired attitude
             q_mix = mc_att_control.QuatMult( mc_att_control.InvertQuat(qd_red), qd );
-            q_mix = q_mix * mc_att_control.SignNoZero( q_mix(1) );
+            q_mix = q_mix .* mc_att_control.SignNoZero( q_mix(1) );
             
             % Catch numerical problems with the domain of acosf and asinf
             q_mix(1) = mc_att_control.constrain( q_mix(1), -1, 1 );
@@ -514,7 +649,7 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
             % This yields a vector representing the commanded rotation around the
             % world z-axis expressed in the body frame such that it can be added to
             % the rates setpoint.
-            obj.rates_sp = obj.rates_sp + mc_att_control.QuatToDcmZ( mc_att_control.InvertQuat(q) ) * v_att_sp.yaw_sp_move_rate;
+            obj.rates_sp = obj.rates_sp + mc_att_control.QuatToDcmZ( mc_att_control.InvertQuat(q) ) .* v_att_sp.yaw_sp_move_rate;
             
             % limit rates
             for i = 1:3
@@ -538,7 +673,7 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
             %   Last modified: J.X.J. Bannwarth, 2019/01/21
             
             % Reset integral if disarmed */
-            if (~v_control_mode.flag_armed || obj.vehicle_status_is_rotary_wing)
+            if (~v_control_mode.flag_armed || ~obj.vehicle_status_is_rotary_wing)
                 obj.rates_int = zeros(3,1);
             end
             
@@ -636,12 +771,12 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
             end
         end
 
-        function actuators_control = publish_actuator_controls( obj, att_control ) % NEED TO CHECK
+        function actuators_control = publish_actuator_controls( obj, att_control )
             %PUBLISH_ACTUATOR_CONTROLS Perform checks before outputing commands
             %   Based on code from PX4 Firmware:
             %       https://github.com/PX4/Firmware/blob/master/src/modules/mc_att_control/mc_att_control_main.cpp
             %   Written:       J.X.J. Bannwarth, 2019/01/21
-            %   Last modified: J.X.J. Bannwarth, 2019/01/21
+            %   Last modified: J.X.J. Bannwarth, 2019/01/30
             actuators_control = zeros(8,1);
             if isfinite( att_control(1) )
                 actuators_control(1) = att_control(1);
@@ -653,7 +788,7 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & matla
                 actuators_control(3) = att_control(3);
             end
             if isfinite( obj.thrust_sp )
-                actuators_control(4) = obj.thrust_sp;
+                actuators_control(4) = -obj.thrust_sp;
             end
 %             if isfinite( landing_gear_landing_gear )
 %                 actuators_control(8) = landing_gear_landing_gear;
