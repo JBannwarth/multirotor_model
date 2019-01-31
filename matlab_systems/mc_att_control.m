@@ -76,6 +76,7 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
         vehicle_status_is_vtol        (1,1) {mustBeGreaterThanOrEqual(vehicle_status_is_vtol       ,    0), mustBeLessThanOrEqual(vehicle_status_is_vtol       ,    1), mustBeInteger(vehicle_status_is_vtol       )} =     0; % IS_VTOL [0-1]
         loop_update_rate_hz           (1,1) {mustBeGreaterThanOrEqual(loop_update_rate_hz          ,   50), mustBeLessThanOrEqual(loop_update_rate_hz          , 5000)                                              } =   250; % Loop update rate Hz [50-5000]
         simple_mode                   (1,1) {mustBeGreaterThanOrEqual(simple_mode                  ,    0), mustBeLessThanOrEqual(simple_mode                  ,    1), mustBeInteger(simple_mode                  )} =     1; % Simple mode [0-1]
+        output_rates                  (1,1) {mustBeGreaterThanOrEqual(output_rates                 ,    0), mustBeLessThanOrEqual(output_rates                 ,    1), mustBeInteger(output_rates                 )} =     1; % Output rate setpoints [0-1]
     end
 
     %% Pre-computed constants
@@ -140,8 +141,12 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
             % but not necessary in simulation
         end
         
-        function num = getNumOutputsImpl( ~ )
-            num = 1;
+        function num = getNumOutputsImpl( obj )
+            if obj.output_rates
+                num = 2;
+            else
+                num = 1;
+            end
         end
         
         function num = getNumInputsImpl( obj )
@@ -153,20 +158,32 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
             end
         end
         
-        function num = getOutputSizeImpl( ~ )
-            num = [8 1];
+        function varargout = getOutputSizeImpl( obj )
+            varargout{1} = [8 1];
+            if obj.output_rates
+                varargout{2} = [3 1];
+            end
         end
         
-        function dataout = getOutputDataTypeImpl(~)
-            dataout = 'double';
+        function varargout = getOutputDataTypeImpl( obj )
+            varargout{1} = 'double';
+            if obj.output_rates
+                varargout{2} = 'double';
+            end
         end
         
-        function cplxout = isOutputComplexImpl(~)
-            cplxout = false;
+        function varargout = isOutputComplexImpl( obj )
+            varargout{1} = false;
+            if obj.output_rates
+                varargout{2} = false;
+            end
         end
         
-        function fixedout = isOutputFixedSizeImpl(~)
-            fixedout = true;
+        function varargout = isOutputFixedSizeImpl( obj )
+            varargout{1} = true;
+            if obj.output_rates
+                varargout{2} = true;
+            end
         end
 
         function [sz,dt,cp] = getDiscreteStateSpecificationImpl( ~, name )
@@ -223,7 +240,7 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
         end
     
         %% Main function
-        function actuators_control = stepImpl( obj, varargin )           
+        function varargout = stepImpl( obj, varargin )           
             % Initialize output
             actuators_control = zeros(8,1);
             att_control       = zeros(3,1);
@@ -413,6 +430,10 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
                     (obj.vehicle_status_is_vtol && ~obj.vehicle_status_is_rotary_wing) ); % VTOL in FW mode
             end
             
+            varargout{1} = actuators_control;
+            if obj.output_rates
+                varargout{2} = obj.rates_sp;
+            end
         end
 
         function resetImpl( obj )
@@ -435,7 +456,7 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
             icon = ["mc_att_control","","v1.82"];
         end
 
-        function varargout = getInputNamesImpl(obj)
+        function varargout = getInputNamesImpl( obj )
             % Return input port names for System block
             if obj.simple_mode
                 varargout = { 'qDes', ...
@@ -452,6 +473,14 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
                     'v_rates_sp',            ...
                     'v_att_in',              ...
                     'sensor_gyro' };
+            end
+        end
+
+        function varargout = getOutputNamesImpl( obj )
+            % Return input port names for System block
+            varargout{1} = 'actuatorsControl';
+            if obj.output_rates
+                varargout{2} = 'attRateSp';
             end
         end
         
