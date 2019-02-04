@@ -27,7 +27,7 @@ classdef MultirotorMixer < matlab.System & matlab.system.mixin.CustomIcon & ...
         roll_scale   (1,1) = 1;
         pitch_scale  (1,1) = 1;
         yaw_scale    (1,1) = 1;
-        airmode            = 'roll_pitch_yaw';
+        airmode            = 'disabled';
         rotors             = -1;
     end
 
@@ -109,6 +109,15 @@ classdef MultirotorMixer < matlab.System & matlab.system.mixin.CustomIcon & ...
             if obj.useHorThrust
                 varargout{2} = 'Thor';
             end
+        end
+
+        function varargout = getOutputNamesImpl(obj)
+            % Return output port names for System block
+            varargout{1} = 'px4PWM';
+            if obj.outputSatStatus
+                varargout{2} = 'satStatus';
+            end
+            
         end
 
         function varargout = getOutputSizeImpl( obj )
@@ -256,12 +265,12 @@ classdef MultirotorMixer < matlab.System & matlab.system.mixin.CustomIcon & ...
             [ k1, sat_status ] = compute_desaturation_gain( obj, desaturation_vector, outputs, ...
                 sat_status, min_output, max_output );
             
-            if ( reduce_only && k1 > 0 )
+            if ( reduce_only && (k1 > 0) )
                 return;
             end
             
             for i = 1:obj.rotor_count
-                outputs(i) = outputs(1) + k1 * desaturation_vector(i);
+                outputs(i) = outputs(i) + k1 * desaturation_vector(i);
             end
             
             % Compute the desaturation gain again based on the updated outputs.
@@ -395,7 +404,7 @@ classdef MultirotorMixer < matlab.System & matlab.system.mixin.CustomIcon & ...
             end
             
             % reduce thrust only
-            [ outputs, saturation_status ] = minimize_saturation( tmp_array, outputs, saturation_status, 0, 1, 1 );
+            [ outputs, saturation_status ] = minimize_saturation( obj, tmp_array, outputs, saturation_status, 0, 1, 1 );
         end
                 
         function [ outputs, saturation_status ] = mix( obj, actuator_control, delta_out_max )
