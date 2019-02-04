@@ -7,7 +7,7 @@ classdef MotorMap < matlab.System & matlab.system.mixin.CustomIcon & ...
     %   Last modified: J.X.J. Bannwarth, 2019/01/31
 
     properties (Nontunable)
-        airframeConfig(1,1) {mustBeGreaterThanOrEqual(airframeConfig, 1), mustBeInteger(airframeConfig)} = 5; % Airframe configuration
+        airframeConfig(1,1) {mustBeGreaterThanOrEqual(airframeConfig, 1), mustBeInteger(airframeConfig)} = 8; % Airframe configuration
     end
 
     properties(Access = private)
