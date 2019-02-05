@@ -1,6 +1,6 @@
-classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
+classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.CustomIcon & ...
         matlab.system.mixin.SampleTime & matlab.system.mixin.Propagates
-    %MC_ATT_CONTROL PX4 Firmware attitude controller (v1.82)
+    %MULTICOPTERATTITUDECONTROL PX4 Firmware attitude controller (v1.82)
     %   Original description:
     %   This implements the multicopter attitude and rate controller. It
     %   takes attitude setpoints (vehicle_attitude_setpoint) or rate
@@ -19,7 +19,7 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
     %   Based on code from PX4 Firmware (retrieved 2019/01/15, v1.82):
     %       https://github.com/PX4/Firmware/blob/master/src/modules/mc_att_control/mc_att_control_main.cpp
     %   Written:       J.X.J. Bannwarth, 2019/01/18
-    %   Last modified: J.X.J. Bannwarth, 2019/01/30
+    %   Last modified: J.X.J. Bannwarth, 2019/02/05
 
     %% Public, tunable properties (equivalent to those available on PX4)
     properties (Nontunable)
@@ -141,6 +141,21 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
             % but not necessary in simulation
         end
         
+        function resetImpl( obj )
+            % Initialize / reset discrete-state properties
+            obj.rates_int                    = zeros(3,1);
+            obj.rates_prev                   = zeros(3,1);
+            obj.rates_prev_filtered          = zeros(3,1);
+            obj.rates_sp                     = zeros(3,1);
+            obj.thrust_sp                    = 0;
+            obj.man_yaw_sp                   = 0;
+            obj.gear_state_initialized       = 0;
+            obj.lp_filters_d_delay_element_1 = zeros(3,1);
+            obj.lp_filters_d_delay_element_2 = zeros(3,1);
+            obj.prev_quat_reset_counter      = 0;
+            obj.reset_yaw_sp                 = 0;
+        end
+
         function num = getNumOutputsImpl( obj )
             if obj.output_rates
                 num = 2;
@@ -238,6 +253,47 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
                     error(['Error: Incorrect State Name: ', name.']);
             end
         end
+        
+        function icon = getIconImpl( ~ )
+            % Define icon for System block
+            icon = ["MulticopterAttitudeControl","","v1.82"];
+        end
+
+        function varargout = getInputNamesImpl( obj )
+            % Return input port names for System block
+            if obj.simple_mode
+                varargout = { ...
+                    'qDes'      , ...
+                    'thrustDes' , ...
+                    'yawRateDes', ...
+                    'qMeasured' , ...
+                    'nuBody'    , ...
+                    };
+            else
+                varargout = { 'v_control_mode_flags',  ...
+                    'vehicle_land_detected', ...
+                    'saturation_status',     ...
+                    'manual_control_sp',     ...
+                    'v_att_sp',              ...
+                    'v_rates_sp',            ...
+                    'v_att_in',              ...
+                    'sensor_gyro' };
+            end
+        end
+
+        function varargout = getOutputNamesImpl( obj )
+            % Return input port names for System block
+            varargout{1} = 'actuatorsControl';
+            if obj.output_rates
+                varargout{2} = 'attRateSp';
+            end
+        end
+        
+        function sts = getSampleTimeImpl( obj )
+            sts = createSampleTime(obj, 'Type','Discrete', ...
+                'SampleTime', 1/obj.loop_update_rate_hz, ...
+                'OffsetTime', 0);
+        end
     
         %% Main function
         function varargout = stepImpl( obj, varargin )           
@@ -255,7 +311,7 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
                 % occurs
                 v_control_mode_flags_in  = [ 1; 1; 1; 1; 0; 1; 1; 0; 0; 0 ];
                 vehicle_land_detected_in = zeros(2,1);
-                saturation_status_in     = zeros(6,1);
+                saturation_status_in     = zeros(12,1);
                 manual_control_sp_in     = zeros(4,1);
                 v_rates_sp_in            = zeros(6,1);
                 v_att_in                 = [ varargin{4}; 0; 0 ];
@@ -307,12 +363,19 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
             v_rates_sp.thrust_body  = v_rates_sp_in(4:6);
             
             % Assign saturation status
-            saturation_status.flags.roll_pos  = saturation_status_in(1);
-            saturation_status.flags.pitch_pos = saturation_status_in(2);
-            saturation_status.flags.yaw_pos   = saturation_status_in(3);
-            saturation_status.flags.roll_neg  = saturation_status_in(4);
-            saturation_status.flags.pitch_neg = saturation_status_in(5);
-            saturation_status.flags.yaw_neg   = saturation_status_in(6);
+            saturation_status = struct( 'value', saturation_status_in( 1), 'flags', struct( ...
+                'valid'     , saturation_status_in( 2), ... %  0 - true when the saturation status is used
+                'motor_pos' , saturation_status_in( 3), ... %  1 - true when any motor has saturated in the positive direction
+                'motor_neg' , saturation_status_in( 4), ... %  2 - true when any motor has saturated in the negative direction
+                'roll_pos'  , saturation_status_in( 5), ... %  3 - true when a positive roll demand change will increase saturation
+                'roll_neg'  , saturation_status_in( 6), ... %  4 - true when a negative roll demand change will increase saturation
+                'pitch_pos' , saturation_status_in( 7), ... %  5 - true when a positive pitch demand change will increase saturation
+                'pitch_neg' , saturation_status_in( 8), ... %  6 - true when a negative pitch demand change will increase saturation
+                'yaw_pos'   , saturation_status_in( 9), ... %  7 - true when a positive yaw demand change will increase saturation
+                'yaw_neg'   , saturation_status_in(10), ... %  8 - true when a negative yaw demand change will increase saturation
+                'thrust_pos', saturation_status_in(11), ... %  9 - true when a positive thrust demand change will increase saturation
+                'thrust_neg', saturation_status_in(12)  ... % 10 - true when a negative thrust demand change will increase saturation
+                ) );
             
             % Assign v_att
             v_att = struct( 'q', zeros(4,1), 'quat_reset_counter', 0, 'delta_q_reset', 0 );
@@ -352,7 +415,7 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
             
             % Vehicle attitude poll
             if obj.prev_quat_reset_counter ~= v_att.quat_reset_counter
-                tmp = obj.man_yaw_sp + mc_att_control.QuatToEuler( v_att.delta_q_reset );
+                tmp = obj.man_yaw_sp + MulticopterAttitudeControl.QuatToEuler( v_att.delta_q_reset );
                 obj.man_yaw_sp = obj.man_yaw_sp + tmp(3);
             end
             obj.prev_quat_reset_counter = v_att.quat_reset_counter;
@@ -393,9 +456,9 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
                     if (manual_control_updated)
                         % Manual rates control - ACRO mode
                         man_rate_sp = [ ...
-                            mc_att_control.SuperExpo( manual_control_sp.y, obj.acro_expo_rp, obj.acro_superexpo_rp );
-                            mc_att_control.SuperExpo( -manual_control_sp.x, obj.acro_expo_rp, obj.acro_superexpo_rp );
-                            mc_att_control.SuperExpo( manual_control_sp.r, obj.acro_expo_y, obj.acro_superexpo_y ) ];
+                            MulticopterAttitudeControl.SuperExpo( manual_control_sp.y, obj.acro_expo_rp, obj.acro_superexpo_rp );
+                            MulticopterAttitudeControl.SuperExpo( -manual_control_sp.x, obj.acro_expo_rp, obj.acro_superexpo_rp );
+                            MulticopterAttitudeControl.SuperExpo( manual_control_sp.r, obj.acro_expo_y, obj.acro_superexpo_y ) ];
                         obj.rates_sp = man_rate_sp .* obj.acro_rate_max;
                         obj.thrust_sp = manual_control_sp.z;
                         % Publish rates setpoints
@@ -436,60 +499,6 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
             end
         end
 
-        function resetImpl( obj )
-            % Initialize / reset discrete-state properties
-            obj.rates_int                    = zeros(3,1);
-            obj.rates_prev                   = zeros(3,1);
-            obj.rates_prev_filtered          = zeros(3,1);
-            obj.rates_sp                     = zeros(3,1);
-            obj.thrust_sp                    = 0;
-            obj.man_yaw_sp                   = 0;
-            obj.gear_state_initialized       = 0;
-            obj.lp_filters_d_delay_element_1 = zeros(3,1);
-            obj.lp_filters_d_delay_element_2 = zeros(3,1);
-            obj.prev_quat_reset_counter      = 0;
-            obj.reset_yaw_sp                 = 0;
-        end
-
-        function icon = getIconImpl( ~ )
-            % Define icon for System block
-            icon = ["mc_att_control","","v1.82"];
-        end
-
-        function varargout = getInputNamesImpl( obj )
-            % Return input port names for System block
-            if obj.simple_mode
-                varargout = { 'qDes', ...
-                    'thrustDes',  ...
-                    'yawRateDes', ...
-                    'qMeasured',  ...
-                    'nuBody' };
-            else
-                varargout = { 'v_control_mode_flags',  ...
-                    'vehicle_land_detected', ...
-                    'saturation_status',     ...
-                    'manual_control_sp',     ...
-                    'v_att_sp',              ...
-                    'v_rates_sp',            ...
-                    'v_att_in',              ...
-                    'sensor_gyro' };
-            end
-        end
-
-        function varargout = getOutputNamesImpl( obj )
-            % Return input port names for System block
-            varargout{1} = 'actuatorsControl';
-            if obj.output_rates
-                varargout{2} = 'attRateSp';
-            end
-        end
-        
-        function sts = getSampleTimeImpl( obj )
-            sts = createSampleTime(obj, 'Type','Discrete', ...
-                'SampleTime', 1/obj.loop_update_rate_hz, ...
-                'OffsetTime', 0);
-        end
-        
         %% mc_att_control_main.cpp - Main control functions
         function attitude_setpoint = generate_attitude_setpoint( obj, reset_yaw_sp, manual_control_sp, v_att )
             %GENERATE_ATTITUDE_SETPOINT Generate attitude setpoint (manual control)
@@ -498,7 +507,7 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
             %   Written:       J.X.J. Bannwarth, 2019/01/15
             %   Last modified: J.X.J. Bannwarth, 2019/01/15
             
-            eul = mc_att_control.QuatToEuler( v_att.q ); % 
+            eul = MulticopterAttitudeControl.QuatToEuler( v_att.q ); % 
             yaw = eul(3);
             attitude_setpoint = struct( 'yaw_sp_move_rate', 0         , ...
                                         'roll_body'       , 0         , ...
@@ -512,7 +521,7 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
             elseif ( manual_control_sp.z > 0.05 || strcmp( obj.airmode, 'roll_pitch_yaw' ) )
                 yaw_rate = obj.yaw_rate_scaling;
                 attitude_setpoint.yaw_sp_move_rate = manual_control_sp.r * yaw_rate;
-                obj.man_yaw_sp = mc_att_control.WrapPi( obj.man_yaw_sp + attitude_setpoint.yaw_sp_move_rate*obj.dt );
+                obj.man_yaw_sp = MulticopterAttitudeControl.WrapPi( obj.man_yaw_sp + attitude_setpoint.yaw_sp_move_rate*obj.dt );
             end
             
             % Input mapping for roll & pitch setpoints
@@ -537,8 +546,8 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
                 v = v * obj.man_tilt_max / v_norm;
             end
             
-            q_sp_rpy = mc_att_control.AxisAngleToQuat( [ v(1); v(2); 0 ] );
-            euler_sp = mc_att_control.QuatToEuler( q_sp_rpy ); %
+            q_sp_rpy = MulticopterAttitudeControl.AxisAngleToQuat( [ v(1); v(2); 0 ] );
+            euler_sp = MulticopterAttitudeControl.QuatToEuler( q_sp_rpy ); %
             attitude_setpoint.roll_body  = euler_sp(1);
             attitude_setpoint.pitch_body = euler_sp(2);
             % The axis angle can change the yaw as well (noticeable at higher tilt angles).
@@ -565,18 +574,18 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
                 % the same as when not yawing
                 
                 % Calculate our current yaw error
-                yaw_error = mc_att_control.WrapPi(attitude_setpoint.yaw_body - yaw);
+                yaw_error = MulticopterAttitudeControl.WrapPi(attitude_setpoint.yaw_body - yaw);
                 
                 % Compute the vector obtained by rotating a z unit vector by the rotation
                 % given by the roll and pitch commands of the user
                 zB = [0.0; 0.0; 1.0];
-                R_sp_roll_pitch = mc_att_control.EulerToDcm( [attitude_setpoint.roll_body; attitude_setpoint.pitch_body; 0.0] );
+                R_sp_roll_pitch = MulticopterAttitudeControl.EulerToDcm( [attitude_setpoint.roll_body; attitude_setpoint.pitch_body; 0.0] );
                 z_roll_pitch_sp = R_sp_roll_pitch * zB;
                 
                 % Transform the vector into a new frame which is rotated around the z axis
                 % by the current yaw error. this vector defines the desired tilt when we look
                 % into the direction of the desired heading
-                R_yaw_correction = mc_att_control.EulerToDcm( [0.0; 0.0; -yaw_error] );
+                R_yaw_correction = MulticopterAttitudeControl.EulerToDcm( [0.0; 0.0; -yaw_error] );
                 z_roll_pitch_sp = R_yaw_correction * z_roll_pitch_sp;
                 
                 % Use the formula z_roll_pitch_sp = R_tilt * [0;0;1]
@@ -587,7 +596,7 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
             end
             
             % Publish the setpoint
-            q_sp = mc_att_control.EulerToQuat( [ attitude_setpoint.roll_body;
+            q_sp = MulticopterAttitudeControl.EulerToQuat( [ attitude_setpoint.roll_body;
                 attitude_setpoint.pitch_body;
                 attitude_setpoint.yaw_body ] );
             attitude_setpoint.q_d = q_sp;
@@ -612,7 +621,7 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
             % Prepare yaw weight from the ratio between roll/pitch and yaw gains
             attitude_gain = obj.attitude_p;
             roll_pitch_gain = ( attitude_gain(1) + attitude_gain(2) ) / 2;
-            yaw_w = mc_att_control.constrain( attitude_gain(3) / roll_pitch_gain, 0, 1 );
+            yaw_w = MulticopterAttitudeControl.constrain( attitude_gain(3) / roll_pitch_gain, 0, 1 );
             attitude_gain(3) = roll_pitch_gain;
             
             % Get estimated and desired vehicle attitude
@@ -621,14 +630,14 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
             
             % Ensure input quaternions are exactly normalized because
             % acosf(1.00001) == NaN
-            q = mc_att_control.normalize( q );
-            qd = mc_att_control.normalize( qd );
+            q = MulticopterAttitudeControl.normalize( q );
+            qd = MulticopterAttitudeControl.normalize( qd );
             
             % Calculate reduced desired attitude neglecting vehicle's yaw to
             % prioritize roll and pitch
-            e_z   = mc_att_control.QuatToDcmZ( q );
-            e_z_d = mc_att_control.QuatToDcmZ( qd );
-            qd_red = mc_att_control.VecsToQuat( e_z, e_z_d );
+            e_z   = MulticopterAttitudeControl.QuatToDcmZ( q );
+            e_z_d = MulticopterAttitudeControl.QuatToDcmZ( qd );
+            qd_red = MulticopterAttitudeControl.VecsToQuat( e_z, e_z_d );
             
             if ( abs(qd_red(2)) > (1 - 1e-5) ) || ( abs(qd_red(3)) > (1 - 1e-5) )
                 % In the infinitesimal corner case where the vehicle and thrust have
@@ -640,30 +649,30 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
             else
                 % Transform rotation from current to desired thrust vector into a
                 % world frame reduced desired attitude
-                qd_red = mc_att_control.QuatMult( qd_red, q );
+                qd_red = MulticopterAttitudeControl.QuatMult( qd_red, q );
             end
             
             % Mix full and reduced desired attitude
-            q_mix = mc_att_control.QuatMult( mc_att_control.InvertQuat(qd_red), qd );
-            q_mix = q_mix .* mc_att_control.SignNoZero( q_mix(1) );
+            q_mix = MulticopterAttitudeControl.QuatMult( MulticopterAttitudeControl.InvertQuat(qd_red), qd );
+            q_mix = q_mix .* MulticopterAttitudeControl.SignNoZero( q_mix(1) );
             
             % Catch numerical problems with the domain of acosf and asinf
-            q_mix(1) = mc_att_control.constrain( q_mix(1), -1, 1 );
-            q_mix(4) = mc_att_control.constrain( q_mix(4), -1, 1 );
-            qd = mc_att_control.QuatMult( qd_red, ...
+            q_mix(1) = MulticopterAttitudeControl.constrain( q_mix(1), -1, 1 );
+            q_mix(4) = MulticopterAttitudeControl.constrain( q_mix(4), -1, 1 );
+            qd = MulticopterAttitudeControl.QuatMult( qd_red, ...
                 [ cos( yaw_w * acos(q_mix(1)) );
                   0;
                   0;
                   sin( yaw_w * asin(q_mix(4)) ) ] );
             
             % Quaternion attitude control law, qe is rotation from q to qd
-            qe = mc_att_control.QuatMult( mc_att_control.InvertQuat(q), qd );
+            qe = MulticopterAttitudeControl.QuatMult( MulticopterAttitudeControl.InvertQuat(q), qd );
             
             % Using sin(alpha/2) scaled rotation axis as attitude error (see
             % quaternion definition by axis angle)
             % Also taking care of the antipodal unit quaternion ambiguity
             % qe(2:4) corresponds to the imaginary part of the quaternion
-            eq = 2 .* mc_att_control.SignNoZero(qe(1)) .* qe(2:4);
+            eq = 2 .* MulticopterAttitudeControl.SignNoZero(qe(1)) .* qe(2:4);
             
             % calculate angular rates setpoint
             obj.rates_sp = eq .* attitude_gain;
@@ -678,16 +687,16 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
             % This yields a vector representing the commanded rotation around the
             % world z-axis expressed in the body frame such that it can be added to
             % the rates setpoint.
-            obj.rates_sp = obj.rates_sp + mc_att_control.QuatToDcmZ( mc_att_control.InvertQuat(q) ) .* v_att_sp.yaw_sp_move_rate;
+            obj.rates_sp = obj.rates_sp + MulticopterAttitudeControl.QuatToDcmZ( MulticopterAttitudeControl.InvertQuat(q) ) .* v_att_sp.yaw_sp_move_rate;
             
             % limit rates
             for i = 1:3
                 if (( v_control_mode.flag_control_velocity_enabled || ...
                         v_control_mode.flag_control_auto_enabled ) && ...
                         ~v_control_mode.flag_control_manual_enabled )
-                    obj.rates_sp(i) = mc_att_control.constrain(obj.rates_sp(i), -obj.auto_rate_max(i), obj.auto_rate_max(i));
+                    obj.rates_sp(i) = MulticopterAttitudeControl.constrain(obj.rates_sp(i), -obj.auto_rate_max(i), obj.auto_rate_max(i));
                 else
-                    obj.rates_sp(i) = mc_att_control.constrain(obj.rates_sp(i), -obj.mc_rate_max(i), obj.mc_rate_max(i));
+                    obj.rates_sp(i) = MulticopterAttitudeControl.constrain(obj.rates_sp(i), -obj.mc_rate_max(i), obj.mc_rate_max(i));
                 end
             end
         end
@@ -720,9 +729,9 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
             % rates(2) = rates(2) - obj.sensor_bias.gyro_y_bias;
             % rates(3) = rates(3) - obj.sensor_bias.gyro_z_bias;
             
-            rates_p_scaled = obj.rate_p .* mc_att_control.pid_attenuations( obj.tpa_breakpoint_p, obj.tpa_rate_p, obj.thrust_sp );
-            rates_i_scaled = obj.rate_i .* mc_att_control.pid_attenuations( obj.tpa_breakpoint_i, obj.tpa_rate_i, obj.thrust_sp );
-            rates_d_scaled = obj.rate_d .* mc_att_control.pid_attenuations( obj.tpa_breakpoint_d, obj.tpa_rate_d, obj.thrust_sp );
+            rates_p_scaled = obj.rate_p .* MulticopterAttitudeControl.pid_attenuations( obj.tpa_breakpoint_p, obj.tpa_rate_p, obj.thrust_sp );
+            rates_i_scaled = obj.rate_i .* MulticopterAttitudeControl.pid_attenuations( obj.tpa_breakpoint_i, obj.tpa_rate_i, obj.thrust_sp );
+            rates_d_scaled = obj.rate_d .* MulticopterAttitudeControl.pid_attenuations( obj.tpa_breakpoint_d, obj.tpa_rate_d, obj.thrust_sp );
             
             % Angular rates error
             rates_err = obj.rates_sp - rates;
@@ -774,7 +783,7 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
             
             % explicitly limit the integrator state */
             for i = 1:3
-                obj.rates_int(i) = mc_att_control.constrain( obj.rates_int(i), -obj.rate_int_lim(i), obj.rate_int_lim(i) );
+                obj.rates_int(i) = MulticopterAttitudeControl.constrain( obj.rates_int(i), -obj.rate_int_lim(i), obj.rate_int_lim(i) );
             end
         end
         
@@ -927,7 +936,7 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
         % Angle/orientation functions
         function euler = QuatToEuler( quat )
             quat_tmp = ones(4,1).*quat;
-            euler = mc_att_control.DcmToEuler( mc_att_control.QuatToDcm( quat_tmp ) );
+            euler = MulticopterAttitudeControl.DcmToEuler( MulticopterAttitudeControl.QuatToDcm( quat_tmp ) );
         end
         
         function euler = DcmToEuler( dcm )
@@ -1114,7 +1123,7 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
             quat(2) = cr(1);
             quat(3) = cr(2);
             quat(4) = cr(3);
-            quat = mc_att_control.normalize( quat );
+            quat = MulticopterAttitudeControl.normalize( quat );
         end
         
         function quatInv = InvertQuat( quat )
@@ -1209,9 +1218,9 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
             %       https://github.com/PX4/Firmware/blob/master/src/lib/mathlib/math/Functions.hpp
             %   Written:       J.X.J. Bannwarth, 2019/01/17
             %   Last modified: J.X.J. Bannwarth, 2019/01/17
-            x = mc_att_control.constrain(value, - 1, 1);
-            gc = mc_att_control.constrain(g, 0, 0.99);
-            out = mc_att_control.Expo(x, e) * (1 - gc) / (1 - abs(x) * gc);
+            x = MulticopterAttitudeControl.constrain(value, - 1, 1);
+            gc = MulticopterAttitudeControl.constrain(g, 0, 0.99);
+            out = MulticopterAttitudeControl.Expo(x, e) * (1 - gc) / (1 - abs(x) * gc);
         end
         
         function out = Expo( value, e )
@@ -1226,8 +1235,8 @@ classdef mc_att_control < matlab.System & matlab.system.mixin.CustomIcon & ...
             %       https://github.com/PX4/Firmware/blob/master/src/lib/mathlib/math/Functions.hpp
             %   Written:       J.X.J. Bannwarth, 2019/01/17
             %   Last modified: J.X.J. Bannwarth, 2019/01/17
-            x = mc_att_control.constrain( value, -1, 1 );
-            ec = mc_att_control.constrain( e, 0, 1 );
+            x = MulticopterAttitudeControl.constrain( value, -1, 1 );
+            ec = MulticopterAttitudeControl.constrain( e, 0, 1 );
             out = (1 - ec) * x + ec * x * x * x;
         end
     end
