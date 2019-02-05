@@ -4,17 +4,17 @@ classdef MotorMap < matlab.System & matlab.system.mixin.CustomIcon & ...
     %   See PX4 airframe reference (retrieved 2019/01/31, v1.82):
     %       https://dev.px4.io/en/airframes/airframe_reference.html
     %   Written:       J.X.J. Bannwarth, 2019/01/31
-    %   Last modified: J.X.J. Bannwarth, 2019/01/31
+    %   Last modified: J.X.J. Bannwarth, 2019/02/05
 
     properties (Nontunable)
-        airframeConfig(1,1) {mustBeGreaterThanOrEqual(airframeConfig, 1), mustBeInteger(airframeConfig)} = 8; % Airframe configuration
+        airframeConfig(1,1) {mustBeGreaterThanOrEqual(airframeConfig, 1), mustBeInteger(airframeConfig)} = 5; % Airframe configuration
     end
 
-    properties(Access = private)
+    properties (Access = private)
         rotorOrder = -1;
     end
 
-    properties(Constant,Access = private)
+    properties (Constant, Access = private)
         airframeTypes = struct( ...
             'hex_plus' , [1 4 6 2 3 5], ...
             'hex_x'    , [5 1 4 6 2 3], ...
@@ -54,12 +54,6 @@ classdef MotorMap < matlab.System & matlab.system.mixin.CustomIcon & ...
                 error( 'Block input should have a length of %d.', ...
                     length(rotors) )
             end
-        end
-
-        function flag = isInputSizeMutableImpl( ~, ~ )
-            % Return false if input size cannot change
-            % between calls to the System object
-            flag = false;
         end
 
         function simPWM = stepImpl( obj, px4PWM )
