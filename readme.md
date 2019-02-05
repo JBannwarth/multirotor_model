@@ -23,6 +23,20 @@ Before using any of the models, make sure to open the Simulink Project file, `Mu
 
 In order to keep the size of the repository small, big data files are stored in a different location, as mentioned in the Data section of this README.
 
+## How to Run
+
+To run a position hold simulation, run the following command to first open the `RunPositionHoldAIAAv3` script and examine its contents.
+
+```matlab
+open RunPositionHoldAIAAv3.m
+```
+
+This file runs a batch simulation, so if you just want to peform one run, put a breakpoint after the following command on line 95:
+
+```matlab
+output = sim( model, 'SimulationMode', 'normal' );
+```
+
 ## Data
 
 ### AIAA Journal Paper Data
