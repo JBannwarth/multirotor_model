@@ -61,6 +61,14 @@ classdef MultirotorMixer < matlab.System & matlab.system.mixin.CustomIcon & ...
                             0.923880, -0.382683,  1.000000,  1.000000 ;
                             0.923880,  0.382683, -1.000000,  1.000000 ;
                            -0.923880, -0.382683, -1.000000,  1.000000 ], ...
+            'octa_xneg', [ -0.382683,  0.923880,  1.000000,  1.000000 ;
+                            0.382683, -0.923880,  1.000000,  1.000000 ;
+                           -0.923880,  0.382683, -1.000000,  1.000000 ;
+                           -0.382683, -0.923880, -1.000000,  1.000000 ;
+                            0.382683,  0.923880, -1.000000,  1.000000 ;
+                            0.923880, -0.382683, -1.000000,  1.000000 ;
+                            0.923880,  0.382683,  1.000000,  1.000000 ;
+                           -0.923880, -0.382683,  1.000000,  1.000000 ], ...
             'octa_plus', [ -0.000000,  1.000000, -1.000000,  1.000000 ;
                             0.000000, -1.000000, -1.000000,  1.000000 ;
                            -0.707107,  0.707107,  1.000000,  1.000000 ;
@@ -76,8 +84,10 @@ classdef MultirotorMixer < matlab.System & matlab.system.mixin.CustomIcon & ...
             'hex_x'    , [ 6 10000 10000 10000 0 ], ...
             'hex_plus' , [ 6 10000 10000 10000 0 ], ...
             'octa_x'   , [ 8 10000 10000 10000 0 ], ...
+            'octa_xneg', [ 8 10000 10000 10000 0 ], ...
             'octa_plus', [ 8 10000 10000 10000 0 ]  ...
             );
+        hor_thrust_mixing = [ 0.414213, -0.414213, -1.000000, -0.414213, 0.414213, 1.000000, -1.000000, 1.000000 ];
     end
     
     methods
@@ -192,13 +202,16 @@ classdef MultirotorMixer < matlab.System & matlab.system.mixin.CustomIcon & ...
             obj.rotor_count = size( rotorMixingMatrix, 1 );
             
             obj.rotors = repmat( struct( 'roll_scale', 0, ...
-                'pitch_scale', 0, 'yaw_scale', 0, 'thrust_scale', 0 ), ...
+                'pitch_scale', 0, 'yaw_scale', 0, 'thrust_scale', 0, 'hor_thrust_scale', 0 ), ...
                 obj.rotor_count, 1 );
             for i = 1:obj.rotor_count
                 obj.rotors(i).roll_scale   = rotorMixingMatrix(i,1);
                 obj.rotors(i).pitch_scale  = rotorMixingMatrix(i,2);
                 obj.rotors(i).yaw_scale    = rotorMixingMatrix(i,3);
                 obj.rotors(i).thrust_scale = rotorMixingMatrix(i,4);
+                if obj.useHorThrust && obj.rotor_count == 8
+                    obj.rotors(i).hor_thrust_scale = MultirotorMixer.hor_thrust_mixing(i);
+                end
             end
             
             commandMixing = obj.command_mixing.(rotorMixers{obj.airframeConfig});
@@ -498,10 +511,7 @@ classdef MultirotorMixer < matlab.System & matlab.system.mixin.CustomIcon & ...
                     [ outputs, saturation_status ] = mix_airmode_disabled( obj, outputs, roll, pitch, yaw, thrust, saturation_status );
             end
             
-            % Apply thrust model and scale outputs to range [idle_speed, 1].
-            % At this point the outputs are expected to be in [0, 1], but
-            % they can be outside, for example if a roll command exceeds
-            % the motor band limit.
+            % App 
             for i = 1:obj.rotor_count
                 % Implement simple model for static relationship between
                 % applied motor pwm and motor thrust model: 
