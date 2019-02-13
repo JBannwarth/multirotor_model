@@ -13,9 +13,9 @@ useWind = false;
 layout = 'octo';
 
 %% Trim using Euler model
-model = 'TestMultirotorSimPx4v1_8';
+model = 'TestMultirotorSimPx4v1_8Lin';
 load_system( model )
-UseEstimators( model, false );
+% UseEstimators( model, false );
 
 % Get wind data and aero parameters
 load( fullfile( projectRoot, 'data_misc', 'AeroBodyOrientedAIAAv3' ) );
@@ -45,10 +45,20 @@ set_param( [model '/Motor model'], 'ModelName', 'MotorModelAIAAv3' );
 % Set trimming parameters
 opspec = operspec( model );
 
-stateSpecs = { 'omega' , 'Min'  , zeros(Uav.N_ROTORS,1)    ; 
-               'q'     , 'x'    , EulerToQuat([0 -0.2 0]') ;
-               'nuBody', 'Known', [1 1 1]'                 };
-           
+initAttGuess = [0 -deg2rad(10) 0]';
+
+% States
+stateSpecs = { 'omega' , 'Min'  , zeros(Uav.N_ROTORS,1) ;
+               'nuBody', 'Known', [1 1 1]'              ;
+               'xiDot' , 'Known', [1 1 1]'              };
+
+if getSimulinkBlockHandle( [ model '/Quadrotor Quaternion Model' ]) == -1
+    % Using Euler model
+    stateSpecs(end+1,:) = { 'eta', 'x', initAttGuess } ;
+else
+    stateSpecs(end+1,:) = { 'q', 'x', EulerToQuat(initAttGuess) } ;
+end
+
 for i = 1:size(stateSpecs,1)
     stateInd = opspec.getStateIndex( stateSpecs{i,1} );
     if stateInd(end,end) ~= length( stateSpecs{i,end} )
@@ -57,30 +67,20 @@ for i = 1:size(stateSpecs,1)
     opspec.States( stateInd(1,1) ).(stateSpecs{i,2}) = stateSpecs{i,end};
 end
 
-% States:  1 - omega, 8 - eta, 9 - nuBody, 10 - xiDot, 11 - xi
-% Inputs:  1 - w, 2 - etaDes, 3 - thrustDes, 4 - yawRateDes, 5 - thrustHor
-% Outputs: 1 - y
-% opspec.States( 1).Min   = zeros(Uav.N_ROTORS,1);
-% opspec.States( 2).Known = [1 1 1]';
-% opspec.States( 3).Known = [1 1 1]';
-% opspec.States( 4).Known = [1 1 1]';
-% opspec.States( 5).Known = [1 1 1]';
-% opspec.States( 7).Known = 1;
-% opspec.States( 8).Known = 1;
-% opspec.States(11).Known = 1;
-% opspec.States(12).Known = 1;
-% opspec.States(13).Known = [0 0 1]';
-% opspec.States(14).Known = [1 1 1]';
-% opspec.States(15).Known = [1 1 1]';
+% Inputs
+inputSpecs = { 'w'         , 'u'    , [ uX uY 0 ]' ;
+               'w'         , 'Known', [ 1 1 1 ]'   ;
+               'etaDes'    , 'u'    , initAttGuess ;
+               'thrustDes' , 'Min'  , 0            ;
+               'yawRateDes', 'Known', 1            };
 
-opspec.Inputs(1).u     = [uX uY 0]';
-opspec.Inputs(1).Known = [1 1 1]';
-opspec.Inputs(2).Known = [0 0 1]';
-opspec.Inputs(3).Min   = 0;
-opspec.Inputs(4).u     = 0;
-opspec.Inputs(4).Known = 1;
-opspec.Inputs(5).u     = 0;
-opspec.Inputs(5).Known = 1;
+for i = 1:size(inputSpecs,1)
+    inputInd = opspec.getInputIndex( [ model '/' inputSpecs{i,1} ] );
+    if inputInd(end,end) ~= length( inputSpecs{i,end} )
+        error( 'Length of state spec vector does not match' )
+    end
+    opspec.Inputs( inputInd(1,1) ).(inputSpecs{i,2}) = inputSpecs{i,end};
+end
 
 op = findop( model, opspec );
 
