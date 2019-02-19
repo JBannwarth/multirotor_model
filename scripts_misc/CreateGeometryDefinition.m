@@ -48,21 +48,21 @@ for i = 1:8
     
     switch i
         case 1
-            ax = [ -sind(cantAngle), 0, -cosd(cantAngle) ];
+            ax = [ 0, -sind(cantAngle), -cosd(cantAngle) ];
         case 2
-            ax = [ 0, -sind(cantAngle), -cosd(cantAngle) ];
-        case 3
-            ax = [ 0, -sind(cantAngle), -cosd(cantAngle) ];
-        case 4
-            ax = [ sind(cantAngle), 0, -cosd(cantAngle) ];
-        case 5
-            ax = [ sind(cantAngle), 0, -cosd(cantAngle) ];
-        case 6
-            ax = [ 0, sind(cantAngle), -cosd(cantAngle) ];
-        case 7
-            ax = [ 0, sind(cantAngle), -cosd(cantAngle) ];
-        case 8
             ax = [ -sind(cantAngle), 0, -cosd(cantAngle) ];
+        case 3
+            ax = [ sind(cantAngle), 0,-cosd(cantAngle) ];
+        case 4
+            ax = [ 0, -sind(cantAngle), -cosd(cantAngle) ];
+        case 5
+            ax = [ 0, sind(cantAngle), -cosd(cantAngle) ];
+        case 6
+            ax = [ sind(cantAngle), 0, -cosd(cantAngle) ];
+        case 7
+            ax = [ -sind(cantAngle), 0, -cosd(cantAngle) ];
+        case 8
+            ax = [ 0, sind(cantAngle), -cosd(cantAngle) ];
     end
     
     rotorFormats{i} = sprintf( rotorFormat, names{i}, pos(1), pos(2), pos(3), ...
