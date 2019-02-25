@@ -7,7 +7,7 @@ clearvars
 project = simulinkproject; projectRoot = project.RootFolder;
 
 %% Configuration
-uX = 0;
+uX = 5;
 uY = 0;
 useWind = false;
 layout = 'octo';
@@ -48,16 +48,14 @@ opspec = operspec( model );
 initAttGuess = [0 -deg2rad(10) 0]';
 
 % States
-stateSpecs = { 'omega' , 'Min'  , zeros(Uav.N_ROTORS,1) ;
-%               'omega' , 'Max'  , 1000*ones(Uav.N_ROTORS,1) ;
-               'nuBody', 'Known', [1 1 1]'              ;
-%              'rates_sp', 'Known', [1 0 1]'              ;
-%              'lp_filters_d_delay_element_1', 'Known', [1 0 1]'              ;
-%              'lp_filters_d_delay_element_2', 'Known', [1 0 1]'              ;
-%               'rates_prev_filtered', 'Known', [1 0 1]'              ;
-%               'rates_int', 'Known', [1 0 1]'              ;
-               'xiDot' , 'Known', [1 1 1]'              ;
-               'xi' , 'Known', [1 1 1]'              };
+stateSpecs = { ...
+               'omega'     , 'Min'  , zeros(Uav.N_ROTORS,1) ;
+               'nuBody'    , 'Known', [1 1 1]'              ;
+%                'accFilterX', 'Known', 1                     ;
+%                'accFilterY', 'Known', 1                     ;
+%                'accFilterZ', 'Known', 1                     ;
+               'xiDot'     , 'Known', [1 1 1]'              ;
+               'xi'        , 'Known', [1 1 1]'              };
 
 if getSimulinkBlockHandle( [ model '/Quadrotor Quaternion Model' ]) == -1
     % Using Euler model
@@ -85,10 +83,11 @@ end
 
 inputSpecs = { 'w'         , 'u'    , [ uX uY 0 ]' ;
                'w'         , 'Known', [ 1 1 1 ]'   ;
-               'etaDes'    , 'Known', [ 1 0 1 ]'   ;
+%                'etaDes'    , 'Known', [ 1 0 1 ]'   ;
                'thrustDes' , 'Min'  , 0            ;
-               'yawRateDes', 'Known', 1            };
-%                'thrustHor' , 'Known', 1            };
+               'yawRateDes', 'Known', 1            ;
+               'HorThrust' , 'Known', [ 1 1 ]'     ;
+               };
 
 for i = 1:size(inputSpecs,1)
     inputInd = opspec.getInputIndex( [ model '/' inputSpecs{i,1} ] );
