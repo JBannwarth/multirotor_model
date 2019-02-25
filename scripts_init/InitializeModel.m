@@ -44,8 +44,10 @@ end
 %% Load buses for controllers
 % Ideally should rewrite controller to remove the need for this - would
 % clear up workspace a lot)
-Px4Bus;
-selfBus;
-mpc_self;
+if ~exist( 'loadBuses', 'var' ) || loadBuses
+    Px4Bus;
+    selfBus;
+    mpc_self;
+end
 
-clearvars i ans init_eta
+clearvars i ans init_eta loadBuses

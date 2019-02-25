@@ -21,8 +21,9 @@ load_system( model )
 load( fullfile( projectRoot, 'data_misc', 'AeroBodyOrientedAIAAv3' ) );
 load( fullfile( projectRoot, 'data_wind', 'TurbSimOC', 'TurbSim_40_01' ) );
 
-switch layout 
-    case 'octo' 
+loadBuses = false;
+switch layout
+    case 'octo'
         InitializeParametersOctocopter
         InitializeModel
     case 'quad'
