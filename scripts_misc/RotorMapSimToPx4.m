@@ -4,7 +4,7 @@ function px4 = RotorMapSimToPx4( sim )
 %   Simulation ordering is incremental in CCW order (NED frame)
 %   See link below for PX4 ordering:
 %   Written:       J.X.J. Bannwarth, 2019/02/20
-%   Last modified: J.X.J. Bannwarth, 2019/02/20
+%   Last modified: J.X.J. Bannwarth, 2019/02/26
     switch length(sim)
         case 4
             px4 = sim( [1 3 4 2]  );
