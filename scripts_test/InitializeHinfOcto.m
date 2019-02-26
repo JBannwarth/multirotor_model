@@ -7,10 +7,10 @@ clearvars
 project = simulinkproject; projectRoot = project.RootFolder;
 
 %% Configuration
-uX = 5;
+uX = 0;
 uY = 0;
 useWind = false;
-layout = 'octo';
+layout = 'octo_neg';
 
 %% Trim using Euler model
 model = 'TestMultirotorSimPx4v1_8Lin';
@@ -23,8 +23,12 @@ load( fullfile( projectRoot, 'data_wind', 'TurbSimOC', 'TurbSim_40_01' ) );
 
 loadBuses = false;
 switch layout
+    case 'octo_neg'
+        InitializeParametersOctocopterCanted
+        InitializeModel
+        Uav.ROTOR_DIRECTION = Uav.ROTOR_DIRECTION .* -1;
     case 'octo'
-        InitializeParametersOctocopter
+        InitializeParametersOctocopterCanted
         InitializeModel
     case 'quad'
         InitializeModel
