@@ -7,7 +7,7 @@ function px4 = RotorMapSimToPx4( sim )
 %   Last modified: J.X.J. Bannwarth, 2019/02/20
     switch length(sim)
         case 4
-            px4 = sim( [1 4 2 3]  );
+            px4 = sim( [1 3 4 2]  );
         case 8
             px4 = sim( [ 1 5 2 4 8 6 7 3 ] );
         otherwise
