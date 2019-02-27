@@ -7,7 +7,7 @@ clearvars
 project = simulinkproject; projectRoot = project.RootFolder;
 
 %% Configuration
-uX = 0;
+uX = 5;
 uY = 0;
 useWind = false;
 layout = 'octo_neg';
@@ -28,8 +28,9 @@ switch layout
         InitializeModel
         Uav.ROTOR_DIRECTION = Uav.ROTOR_DIRECTION .* -1;
     case 'octo'
-        InitializeParametersOctocopterCanted
+        InitializeParametersOctocopter
         InitializeModel
+        Uav.ROTOR_DIRECTION = Uav.ROTOR_DIRECTION .* -1;
     case 'quad'
         InitializeModel
     otherwise
@@ -79,13 +80,6 @@ for i = 1:size(stateSpecs,1)
 end
 
 % Inputs
-% inputSpecs = { 'w'         , 'u'    , [ uX uY 0 ]' ;
-%                'w'         , 'Known', [ 1 1 1 ]'   ;
-%                'etaDes'    , 'u'    , initAttGuess ;
-%                'thrustDes' , 'Min'  , 0            ;
-%                'yawRateDes', 'Known', 1            ;
-%                'thrustHor' , 'Known', 0            };
-
 inputSpecs = { 'w'         , 'u'    , [ uX uY 0 ]' ;
                'w'         , 'Known', [ 1 1 1 ]'   ;
 %                'etaDes'    , 'Known', [ 1 0 1 ]'   ;
@@ -102,7 +96,12 @@ for i = 1:size(inputSpecs,1)
     opspec.Inputs( inputInd(1,1) ).(inputSpecs{i,2}) = inputSpecs{i,end};
 end
 
-op = findop( model, opspec );
+options = findopOptions( ...
+    'OptimizerType', 'lsqnonlin-proj', ...
+    'OptimizationOptions', optimset( 'MaxIter', 10000 ) ...
+    );
+
+op = findop( model, opspec, options );
 
 % Set initial states
 cor = { ...
@@ -135,19 +134,6 @@ end
 Initial.ETA_DES = op.Inputs(2).u;
 Initial.THRUST_DES = op.Inputs(3).u;
 
-% Initial.OMEGA   = op.states(1).x;
-% Initial.ETA     = op.states(2).x;
-% Initial.Q       = EulerToQuat(Initial.ETA')';
-% Initial.NU_BODY = op.states(3).x;
-% Initial.XI_DOT  = op.states(4).x;
-% Initial.XI      = op.states(5).x;
-
-% Initial.U_M     = op.Inputs(2).u;
-
-% Initial.Y1      = [ Initial.XI_DOT([2 1]); Initial.XI([2 1]) ];
-% Initial.Y2      = [ Initial.XI_DOT(3); Initial.NU_BODY; Initial.XI(3); Initial.ETA ];
-% Initial.Y       = [ Initial.Y1; Initial.Y2 ];
-
 % Get linear model (not used by controller)
 inputs = { ...
     'etaDes'     , 1 ;
@@ -169,6 +155,7 @@ end
 
 linsys = linearize( model, io, op );
 
+return
 %% Trim the real model
 model = 'TestMultirotorSimPx4v1_8Hinf';
 load_system( model )
@@ -178,7 +165,7 @@ if useWind
     UseWindProfile( model, true );
 else
     windVelString = sprintf('[%f; %f; 0]', uX, uY);
-    set_param( [model '/Fixed wind input'], 'value', windVelString );
+    set_param( [model '/wDist'], 'value', windVelString );
     UseWindProfile( model, false );
 end
 
