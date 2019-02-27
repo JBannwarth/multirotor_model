@@ -4,7 +4,7 @@ classdef MotorMap < matlab.System & matlab.system.mixin.CustomIcon & ...
     %   See PX4 airframe reference (retrieved 2019/01/31, v1.82):
     %       https://dev.px4.io/en/airframes/airframe_reference.html
     %   Written:       J.X.J. Bannwarth, 2019/01/31
-    %   Last modified: J.X.J. Bannwarth, 2019/02/05
+    %   Last modified: J.X.J. Bannwarth, 2019/02/27
 
     properties (Nontunable)
         airframeConfig(1,1) {mustBeGreaterThanOrEqual(airframeConfig, 1), mustBeInteger(airframeConfig)} = 1; % Airframe configuration
@@ -84,7 +84,10 @@ classdef MotorMap < matlab.System & matlab.system.mixin.CustomIcon & ...
             for i = 1:numel( airframes )
                 definition = [ definition, sprintf( '%02d %s ', i, airframes{i} ), '\n' ];
             end
-            definition = sprintf( definition(1:end-2) );
+            definition = [definition, ...
+                'See PX4 airframe reference (retrieved 2019/01/31, v1.82):\n' ...
+                '    https://dev.px4.io/en/airframes/airframe_reference.html' ];
+            definition = sprintf( definition );
             header = matlab.system.display.Header( 'MotorMap', ...
                 'Title', 'Motor Map', ...
                 'Text', definition );
