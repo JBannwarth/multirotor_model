@@ -15,6 +15,10 @@ layout = 'octo_neg';
 %% Trim using Euler model
 model = 'TestMultirotorSimPx4v1_8Lin';
 load_system( model )
+
+% Deactivate initial states/input since we aim to find them
+set_param( model, 'LoadInitialState', 'off' );
+set_param( model, 'LoadExternalInput', 'off' );
 % UseEstimators( model, false );
 
 % Get wind data and aero parameters
@@ -47,7 +51,6 @@ end
 set_param( [model '/Drag model'],  'ModelName', 'DragModelAIAAv3' );
 set_param( [model '/Motor model'], 'ModelName', 'MotorModelAIAAv3' );
 
-
 % Set trimming parameters
 opspec = operspec( model );
 
@@ -57,9 +60,6 @@ initAttGuess = [0 -deg2rad(10) 0]';
 stateSpecs = { ...
                'omega'     , 'Min'  , zeros(Uav.N_ROTORS,1) ;
                'nuBody'    , 'Known', [1 1 1]'              ;
-%                'accFilterX', 'Known', 1                     ;
-%                'accFilterY', 'Known', 1                     ;
-%                'accFilterZ', 'Known', 1                     ;
                'xiDot'     , 'Known', [1 1 1]'              ;
                'xi'        , 'Known', [1 1 1]'              };
 
@@ -155,27 +155,51 @@ end
 
 linsys = linearize( model, io, op );
 
-return
 %% Trim the real model
 model = 'TestMultirotorSimPx4v1_8Hinf';
 load_system( model )
+set_param( model, 'LoadInitialState', 'off' );
+set_param( model, 'LoadExternalInput', 'off' );
 
 if useWind
     set_param( [model '/Varying wind input'], 'VariableName', 'windInput' );
     UseWindProfile( model, true );
 else
     windVelString = sprintf('[%f; %f; 0]', uX, uY);
-    set_param( [model '/wDist'], 'value', windVelString );
+    set_param( [model '/Fixed wind input'], 'value', windVelString );
     UseWindProfile( model, false );
 end
+
+% Select submodels
+set_param( [model '/Drag model'],  'ModelName', 'DragModelAIAAv3' );
+set_param( [model '/Motor model'], 'ModelName', 'MotorModelAIAAv3' );
+
+% Set operation point specs
+opspecFull = operspec( model );
+
+for i = 1:size(stateSpecs,1)
+    stateInd = opspecFull.getStateIndex( stateSpecs{i,1} );
+    if stateInd(end,end) ~= length( stateSpecs{i,end} )
+        error( 'Length of state spec vector does not match' )
+    end
+    opspecFull.States( stateInd(1,1) ).(stateSpecs{i,2}) = stateSpecs{i,end};
+end
+
+options = findopOptions( ...
+    'OptimizerType', 'simplex', ...
+    'OptimizationOptions', optimset( 'MaxIter', 10000 ) ...
+    );
+
+opFull = findop( model, opspecFull, options );
+
+set_param( model, 'LoadInitialState', 'on' );
+set_param( model, 'InitialState', 'getstatestruct(opFull)' );
 
 % Simulation parameters
 Simulation.TS_MAX = 0.001;
 Simulation.TS_OUT = 0.01;
 Simulation.T_END = 30;
 InitializeModel
-
-opspecFull = operspec( model );
 
 %% Run on real model
 % model = 'Masse_MultirotorSimHinf';
