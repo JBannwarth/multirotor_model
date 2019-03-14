@@ -126,7 +126,7 @@ set_param( [model '/Step wind input'], 'After' , '[5 0 0]''' );
 % Prepare horizontal gain sweep
 Ctrl.HOR_GAIN = 0;
 set_param( [model '/Pos Control/hor_xy'], 'Gain', 'Ctrl.HOR_GAIN' )
-gainVals = -linspace(0,0.5,6);
+gainVals = linspace(0,0.5,6);
 for i = 1:length( gainVals )
     simIn(i) = Simulink.SimulationInput( model );
     simIn(i) = setVariable( simIn(i), 'Ctrl.HOR_GAIN', gainVals(i));
