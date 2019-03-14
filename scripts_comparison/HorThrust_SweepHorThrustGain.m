@@ -26,6 +26,7 @@ load( fullfile( projectRoot, 'data_misc', 'AeroBodyOrientedAIAAv3' ) );
 load( fullfile( projectRoot, 'data_wind', 'TurbSimOC', 'TurbSim_40_01' ) );
 
 % Choose fixed wind input
+set_param( [model '/Varying wind input'], 'commented', 'on' )
 set_param( [model '/Input choice'], 'Value', '2' )
 set_param( [model '/Fixed wind input'], 'Value', mat2str(ULin) )
 
