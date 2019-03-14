@@ -43,6 +43,10 @@ InitializeParametersOctocopterCanted
 InitializeModel
 Uav.ROTOR_DIRECTION = Uav.ROTOR_DIRECTION .* -1;
 
+% Set controller parameters
+Ctrl.HOR_GAIN = 0;
+Ctrl.VERTICAL_COMP_TYPE = 3;
+Ctrl.THROTTLE_HOVER = Uav.THROTTLE_HOVER;
 
 %% Trim model
 % Deactivate initial states/input since we aim to find them
@@ -120,12 +124,12 @@ set_param( [model '/Step wind input'], 'Before', '[3 0 0]''' );
 set_param( [model '/Step wind input'], 'After' , '[5 0 0]''' );
 
 % Prepare horizontal gain sweep
-horGain = 0;
-set_param( [model '/Pos Control/hor_xy'], 'Gain', 'horGain' )
+Ctrl.HOR_GAIN = 0;
+set_param( [model '/Pos Control/hor_xy'], 'Gain', 'Ctrl.HOR_GAIN' )
 gainVals = -linspace(0,0.5,6);
 for i = 1:length( gainVals )
     simIn(i) = Simulink.SimulationInput( model );
-    simIn(i) = setVariable( simIn(i), 'horGain', gainVals(i));
+    simIn(i) = setVariable( simIn(i), 'Ctrl.HOR_GAIN', gainVals(i));
 end
 
 % Simulate the system
