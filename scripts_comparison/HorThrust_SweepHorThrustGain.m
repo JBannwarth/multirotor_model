@@ -127,7 +127,7 @@ set_param( [model '/Step wind input'], 'After' , '[5 0 0]''' );
 % Prepare horizontal gain sweep
 Ctrl.HOR_GAIN = 0;
 set_param( [model '/Pos Control/hor_xy'], 'Gain', 'Ctrl.HOR_GAIN' )
-gainVals = linspace(0,0.5,6);
+gainVals = linspace(0,0.05,6);
 for i = 1:length( gainVals )
     simIn(i) = Simulink.SimulationInput( model );
     simIn(i) = setVariable( simIn(i), 'Ctrl.HOR_GAIN', gainVals(i));
@@ -155,29 +155,29 @@ for i = 1:length( simOutputs )
     % Position
     set(0, 'currentfigure', f1);
     set(f1, 'currentaxes', axX);
-    plot( logsout{9}.Values.Time, logsout{9}.Values.Data(:,1) )
+    plot( logsout.get('xi').Values.Time, logsout.get('xi').Values.Data(:,1) )
     set(f1, 'currentaxes', axY);
-    plot( logsout{9}.Values.Time, logsout{9}.Values.Data(:,2) )
+    plot( logsout.get('xi').Values.Time, logsout.get('xi').Values.Data(:,2) )
     set(f1, 'currentaxes', axZ);
-    plot( logsout{9}.Values.Time, logsout{9}.Values.Data(:,3) )
+    plot( logsout.get('xi').Values.Time, logsout.get('xi').Values.Data(:,3) )
     
     % Attitude
     set(0, 'currentfigure', f2);
     set(f2, 'currentaxes', axRoll);
-    plot( logsout{7}.Values.Time, rad2deg( logsout{7}.Values.Data(:,1) ) )
+    plot( logsout.get('eta').Values.Time, rad2deg( logsout.get('eta').Values.Data(:,1) ) )
     set(f2, 'currentaxes', axPitch);
-    plot( logsout{7}.Values.Time, rad2deg( logsout{7}.Values.Data(:,2) ) )
+    plot( logsout.get('eta').Values.Time, rad2deg( logsout.get('eta').Values.Data(:,2) ) )
     set(f2, 'currentaxes', axYaw);
-    plot( logsout{7}.Values.Time, rad2deg( logsout{7}.Values.Data(:,3) ) )
+    plot( logsout.get('eta').Values.Time, rad2deg( logsout.get('eta').Values.Data(:,3) ) )
     
     % Body thrust
     set(0, 'currentfigure', f3);
     set(f3, 'currentaxes', axTx);
-    plot( logsout{4}.Values.Time, logsout{4}.Values.Data(:,1) )
+    plot( logsout.get('TBody').Values.Time, logsout.get('TBody').Values.Data(:,1) )
     set(f3, 'currentaxes', axTy);
-    plot( logsout{4}.Values.Time, logsout{4}.Values.Data(:,2) )
+    plot( logsout.get('TBody').Values.Time, logsout.get('TBody').Values.Data(:,2) )
     set(f3, 'currentaxes', axTz);
-    plot( logsout{4}.Values.Time, logsout{4}.Values.Data(:,3) )
+    plot( logsout.get('TBody').Values.Time, logsout.get('TBody').Values.Data(:,3) )
 end
 
 % Legend
