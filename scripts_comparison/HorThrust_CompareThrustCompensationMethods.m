@@ -1,6 +1,6 @@
 %COMPARETHRUSTCOMPENSATIONMETHODS Compare ways to compensate thrust
 %   Written by:    J.X.J. Bannwarth, 2018/03/12
-%	Last modified: J.X.J. Bannwarth, 2019/03/14
+%	Last modified: J.X.J. Bannwarth, 2019/04/04
 
 clearvars;
 project = simulinkproject; projectRoot = project.RootFolder;
@@ -8,6 +8,7 @@ project = simulinkproject; projectRoot = project.RootFolder;
 %% Configuration
 % Wind
 ULin = [3 0 0]';
+ULin = [-0.26345 0 0]';
 UStepInit = [3 0 0]';
 UStepEnd  = [5 0 0]';
 stepTime  = 5;
@@ -42,6 +43,7 @@ loadBuses = false;
 InitializeParametersOctocopterCanted
 InitializeModel
 Uav.ROTOR_DIRECTION = Uav.ROTOR_DIRECTION .* -1;
+Motor.K = 0.5*Uav.RHO_AIR*Uav.D_PROP^2*Uav.A_PROP*Aero.Cz2.coefs(2)
 
 % Set controller parameters
 Ctrl.HOR_GAIN = 0;
@@ -148,9 +150,9 @@ simOutputs = sim(simIn);
 %% Plot results
 close all
 f1 = figure('Name', 'Position');
-axX = subplot(4,1,1); hold on; grid on; ylabel('$x$ (m)')
-axY = subplot(4,1,2); hold on; grid on; ylabel('$y$ (m)')
-axZ = subplot(4,1,3); hold on; grid on; ylabel('$z$ (m)'); 
+axX = subplot(4,1,1); hold on; grid on; ylabel('North $x$ (m)')
+axY = subplot(4,1,2); hold on; grid on; ylabel('East $y$ (m)')
+axZ = subplot(4,1,3); hold on; grid on; ylabel('Down $z$ (m)'); 
 axN = subplot(4,1,4); hold on; grid on; ylabel('$|\mathbf{x}|$ (m)');  xlabel('t (s)')
 f2 = figure('Name', 'Attitude');
 axRoll  = subplot(3,1,1); hold on; grid on; ylabel('$\phi$ ($^\circ$)')
@@ -175,46 +177,51 @@ for i = 1:length( simOutputs )
     % Position
     set(0, 'currentfigure', f1);
     set(f1, 'currentaxes', axX);
-    plot( logsout.get('xi').Values.Time, logsout.get('xi').Values.Data(:,1), 'LineStyle', lineStyle{i}, 'Color', cols(i,:) )
+    plot( logsout.get('xi').Values.Time(1:100:end), logsout.get('xi').Values.Data(1:100:end,1), 'LineStyle', lineStyle{i}, 'Color', cols(i,:) )
     set(f1, 'currentaxes', axY);
-    plot( logsout.get('xi').Values.Time, logsout.get('xi').Values.Data(:,2), 'LineStyle', lineStyle{i}, 'Color', cols(i,:) )
+    plot( logsout.get('xi').Values.Time(1:100:end), logsout.get('xi').Values.Data(1:100:end,2), 'LineStyle', lineStyle{i}, 'Color', cols(i,:) )
     set(f1, 'currentaxes', axZ);
-    plot( logsout.get('xi').Values.Time, logsout.get('xi').Values.Data(:,3), 'LineStyle', lineStyle{i}, 'Color', cols(i,:) )
+    plot( logsout.get('xi').Values.Time(1:100:end), logsout.get('xi').Values.Data(1:100:end,3), 'LineStyle', lineStyle{i}, 'Color', cols(i,:) )
     set(f1, 'currentaxes', axN);
-    plot( logsout.get('posNorm').Values.Time, logsout.get('posNorm').Values.Data, 'LineStyle', lineStyle{i}, 'Color', cols(i,:) )
+    plot( logsout.get('posNorm').Values.Time(1:100:end), logsout.get('posNorm').Values.Data(1:100:end), 'LineStyle', lineStyle{i}, 'Color', cols(i,:) )
     
     % Attitude
     set(0, 'currentfigure', f2);
     set(f2, 'currentaxes', axRoll);
-    plot( logsout.get('eta').Values.Time, rad2deg( logsout.get('eta').Values.Data(:,1) ), 'LineStyle', lineStyle{i}, 'Color', cols(i,:) )
+    plot( logsout.get('eta').Values.Time(1:100:end), rad2deg( logsout.get('eta').Values.Data(1:100:end,1) ), 'LineStyle', lineStyle{i}, 'Color', cols(i,:) )
     set(f2, 'currentaxes', axPitch);
-    plot( logsout.get('eta').Values.Time, rad2deg( logsout.get('eta').Values.Data(:,2) ), 'LineStyle', lineStyle{i}, 'Color', cols(i,:) )
+    plot( logsout.get('eta').Values.Time(1:100:end), rad2deg( logsout.get('eta').Values.Data(1:100:end,2) ), 'LineStyle', lineStyle{i}, 'Color', cols(i,:) )
     set(f2, 'currentaxes', axYaw);
-    plot( logsout.get('eta').Values.Time, rad2deg( logsout.get('eta').Values.Data(:,3) ), 'LineStyle', lineStyle{i}, 'Color', cols(i,:) )
+    plot( logsout.get('eta').Values.Time(1:100:end), rad2deg( logsout.get('eta').Values.Data(1:100:end,3) ), 'LineStyle', lineStyle{i}, 'Color', cols(i,:) )
     
     % Body thrust
     set(0, 'currentfigure', f3);
     set(f3, 'currentaxes', axTx);
-    plot( logsout.get('TBody').Values.Time, logsout.get('TBody').Values.Data(:,1), 'LineStyle', lineStyle{i}, 'Color', cols(i,:) )
+    plot( logsout.get('TBody').Values.Time(1:100:end), logsout.get('TBody').Values.Data(1:100:end,1), 'LineStyle', lineStyle{i}, 'Color', cols(i,:) )
     set(f3, 'currentaxes', axTy);
-    plot( logsout.get('TBody').Values.Time, logsout.get('TBody').Values.Data(:,2), 'LineStyle', lineStyle{i}, 'Color', cols(i,:) )
+    plot( logsout.get('TBody').Values.Time(1:100:end), logsout.get('TBody').Values.Data(1:100:end,2), 'LineStyle', lineStyle{i}, 'Color', cols(i,:) )
     set(f3, 'currentaxes', axTz);
-    plot( logsout.get('TBody').Values.Time, logsout.get('TBody').Values.Data(:,3), 'LineStyle', lineStyle{i}, 'Color', cols(i,:) )
+    plot( logsout.get('TBody').Values.Time(1:100:end), logsout.get('TBody').Values.Data(1:100:end,3), 'LineStyle', lineStyle{i}, 'Color', cols(i,:) )
 end
 
 % Legend
-legendStr = compose('Gain = %.2f, mode = %d', ...
-    [ repmat(gainVals', length(vertCompVals), 1), ...
-    [ones(size(gainVals')); ones(size(gainVals')).*2; ones(size(gainVals')).*3]] );
+% legendStr = compose('Gain = %.2f, mode = %d', ...
+%     [ repmat(gainVals', length(vertCompVals), 1), ...
+%     [ones(size(gainVals')); ones(size(gainVals')).*2; ones(size(gainVals')).*3]] );
+
+legendStr = compose( 'Gain = %.2f', gainVals );
 
 set(0, 'currentfigure', f1); set(f1, 'currentaxes', axX);
 legend( legendStr )
 SetFigProp( [12,20] )
+MatlabToLatexEps( fullfile( projectRoot, 'work', 'StepComp_x' ) )
 
 set(0, 'currentfigure', f2); set(f2, 'currentaxes', axRoll);
 legend( legendStr )
 SetFigProp( [12,20] )
+MatlabToLatexEps( fullfile( projectRoot, 'work', 'StepComp_eta' ) )
 
 set(0, 'currentfigure', f3); set(f3, 'currentaxes', axTx);
 legend( legendStr )
 SetFigProp( [12,20] )
+MatlabToLatexEps( fullfile( projectRoot, 'work', 'StepComp_TBody' ) )
