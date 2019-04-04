@@ -1,6 +1,6 @@
-%SWEEPHORTHRUSTGAIN Sweep horizontal thrust gains for the canted octocopter
+%HORTHRUST_SWEEPHORTHRUSTGAIN Sweep horizontal thrust gains for the canted octocopter
 %   Written by:    J.X.J. Bannwarth, 2018/03/05
-%	Last modified: J.X.J. Bannwarth, 2019/03/07
+%	Last modified: J.X.J. Bannwarth, 2019/04/05
 
 clearvars;
 project = simulinkproject; projectRoot = project.RootFolder;
@@ -27,6 +27,7 @@ load( fullfile( projectRoot, 'data_wind', 'TurbSimOC', 'TurbSim_40_01' ) );
 
 % Choose fixed wind input
 set_param( [model '/Varying wind input'], 'commented', 'on' )
+set_param( [model '/Sinusoidal input'], 'commented', 'on' )
 set_param( [model '/Input choice'], 'Value', '2' )
 set_param( [model '/Fixed wind input'], 'Value', mat2str(ULin) )
 
@@ -48,6 +49,7 @@ Uav.ROTOR_DIRECTION = Uav.ROTOR_DIRECTION .* -1;
 Ctrl.HOR_GAIN = 0;
 Ctrl.VERTICAL_COMP_TYPE = 3;
 Ctrl.THROTTLE_HOVER = Uav.THROTTLE_HOVER;
+Ctrl.CONTROLLER_TYPE = 1;
 
 %% Trim model
 % Deactivate initial states/input since we aim to find them
@@ -126,7 +128,7 @@ set_param( [model '/Step wind input'], 'After' , '[5 0 0]''' );
 
 % Prepare horizontal gain sweep
 Ctrl.HOR_GAIN = 0;
-set_param( [model '/Pos Control/hor_xy'], 'Gain', 'Ctrl.HOR_GAIN' )
+set_param( [model '/Pos Control/Horizontal thrust control/Proportional gain/hor_xy'], 'Gain', 'Ctrl.HOR_GAIN' )
 gainVals = linspace(0,0.05,6);
 for i = 1:length( gainVals )
     simIn(i) = Simulink.SimulationInput( model );
