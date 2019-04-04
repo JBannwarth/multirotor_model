@@ -1,4 +1,4 @@
-%COMPARETHRUSTCOMPENSATIONMETHODS Compare ways to compensate thrust
+%HORTHRUST_COMPARETHRUSTCOMPENSATIONMETHODS Compare ways to compensate thrust
 %   Written by:    J.X.J. Bannwarth, 2018/03/12
 %	Last modified: J.X.J. Bannwarth, 2019/04/04
 
@@ -38,17 +38,21 @@ set_param( [model '/Motor model'], 'ModelName', 'MotorModelAIAAv3' );
 set_param( model, 'LoadInitialState', 'off' );
 set_param( model, 'LoadExternalInput', 'off' );
 
+% Deactivate sinusoidal input
+set_param( [model '/Sinusoidal input'], 'commented', 'on' )
+
 % Load UAV parameters
 loadBuses = false;
 InitializeParametersOctocopterCanted
 InitializeModel
 Uav.ROTOR_DIRECTION = Uav.ROTOR_DIRECTION .* -1;
-Motor.K = 0.5*Uav.RHO_AIR*Uav.D_PROP^2*Uav.A_PROP*Aero.Cz2.coefs(2)
+Motor.K = 0.5*Uav.RHO_AIR*Uav.D_PROP^2*Uav.A_PROP*Aero.Cz2.coefs(2);
 
 % Set controller parameters
 Ctrl.HOR_GAIN = 0;
 Ctrl.VERTICAL_COMP_TYPE = 3;
 Ctrl.THROTTLE_HOVER = Uav.THROTTLE_HOVER;
+Ctrl.CONTROLLER_TYPE = 1;
 
 %% Trim model
 % Deactivate initial states/input since we aim to find them
