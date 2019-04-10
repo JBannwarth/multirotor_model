@@ -68,7 +68,7 @@ end
 Uav.G   = Uav.M * [0; 0; GRAVITY]; % [N]
 
 % Frame inertia (from trifilar pendulum tests) [kgm^2]
-Uav.I = diag( [0.024, 0.024, 0.1051] ); % Izz not measured yet
+Uav.I = diag( [0.024, 0.024, 0.1051] );
 
 % Nominal battery voltage (3S LiPo) [V]
 Uav.NOMINAL_BATTERY_VOLTAGE = 11.1;   
