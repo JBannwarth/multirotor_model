@@ -30,6 +30,29 @@ Uav.R_MOTOR_TO_BODY(:,:,6) = eye(3);
 Uav.R_MOTOR_TO_BODY(:,:,7) = eye(3);
 Uav.R_MOTOR_TO_BODY(:,:,8) = eye(3);
 
+for i = 1:8
+    switch i
+        case 1
+            ax = [ 0, sin(Uav.CANT_ANGLE), cos(Uav.CANT_ANGLE) ];
+        case 2
+            ax = [ sin(Uav.CANT_ANGLE), 0, cos(Uav.CANT_ANGLE) ];
+        case 3
+            ax = [ -sin(Uav.CANT_ANGLE), 0, cos(Uav.CANT_ANGLE) ];
+        case 4
+            ax = [ 0, sin(Uav.CANT_ANGLE), cos(Uav.CANT_ANGLE) ];
+        case 5
+            ax = [ 0, -sin(Uav.CANT_ANGLE), cos(Uav.CANT_ANGLE) ];
+        case 6
+            ax = [ -sin(Uav.CANT_ANGLE), 0, cos(Uav.CANT_ANGLE) ];
+        case 7
+            ax = [ sin(Uav.CANT_ANGLE), 0, cos(Uav.CANT_ANGLE) ];
+        case 8
+            ax = [ 0, -sin(Uav.CANT_ANGLE), cos(Uav.CANT_ANGLE) ];
+    end
+    Uav.R_MOTOR_TO_BODY(:,:,i) = QuatToDcm( VecsToQuat( [0,0,1], ax ) );
+end
+
+
 for i = 1:length( Uav.L )
     Uav.L_VEC(:,i) = [ Uav.L(i) * cos( Uav.BETA(i) );
                        Uav.L(i) * sin( Uav.BETA(i) ); 

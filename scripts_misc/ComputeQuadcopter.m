@@ -1,4 +1,4 @@
-inFile = 'inputdata/UavMeasurements.xlsx';
+inFile = 'data_misc/MeasurementsInertia_Quadcopter.xlsx';
 m_object       = xlsread( inFile, 'chars', 'A2');
 m_tri_plate    = xlsread( inFile, 'chars', 'C2');
 l_tri_wire     = xlsread( inFile, 'chars', 'D2');
@@ -11,6 +11,6 @@ T_tri_plate    = xlsread( inFile, 'mmoi', 'B4:B6') ./ xlsread( inFile, 'mmoi', '
 
 rotation = eye(3);
 
-I = CalculateInertiaTensor(m_object, m_tri_plate, ...
+I = CalculateInertiaTensor(m_object, m_tri_plate, ... 
     l_tri_wire, r_tri_wire, r_cpd_pendulum, T_cpd_pendulum, ...
     T_tri, T_tri_plate, rotation);
