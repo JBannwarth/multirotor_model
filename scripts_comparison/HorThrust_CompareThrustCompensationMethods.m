@@ -133,7 +133,7 @@ set_param( [model '/Step wind input'], 'After' , '[5 0 0]''' );
 % Prepare horizontal gain sweep
 Ctrl.HOR_GAIN = 0;
 Ctrl.VERTICAL_COMP_TYPE = 1;
-set_param( [model '/Pos Control/hor_xy'], 'Gain', 'Ctrl.HOR_GAIN' )
+set_param( [model '/Pos Control/Horizontal thrust control/Proportional gain/hor_xy'], 'Gain', 'Ctrl.HOR_GAIN' )
 gainVals = linspace(0,0.04,5);
 vertCompVals = 1:3;
 ind = 1;
