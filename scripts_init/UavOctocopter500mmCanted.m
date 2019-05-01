@@ -6,7 +6,7 @@
 
 %% GEOMETRICAL PARAMETERS
 Uav.D_UAV = 0.5;
-Uav.D_PROP = 10 * 0.0254;
+Uav.D_PROP = 6 * 0.0254;
 Uav.A_UAV = (pi*Uav.D_UAV^2)/4;
 Uav.A_PROP = (pi*Uav.D_PROP^2)/4;
 Uav.BETA = deg2rad(22.5:45:337.5)'; % Arm angles [rad]
