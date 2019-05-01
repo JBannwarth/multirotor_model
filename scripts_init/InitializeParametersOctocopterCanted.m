@@ -1,6 +1,6 @@
 %INITIALIZEPARAMETERSOCTOCOPTER Initialises parameters for octocopter model
 %	Written by:    J.X.J. Bannwarth, 2019/01/09
-%	Last modified: J.X.J. Bannwarth, 2019/01/09
+%	Last modified: J.X.J. Bannwarth, 2019/05/01
 
 % Clean up
 % clear variables; clc;
@@ -10,7 +10,7 @@
 GRAVITY = 9.80665; % [m/s^2]
 
 % Call the appropriate components
-Uav.CANT_ANGLE = deg2rad(5); % deg
+Uav.CANT_ANGLE = deg2rad(31); % deg - as per Z.J. Chen's design
 UavOctocopter500mmCanted
 MotorRcTimerMt2610
 
