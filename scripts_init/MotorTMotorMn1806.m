@@ -13,7 +13,7 @@ Motor.K   = 1.5280e-06; % Rotor thrust coefficient
 
 Motor.V_0 = 12.4;
 Motor.I_0 = 0.6;
-MOTOR.K_V = 240.8554;
+Motor.K_V = 240.8554;
 
 %% MOTOR MECHANICAL PROPERTIES
 % Rotor drag coefficient (no value, but necessary)
@@ -39,7 +39,7 @@ Motor.B = 4.4335282346e-7 .* ones(1,Uav.N_ROTORS);
 % Motor.R_R = ;
 % Motor.H_R = ;
 for i = 1:Uav.N_ROTORS
-    Motor.I_R(:,:,i) = diag(0, 0, 3.2903e-06);
+    Motor.I_R(:,:,i) = diag( [0, 0, 3.2903e-06] );
 end
 Motor.I_R_ZZ = reshape( Motor.I_R(3,3,:), [1, size(Motor.I_R,3)] );
 
