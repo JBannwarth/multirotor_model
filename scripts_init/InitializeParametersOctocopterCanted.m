@@ -12,7 +12,7 @@ GRAVITY = 9.80665; % [m/s^2]
 % Call the appropriate components
 Uav.CANT_ANGLE = deg2rad(31); % deg - as per Z.J. Chen's design
 UavOctocopter500mmCanted
-MotorRcTimerMt2610
+MotorTMotorMn1806
 
 %% AERO PARAMETERS
 if ~exist( 'Aero', 'var' )
@@ -29,12 +29,14 @@ if strcmp( Aero.Type, 'Body oriented' )
 else
     Uav.OMEGA_HOVER = sqrt( Uav.THRUST_HOVER / (0.5*Uav.RHO_AIR*Aero.CT1.coefs(1)) );
 end
-% sqrt(Uav.THRUST_HOVER/Motor.K);
 
 % Estimated throttle required to maintain hover
-Uav.THROTTLE_HOVER = ( Motor.K_E*Uav.OMEGA_HOVER + ...
-    (mean(Motor.B)*Motor.R/Motor.K_T) * Uav.OMEGA_HOVER^2 ) / ...
-    Uav.NOMINAL_BATTERY_VOLTAGE;
+Vi = ( Motor.V_0 - ...
+    Motor.K_T*Uav.OMEGA_HOVER^2*(Motor.R * Motor.K_V * Motor.V_0) ) / ...
+    Motor.I_0*Motor.R + Motor.I_0*Motor.R + ...
+    Uav.OMEGA_HOVER*( Motor.V_0 - Motor.I_0*Motor.R ) / ( Motor.K_V * Motor.V_0 );
+
+Uav.THROTTLE_HOVER = (Vi - 2.3508)/6.9817;
 
 Uav.THROTTLE_HOVER = Uav.THROTTLE_HOVER / cos(Uav.CANT_ANGLE);
 
@@ -61,7 +63,7 @@ if ~isfield( Initial, 'NU_BODY' ) % Initial angular velocity in body frame
     Initial.NU_BODY = [0; 0; 0];
 end
 if ~isfield( Initial, 'OMEGA' )   % Initial rotor speed
-    Initial.OMEGA   = Uav.OMEGA_HOVER;
+    Initial.OMEGA   = Uav.OMEGA_HOVER .* ones(Uav.N_ROTORS,1);
 end
 
 %% SIMULATION PARAMETERS
