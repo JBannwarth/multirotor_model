@@ -13,7 +13,7 @@ UStepEnd  = [5 0 0]';
 stepTime  = 5;
 
 % Model
-model = 'TestMultirotorSimPx4v1_8Hinf';
+model = 'MultirotorSimPx4v1_8Cont';
 Simulation.TS_MAX = 0.001;
 Simulation.TS_OUT = 0.01;
 Simulation.T_END = 50;
