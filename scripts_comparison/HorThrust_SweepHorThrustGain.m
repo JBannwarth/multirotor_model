@@ -33,7 +33,7 @@ set_param( [model '/Fixed wind input'], 'Value', mat2str(ULin) )
 
 % Select submodels
 set_param( [model '/Drag model'],  'ModelName', 'DragModelAIAAv3' );
-set_param( [model '/Motor model'], 'ModelName', 'MotorModelAIAAv3' );
+set_param( [model '/Motor model'], 'ModelName', 'MotorModelZJChen' );
 
 % Deactivate initial states/input since we aim to find them
 set_param( model, 'LoadInitialState', 'off' );
@@ -44,6 +44,9 @@ loadBuses = false;
 InitializeParametersOctocopterCanted
 InitializeModel
 Uav.ROTOR_DIRECTION = Uav.ROTOR_DIRECTION .* -1;
+% Use measured motor thrust constant - more accurate than using the
+% value extrapolated from the static drag testing
+Aero.Cz2.coefs(2) = Motor.K / (0.5 .* Uav.RHO_AIR .* Uav.D_PROP^2 .* Uav.A_PROP);
 
 % Set controller parameters
 Ctrl.HOR_GAIN = 0;
@@ -68,10 +71,20 @@ else
 
     % States
     stateSpecs = { ...
-                   'omega'     , 'Min'  , zeros(Uav.N_ROTORS,1) ;
-                   'nuBody'    , 'Known', [1 1 1]'              ;
-                   'xiDot'     , 'Known', [1 1 1]'              ;
-                   'xi'        , 'Known', [1 1 1]'              };
+                   'omega'             , 'Min'  , zeros(Uav.N_ROTORS,1) ;
+                   'nuBody'            , 'Known', [1 1 1]'              ;
+                   'xiDot'             , 'Known', [1 1 1]'              ;
+                   'xi'                , 'Known', [1 1 1]'              ;
+                   'AttRatePID_D_roll' , 'Known', [1 1]';
+                   'AttRatePID_D_pitch', 'Known', [1 1]';
+                   'AttRatePID_D_yaw'  , 'Known', [1 1]';
+                   'AttRatePID_I_roll' , 'Known', 1;
+                   'AttRatePID_I_yaw'  , 'Known', 1;
+                   'velPID_D_x'        , 'Known', 1;
+                   'velPID_D_y'        , 'Known', 1;
+                   'velPID_D_z'        , 'Known', 1;
+                   'velPID_I_y'        , 'Known', 1;
+                 };
 
     if getSimulinkBlockHandle( [ model '/Quadrotor Quaternion Model' ]) == -1
         % Using Euler model
