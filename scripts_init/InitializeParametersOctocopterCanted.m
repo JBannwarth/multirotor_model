@@ -20,6 +20,10 @@ if ~exist( 'Aero', 'var' )
 end
 
 %% ROTOR/MOTOR DYNAMICS
+% Use measured motor thrust constant - more accurate than using the
+% value extrapolated from the static drag testing
+Aero.Cz2.coefs(2) = Motor.K / (0.5 .* Uav.RHO_AIR .* Uav.D_PROP^2 .* Uav.A_PROP);
+
 % Single motor thrust required for hover [N]
 Uav.THRUST_HOVER = abs(Uav.G(3)) / 8;
 
