@@ -56,7 +56,6 @@ set_param( model, 'LoadExternalInput', 'off' );
 loadBuses = false;
 InitializeParametersOctocopterCanted
 InitializeModel
-Uav.ROTOR_DIRECTION = Uav.ROTOR_DIRECTION .* -1;
 
 % Set controller parameters
 Ctrl.HOR_GAIN = 0;
