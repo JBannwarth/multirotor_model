@@ -50,6 +50,15 @@ if any( strcmp( toLoad, 'velPID' ) )
                      };
                  ];
 end
+if any( strcmp( toLoad, 'velD' ) )
+    stateSpecs = [ stateSpecs;
+                     { ...
+                       'velPID_D_x', 'Known', 1;
+                       'velPID_D_y', 'Known', 1;
+                       'velPID_D_z', 'Known', 1;
+                     };
+                 ];
+end
 if any( strcmp( toLoad, 'lpThrust' ) )
     stateSpecs = [ stateSpecs;
                  { ...
