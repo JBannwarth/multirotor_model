@@ -6,7 +6,7 @@ project = simulinkproject; projectRoot = project.RootFolder;
 
 %% Simulation parameters
 % Model
-model = 'MultirotorSimPx4v1_8ContAttOnly';
+model = 'MultirotorSimPx4v1_8FPHT';
 Simulation.TS_MAX = 0.001;
 Simulation.TS_OUT = 0.01;
 Simulation.T_END = 20;
@@ -32,41 +32,44 @@ loadBuses = false;
 InitializeParametersOctocopterCanted
 InitializeModel
 Ctrl.THROTTLE_HOVER = Uav.THROTTLE_HOVER;
+Ctrl.BYPASS_ROTATION = 1;
 
 %% Find operating point
-toLoad = { 'attRatePID' };
+toLoad = { 'attRatePID', 'velD' };
 FindOpPx4v1_8Cont
 
 %% Load real model
-modelLin = model;
-model = 'MultirotorSimPx4v1_8FPHT';
-load_system( model )
+% modelLin = model;
+% model = 'MultirotorSimPx4v1_8FPHT';
+% load_system( model )
+% 
+% % Coment out what might cause issues
+% set_param( [model '/Sinusoidal input'], 'Commented', 'on' )
+% set_param( [model '/Varying wind input'], 'Commented', 'on' )
+% set_param( [model '/Step wind input'], 'Commented', 'on' )
+% 
+% % Adjust operating point
+% for i = 1:length(ops)
+%     ind = ops(i).getInputIndex([modelLin '/thrustDes']);
+%     Ctrl.THROTTLE_HOVER = ops(i).Inputs(ind(1)).u;
+%     ops(i).Inputs(1:4) = []; 
+%     ops(i).Inputs(1).Block = strrep( ops(i).Inputs(1).Block, modelLin, model );
+%     for j = 1:length(ops(i).States)
+%         ops(i).States(j).Block = strrep( ops(i).States(j).Block, modelLin, model );
+%     end
+% end
+% op = ops(1);
+% 
+% % Select submodels
+% set_param( [model '/Drag model'],  'ModelName', 'DragModelAIAAv3' );
+% set_param( [model '/Motor model'], 'ModelName', 'MotorModelZJChen' );
+% 
+% % Set initial states
+% set_param( model, 'LoadInitialState', 'on' );
+% set_param( model, 'InitialState', 'getstatestruct(op)' );
+% 
+% % Set controller lin point
+% ind = op.getStateIndex('eta');
+% Ctrl.ETA_LIN = op.States(ind(1)).x;
 
-% Coment out what might cause issues
-set_param( [model '/Sinusoidal input'], 'Commented', 'on' )
-set_param( [model '/Varying wind input'], 'Commented', 'on' )
-set_param( [model '/Step wind input'], 'Commented', 'on' )
-
-% Adjust operating point
-for i = 1:length(ops)
-    ind = ops(i).getInputIndex([modelLin '/thrustDes']);
-    Ctrl.THROTTLE_HOVER = ops(i).Inputs(ind(1)).u;
-    ops(i).Inputs(1:4) = []; 
-    ops(i).Inputs(1).Block = strrep( ops(i).Inputs(1).Block, modelLin, model );
-    for j = 1:length(ops(i).States)
-        ops(i).States(j).Block = strrep( ops(i).States(j).Block, modelLin, model );
-    end
-end
-op = ops(1);
-
-% Select submodels
-set_param( [model '/Drag model'],  'ModelName', 'DragModelAIAAv3' );
-set_param( [model '/Motor model'], 'ModelName', 'MotorModelZJChen' );
-
-% Set initial states
-set_param( model, 'LoadInitialState', 'on' );
-set_param( model, 'InitialState', 'getstatestruct(op)' );
-
-% Set controller lin point
-ind = op.getStateIndex('eta');
-Ctrl.ETA_LIN = op.States(ind(1)).x;
+Ctrl.BYPASS_ROTATION = 0;
