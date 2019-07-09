@@ -23,6 +23,8 @@ switch ctrlName
         InitializePx4v1_8IHT
     case 'FPHT'
         InitializePx4v1_8FPHT
+    case 'FPHTSimple'
+        InitializePx4v1_8FPHTSimple
     case 'MIS'
         InitializePx4v1_8MIS
 end
