@@ -2,7 +2,7 @@
 %   Parameters need to be loaded up before running this script
 %   Use the 'toLoad' variable to control which states are set to 0
 %   Written by:    J.X.J. Bannwarth, 2019/05/15
-%	Last modified: J.X.J. Bannwarth, 2019/05/15
+%	Last modified: J.X.J. Bannwarth, 2019/07/09
 
 % Deactivate initial states/input since we aim to find them
 set_param( model, 'LoadInitialState', 'off' );
@@ -23,11 +23,17 @@ opspec = operspec( model, [size(ULin,1) 1] );
 initAttGuess = [0 -deg2rad(10) 0]';
 
 % States
-stateSpecs = { ...
-               'omega' , 'Min'  , zeros(Uav.N_ROTORS,1) ;
-               'nuBody', 'Known', [1 1 1]'              ;
-               'xiDot' , 'Known', [1 1 1]'              ;
-               'xi'    , 'Known', [1 1 1]'              ; };
+if any( strcmp( toLoad, 'posOnly' ) )
+    stateSpecs = { ...
+                   'xiDot' , 'Known', [1 1 1]'              ;
+                   'xi'    , 'Known', [1 1 1]'              ; };
+else
+    stateSpecs = { ...
+                   'omega' , 'Min'  , zeros(Uav.N_ROTORS,1) ;
+                   'nuBody', 'Known', [1 1 1]'              ;
+                   'xiDot' , 'Known', [1 1 1]'              ;
+                   'xi'    , 'Known', [1 1 1]'              ; };
+end
 
 if any( strcmp( toLoad, 'attRatePID' ) )
     stateSpecs = [ stateSpecs;
@@ -76,12 +82,14 @@ if any( strcmp( toLoad, 'leadComp' ) )
              ];
 end
 
-if getSimulinkBlockHandle( [ model '/Quadrotor Quaternion Model' ]) == -1
-    % Using Euler model
-    stateSpecs(end+1,:) = { 'eta', 'x'    , initAttGuess } ;
-    stateSpecs(end+1,:) = { 'eta', 'Known', [ 1 0 1 ] } ;
-else
-    stateSpecs(end+1,:) = { 'q', 'x', EulerToQuat(initAttGuess) } ;
+if ~any( strcmp( toLoad, 'posOnly' ) )
+    if (getSimulinkBlockHandle( [ model '/Quadrotor Quaternion Model' ]) == -1)
+        % Using Euler model
+        stateSpecs(end+1,:) = { 'eta', 'x'    , initAttGuess } ;
+        stateSpecs(end+1,:) = { 'eta', 'Known', [ 1 0 1 ] } ;
+    else
+        stateSpecs(end+1,:) = { 'q', 'x', EulerToQuat(initAttGuess) } ;
+    end
 end
 
 for i = 1:size(stateSpecs,1)
