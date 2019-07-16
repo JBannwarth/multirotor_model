@@ -1,8 +1,8 @@
-%UAVOCTOCOPTER500MM Load octocopter parameters
+%UAVOCTOCOPTER500MMCANTED Load canted rotor octocopter parameters
 %   Last configuration change:
 %       2019/01/09 - Start parameters
 %   Written by:    J.X.J. Bannwarth, 2019/01/09
-%   Last modified: J.X.J. Bannwarth, 2019/01/09
+%   Last modified: J.X.J. Bannwarth, 2019/07/16
 
 %% GEOMETRICAL PARAMETERS
 Uav.D_UAV = 0.5;
@@ -12,7 +12,12 @@ Uav.A_PROP = (pi*Uav.D_PROP^2)/4;
 Uav.BETA = deg2rad(22.5:45:337.5)'; % Arm angles [rad]
 Uav.N_ROTORS = length(Uav.BETA); % Number of rotors [-]
 Uav.L    = (0.5 / 2) * ones(Uav.N_ROTORS,1); % Distances from centre to motor axis [m]
-% Note: rotor directions are inverted compared to default PX4 arrangement
+% Notes:
+%   - Rotor directions for this specific UAV are inverted compared to
+%   default PX4 arrangement
+%   - The terms 'CCW' and 'CW' are defined with respect to the z-axis of
+%   the  motors' frames of reference, which by default are NED and aligned
+%   with the UAV's frame of reference (which is also NED)
 Uav.ROTOR_DIRECTION = (-1).^(1:Uav.N_ROTORS); % 1 = CCW, -1 = CW [-]
 % Rotation matrices from motor to body frame for each rotor
 % E.g. Non-rotated rotors (rotors parallel to body z-axis)
