@@ -9,8 +9,8 @@ Uav.D_UAV = 0.5;
 Uav.D_PROP = 6 * 0.0254;
 Uav.A_UAV = (pi*Uav.D_UAV^2)/4;
 Uav.A_PROP = (pi*Uav.D_PROP^2)/4;
-Uav.BETA = deg2rad(22.5:45:337.5)'; % Arm angles [rad]
-Uav.N_ROTORS = length(Uav.BETA); % Number of rotors [-]
+Uav.GAMMA = deg2rad(22.5:45:337.5)'; % Arm angles [rad]
+Uav.N_ROTORS = length(Uav.GAMMA); % Number of rotors [-]
 Uav.L    = (0.5 / 2) * ones(Uav.N_ROTORS,1); % Distances from centre to motor axis [m]
 % Notes:
 %   - Rotor directions for this specific UAV are inverted compared to
@@ -38,29 +38,29 @@ Uav.R_MOTOR_TO_BODY(:,:,8) = eye(3);
 for i = 1:8
     switch i
         case 1
-            ax = [ 0, sin(Uav.CANT_ANGLE), cos(Uav.CANT_ANGLE) ];
+            ax = [ 0, sin(Uav.ZETA), cos(Uav.ZETA) ];
         case 2
-            ax = [ sin(Uav.CANT_ANGLE), 0, cos(Uav.CANT_ANGLE) ];
+            ax = [ sin(Uav.ZETA), 0, cos(Uav.ZETA) ];
         case 3
-            ax = [ -sin(Uav.CANT_ANGLE), 0, cos(Uav.CANT_ANGLE) ];
+            ax = [ -sin(Uav.ZETA), 0, cos(Uav.ZETA) ];
         case 4
-            ax = [ 0, sin(Uav.CANT_ANGLE), cos(Uav.CANT_ANGLE) ];
+            ax = [ 0, sin(Uav.ZETA), cos(Uav.ZETA) ];
         case 5
-            ax = [ 0, -sin(Uav.CANT_ANGLE), cos(Uav.CANT_ANGLE) ];
+            ax = [ 0, -sin(Uav.ZETA), cos(Uav.ZETA) ];
         case 6
-            ax = [ -sin(Uav.CANT_ANGLE), 0, cos(Uav.CANT_ANGLE) ];
+            ax = [ -sin(Uav.ZETA), 0, cos(Uav.ZETA) ];
         case 7
-            ax = [ sin(Uav.CANT_ANGLE), 0, cos(Uav.CANT_ANGLE) ];
+            ax = [ sin(Uav.ZETA), 0, cos(Uav.ZETA) ];
         case 8
-            ax = [ 0, -sin(Uav.CANT_ANGLE), cos(Uav.CANT_ANGLE) ];
+            ax = [ 0, -sin(Uav.ZETA), cos(Uav.ZETA) ];
     end
     Uav.R_MOTOR_TO_BODY(:,:,i) = QuatToDcm( VecsToQuat( [0,0,1], ax ) );
 end
 
 
 for i = 1:length( Uav.L )
-    Uav.L_VEC(:,i) = [ Uav.L(i) * cos( Uav.BETA(i) );
-                       Uav.L(i) * sin( Uav.BETA(i) ); 
+    Uav.L_VEC(:,i) = [ Uav.L(i) * cos( Uav.GAMMA(i) );
+                       Uav.L(i) * sin( Uav.GAMMA(i) ); 
                        0 ];
 end
 

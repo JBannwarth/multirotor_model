@@ -9,8 +9,8 @@ Uav.D_UAV = 0.5;
 Uav.D_PROP = 10 * 0.0254;
 Uav.A_UAV = (pi*Uav.D_UAV^2)/4;
 Uav.A_PROP = (pi*Uav.D_PROP^2)/4;
-Uav.BETA = deg2rad(22.5:45:337.5)'; % Arm angles [rad]
-Uav.N_ROTORS = length(Uav.BETA); % Number of rotors [-]
+Uav.GAMMA = deg2rad(22.5:45:337.5)'; % Arm angles [rad]
+Uav.N_ROTORS = length(Uav.GAMMA); % Number of rotors [-]
 Uav.L    = (0.5 / 2) * ones(Uav.N_ROTORS,1); % Distances from centre to motor axis [m]
 % Note: rotor directions are inverted compared to default PX4 arrangement
 Uav.ROTOR_DIRECTION = (-1).^((1:Uav.N_ROTORS)-1); % 1 = CCW, -1 = CW [-]
@@ -31,8 +31,8 @@ Uav.R_MOTOR_TO_BODY(:,:,7) = eye(3);
 Uav.R_MOTOR_TO_BODY(:,:,8) = eye(3);
 
 for i = 1:length( Uav.L )
-    Uav.L_VEC(:,i) = [ Uav.L(i) * cos( Uav.BETA(i) );
-                       Uav.L(i) * sin( Uav.BETA(i) ); 
+    Uav.L_VEC(:,i) = [ Uav.L(i) * cos( Uav.GAMMA(i) );
+                       Uav.L(i) * sin( Uav.GAMMA(i) ); 
                        0 ];
 end
 
