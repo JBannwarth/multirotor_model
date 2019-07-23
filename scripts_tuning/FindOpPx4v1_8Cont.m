@@ -67,19 +67,19 @@ if any( strcmp( toLoad, 'velD' ) )
 end
 if any( strcmp( toLoad, 'lpThrust' ) )
     stateSpecs = [ stateSpecs;
-                 { ...
-                   'lpThrust_x', 'Known', 0;
-                   'lpThrust_y', 'Known', 1;
-                 };
-             ];
+                     { ...
+                       'lpThrust_x', 'Known', 0;
+                       'lpThrust_y', 'Known', 1;
+                     };
+                 ];
 end
 if any( strcmp( toLoad, 'leadComp' ) )
     stateSpecs = [ stateSpecs;
-                 { ...
-                   'lcThrust_D_x', 'Known', 1;
-                   'lcThrust_D_y', 'Known', 1;
-                 };
-             ];
+                     { ...
+                       'lcThrust_D_x', 'Known', 1;
+                       'lcThrust_D_y', 'Known', 1;
+                     };
+                 ];
 end
 
 if ~any( strcmp( toLoad, 'posOnly' ) )
@@ -107,11 +107,16 @@ for i = 1:length(opspec)
     inputSpecs = { ...
                    'U'         , 'u'    , ULin(i,:)'   ;
                    'U'         , 'Known', [ 1 1 1 ]'   ;
-    %                'etaDes'    , 'Known', [ 1 0 1 ]'   ;
-    %                'thrustDes' , 'Min'  , 0            ;
-    %                'yawRateDes', 'Known', 1            ;
-    %                'HorThrust' , 'Known', [ 1 1 ]'     ;
                    };
+   if any( strcmp( toLoad, 'fullInput' ) )
+       inputSpecs = [ inputSpecs; 
+                        { ...
+                           'etaDes'       , 'Known', [ 1 0 1 ]'   ;
+                           'thrustDes'    , 'Min'  , 0            ;
+                           'horThrustDes' , 'Known', [ 1 1 ]'     ;
+                        };
+                    ];
+   end
 
     for j = 1:size(inputSpecs,1)
         inputInd = opspec(i,1).getInputIndex( [ model '/' inputSpecs{j,1} ] );
