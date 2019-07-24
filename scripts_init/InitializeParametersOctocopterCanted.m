@@ -42,7 +42,7 @@ Vi = ( Motor.V_0 - ...
 
 Uav.THROTTLE_HOVER = (Vi - 2.3508)/6.9817;
 
-Uav.THROTTLE_HOVER = Uav.THROTTLE_HOVER / cos(Uav.CANT_ANGLE);
+Uav.THROTTLE_HOVER = Uav.THROTTLE_HOVER / cos(Uav.ZETA);
 
 Uav.NOISE_TS = 0.002;
 
