@@ -40,7 +40,7 @@ switch ctrlName
     case 'FPHT'
         InitializePx4v1_8FPHT
     case 'FPHTSimple'
-        InitializePx4v1_8FPHTSimple
+        InitializePx4v1_8FPHTTranslationOnly
     case 'MIS'
         InitializePx4v1_8MIS
 end
