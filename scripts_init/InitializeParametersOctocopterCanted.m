@@ -10,7 +10,7 @@
 GRAVITY = 9.80665; % [m/s^2]
 
 % Call the appropriate components
-Uav.CANT_ANGLE = deg2rad(31); % deg - as per Z.J. Chen's design
+Uav.ZETA = deg2rad(31); % deg - as per Z.J. Chen's design
 UavOctocopter500mmCanted
 MotorTMotorMn1806
 
