@@ -16,6 +16,7 @@
 GRAVITY = 9.80665; % [m/s^2]
 
 % Call the appropriate components
+Uav.ZETA = deg2rad(0); % Cant angle
 UavQuadcopter460mm
 MotorRcTimerMt2610
 
