@@ -1,4 +1,4 @@
-%INITIALIZEPX4V1_8FPHTSIMPLE Initialise simplified FPHT controller
+%INITIALIZEPX4V1_8FPHTTRANSLATIONONLY Initialise simplified FPHT controller
 %   Written by:    J.X.J. Bannwarth, 2019/07/09
 %	Last modified: J.X.J. Bannwarth, 2019/07/09
 
