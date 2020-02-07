@@ -117,6 +117,15 @@ for i = 1:length(opspec)
                         };
                     ];
    end
+   if any( strcmp( toLoad, 'fullInputThrustControl' ) )
+       inputSpecs = [ inputSpecs; 
+                        { ...
+                           'attThrustDes' , 'Known', [ 0 1 0 ]'   ;
+                           'attThrustDes' , 'u', [ 0 0 -0.5 ]'   ;
+                           'horThrustDes' , 'Known', [ 1 1 ]'     ;
+                        };
+                    ];
+   end
 
     for j = 1:size(inputSpecs,1)
         inputInd = opspec(i,1).getInputIndex( [ model '/' inputSpecs{j,1} ] );
