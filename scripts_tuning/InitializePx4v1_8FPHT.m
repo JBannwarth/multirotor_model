@@ -1,6 +1,6 @@
 %INITIALIZEPX4V1_8FPHT Initialise full position horizontal thrust controller
 %   Written by:    J.X.J. Bannwarth, 2019/05/16
-%	Last modified: J.X.J. Bannwarth, 2019/06/20
+%	Last modified: J.X.J. Bannwarth, 2019/09/02
 
 project = simulinkproject; projectRoot = project.RootFolder;
 
@@ -9,7 +9,9 @@ project = simulinkproject; projectRoot = project.RootFolder;
 model = 'MultirotorSimPx4v1_8FPHT';
 Simulation.TS_MAX = 0.001;
 Simulation.TS_OUT = 0.01;
-Simulation.T_END = 20;
+if ~isfield( Simulation, 'T_END' )
+    Simulation.T_END = 20;
+end
 
 %% Load parameters
 load_system( model )
