@@ -1,6 +1,6 @@
 %PLOTPOSITIONHOLDERRORAIAAV3 Plot position hold error
 %   Written by:    J.X.J. Bannwarth, 2017/09/19
-%   Last Modified: J.X.J. Bannwarth, 2019/01/10
+%   Last Modified: J.X.J. Bannwarth, 2020/04/15
 clearvars;
 close all;
 
@@ -9,21 +9,14 @@ project = simulinkproject; projectRoot = project.RootFolder;
 outFolder = fullfile( projectRoot, '..', 'journal_paper_1', 'fig' );
 outFolderRaw = fullfile( projectRoot, '..', 'journal_paper_1', 'fig', 'tikz', 'data_poshold' );
 inFolderExp = fullfile( projectRoot, 'data_validation', 'HoverExpLogsOCAIAAv3' );
-inFolderSim = fullfile( projectRoot, 'data_results', 'HoverSim_2019-01-10_13-50-39_OC' );
+inFolderSim = fullfile( projectRoot, 'data_results', 'HoverSim_2020-04-15_16-24-40_OC' );
 fontSize  = 9;
 outSize   = [8 8];
 printResults = false;
 
 %% Load simulation data
-files = dir(inFolderSim); files = {files.name};
-% Only keep actual files
-toRemove = [];
-for i = 1:length(files)
-    if ~contains( files{i}, '.mat' )
-        toRemove(end+1) = i;
-    end
-end
-files(toRemove) = [];
+files = dir( fullfile( inFolderSim, '*.mat' ) );
+files = {files.name};
 
 for i = 1:length(files)
     load( fullfile( inFolderSim, files{i} ) )
@@ -32,15 +25,8 @@ for i = 1:length(files)
 end
 
 %% Load experimental data
-files = dir(inFolderExp); files = {files.name};
-% Only keep actual files
-toRemove = [];
-for i = 1:length(files)
-    if ~contains( files{i}, '.mat' )
-        toRemove(end+1) = i;
-    end
-end
-files(toRemove) = [];
+files = dir( fullfile( inFolderExp, '*.mat' ) );
+files = {files.name};
 
 for i = 1:length(files)
     load( fullfile( inFolderExp, files{i} ) )

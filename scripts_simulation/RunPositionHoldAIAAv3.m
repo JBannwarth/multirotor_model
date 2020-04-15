@@ -1,6 +1,6 @@
 %RUNPOSITIONHOLDSIM Run simulation for position hold case
 %   Written by:    J.X.J. Bannwarth, 2017
-%   Last Modified: J.X.J. Bannwarth, 2019/01/10
+%   Last Modified: J.X.J. Bannwarth, 2019/04/15
 close all; clc;
 clear all; %#ok<CLALL>
 
@@ -15,16 +15,8 @@ else
     Uav.M = 1.5; % UAV was a bit heavier at the time this data was taken
 end
 
-windFiles = dir(inFolder);
+windFiles = dir( fullfile( inFolder, '*.mat' ) );
 windFiles = {windFiles.name};
-% Only keep actual files
-toRemove = [];
-for i = 1:length(windFiles)
-    if ~contains( windFiles{i}, '.mat' )
-        toRemove(end+1) = i;
-    end
-end
-windFiles(toRemove) = [];
 
 % Create folder for results with date (user can rename folder later anyway
 if ( useClosedContraptionData )
