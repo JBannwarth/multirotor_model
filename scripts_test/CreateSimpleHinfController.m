@@ -138,3 +138,5 @@ K = B2'*P
 Wind.StepTime = 2;
 Wind.StepInit = ULin;
 Wind.StepFinal = Wind.StepInit + [3 0 0];
+
+Ctrl.BYPASS_ROTATION = false;
