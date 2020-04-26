@@ -24,7 +24,7 @@ for ii = 1:length( filesToLoad )
         simOutputs{ii,jj} = simOut(jj).logsout;
     end
     ULins{ii,1} = ULin;
-%     clearvars simIn simOut ULin
+    clearvars simIn simOut ULin
 end
 
 %% Process data
@@ -50,9 +50,12 @@ for ii = 1:length( filesToLoad )
 %         plot( actControls.Time, horThrust.Data(:,1) );
         
         % Find mean and magnitude for pitch control
+        % Guesses
         yOffset = mean(actControls.Data(:,2));
+        yMin = min( actControls.Data( floor(end/2):end,2) );
+        yMax = max( actControls.Data( floor(end/2):end,2) );
         mdl = fit( actControls.Time, actControls.Data(:,2), ft, ...
-            'startpoint', [0, windF(ii,jj), 0.01, yOffset] );
+            'startpoint', [0, windF(ii,jj), yMax-yMin, yOffset] );
 %         plot( actControls.Time, mdl.yoff+sin((actControls.Time-mdl.shift)*mdl.xscale)*mdl.yscale);
         pitchAmpl(ii,jj) = abs(mdl.yscale);
         pitchMean(ii,jj) = mdl.yoff;
@@ -60,11 +63,11 @@ for ii = 1:length( filesToLoad )
         % Find mean and magnitude for horizontal thrust
         % Guesses
         yOffset = mean(horThrust.Data(:,1));
-        xMin = min( horThrust.Data( floor(end/2):end,1) );
-        xMax = max( horThrust.Data( floor(end/2):end,1) );
+        yMin = min( horThrust.Data( floor(end/2):end,1) );
+        yMax = max( horThrust.Data( floor(end/2):end,1) );
         
         mdl = fit( horThrust.Time, horThrust.Data(:,1), ft, ...
-            'startpoint', [0, windF(ii,jj), xMax-xMin, yOffset] );
+            'startpoint', [0, windF(ii,jj), yMax-yMin, yOffset] );
 %         plot( horThrust.Time, mdl.yoff+sin((horThrust.Time-mdl.shift)*mdl.xscale)*mdl.yscale);
         horThrustAmpl(ii,jj) = abs(mdl.yscale);
         horThrustMean(ii,jj) = mdl.yoff;
@@ -85,6 +88,7 @@ for ii = 1:length( filesToLoad )
 end
 legend( labels, 'Location', 'Best' )
 set( gca,'xscale','log' )
+
 xlabel( 'Wind frequency (Hz)' )
 ylabel( 'Gain (dB)' )
 title( 'Solid: pitch, dashed: horizontal thrust' )
