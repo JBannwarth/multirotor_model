@@ -41,7 +41,6 @@ output = sim( model, 'SimulationMode', 'normal' );
 
 ### AIAA Journal Paper Data
 
-
 > Jérémie X. J. Bannwarth, Z. Jeremy Chen, Karl A. Stol, Bruce A. MacDonald, and Peter J. Richards (2018). [Aerodynamic Force Modeling of Multirotor Unmanned Aerial Vehicles](https://doi.org/10.2514/1.J057165) AIAA Journal 0 0:0, 1-10.
 
 The data used for above paper is available in the `UAV Wind Project` Google Drive (request access from me), under the following there folders:
@@ -51,7 +50,6 @@ The data used for above paper is available in the `UAV Wind Project` Google Driv
     - Hover data to put in `data_validation\HoverExpLogsOCAIAAv3`: `2018-02-23 Hover Experiment Logs (OC) - Cropped`
 - Data to put inside the `data_wind` subfolder:
     - Wind profiles to put in `data_wind\TurbSimOC`: `2018-06-07 TurbSim Wind Profiles for AIAA Paper`
-
 
 If you do not have access to the aforementioned Google Drive, the data is also stored on the University's research drive: `R:\MECH\Wind Disturbance Rejection UAV Project\Experiments`. 
 
