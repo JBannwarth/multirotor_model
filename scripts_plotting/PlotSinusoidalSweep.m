@@ -30,8 +30,10 @@ end
 %% Process data
 windF = zeros( size( simInputs ) );
 windAmpl  = zeros( size( simInputs ) ); 
-pitchAmpl = zeros( size( simInputs ) );
-pitchMean = zeros( size( simInputs ) );
+pitchTorqueAmpl = zeros( size( simInputs ) );
+pitchTorqueMean = zeros( size( simInputs ) );
+pitchDesAmpl  = zeros( size( simInputs ) );
+pitchDesMean  = zeros( size( simInputs ) );
 horThrustAmpl = zeros( size( simInputs ) );
 horThrustMean = zeros( size( simInputs ) );
 
@@ -45,9 +47,28 @@ for ii = 1:length( filesToLoad )
         windAmpl(ii,jj) = simInputs{ii,jj}.getVariable('Wind').Ampl(1);
         actControls = simOutputs{ii,jj}.get('actControls').Values;
         horThrust = simOutputs{ii,jj}.get('horThrustDes').Values;
+        qDes = simOutputs{ii,jj}.get('qDes').Values;
+        eulDes = QuatToEuler(qDes.Data);
+        pitchDes = eulDes(:,2);
         
 %         figure; hold on; grid on; box on
-%         plot( actControls.Time, horThrust.Data(:,1) );
+%         plot( qDes.Time, pitchDes );
+
+        % Find mean and magnitude for desired pitch
+        % Guesses
+        yOffset = mean(pitchDes);
+        yMin = min( pitchDes( floor(end/2):end) );
+        yMax = max( pitchDes( floor(end/2):end) );
+        
+        % Estimate frequency by finding number of peaks
+%         nPeaks = sum( diff( (movmean(pitchDes,10)-mean(pitchDes))>0 ) > 0 );
+%         fEst = 2*pi*nPeaks / ( qDes.Time(end) - qDes.Time(1) );
+        
+        mdl = fit( qDes.Time, pitchDes, ft, ...
+            'startpoint', [0, windF(ii,jj), yMax-yMin, yOffset] );
+%         plot( qDes.Time, mdl.yoff+sin((qDes.Time-mdl.shift)*mdl.xscale)*mdl.yscale);
+        pitchDesAmpl(ii,jj) = abs(mdl.yscale);
+        pitchDesMean(ii,jj) = mdl.yoff;
         
         % Find mean and magnitude for pitch control
         % Guesses
@@ -57,8 +78,8 @@ for ii = 1:length( filesToLoad )
         mdl = fit( actControls.Time, actControls.Data(:,2), ft, ...
             'startpoint', [0, windF(ii,jj), yMax-yMin, yOffset] );
 %         plot( actControls.Time, mdl.yoff+sin((actControls.Time-mdl.shift)*mdl.xscale)*mdl.yscale);
-        pitchAmpl(ii,jj) = abs(mdl.yscale);
-        pitchMean(ii,jj) = mdl.yoff;
+        pitchTorqueAmpl(ii,jj) = abs(mdl.yscale);
+        pitchTorqueMean(ii,jj) = mdl.yoff;
         
         % Find mean and magnitude for horizontal thrust
         % Guesses
@@ -76,12 +97,16 @@ end
 
 %% Plot response
 figure( 'Name', 'Frequency response' ); hold on; grid on; box on;
-pitchdB = 20*log10( pitchAmpl./windAmpl );
+pitchTorquedB = 20*log10( pitchTorqueAmpl./windAmpl );
+pitchDesdB = 20*log10( pitchDesAmpl./windAmpl );
 horThrustdB = 20*log10( horThrustAmpl./windAmpl );
 
 colours = get(gca,'colororder');
 for ii = 1:length( filesToLoad )
-    plot( windF(ii,:)./(2*pi), pitchdB(ii,:), 'Color', colours(ii,:) )
+    plot( windF(ii,:)./(2*pi), pitchTorquedB(ii,:), 'Color', colours(ii,:) )
+end
+for ii = 1:length( filesToLoad )
+    plot( windF(ii,:)./(2*pi), pitchDesdB(ii,:), '-.', 'Color', colours(ii,:) )
 end
 for ii = 1:length( filesToLoad )
     plot( windF(ii,:)./(2*pi), horThrustdB(ii,:), '--', 'Color', colours(ii,:) )
@@ -91,6 +116,6 @@ set( gca,'xscale','log' )
 
 xlabel( 'Wind frequency (Hz)' )
 ylabel( 'Gain (dB)' )
-title( 'Solid: pitch, dashed: horizontal thrust' )
+title( 'Solid: pitch torque, dash-dotted: des pitch, dashed: horizontal thrust' )
 
 SetFigProp( outSize , fontSize );
