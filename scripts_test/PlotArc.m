@@ -8,7 +8,7 @@ function [] = PlotArc( R, v2, scale, label, color, varargin )
         ax = varargin{1};
     end
 
-    v1 = R(:,ax); % Use z axis as ref    
+    v1 = R(:,ax); % Use z axis as ref
     e_R = R' * cross(v1, v2);
     e_R_z_sin = norm(e_R);
     e_R_z_cos = dot(v1, v2);
