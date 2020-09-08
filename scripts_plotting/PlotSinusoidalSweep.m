@@ -4,7 +4,6 @@
 
 %% First initialization
 close all; clc; clearvars;
-ctrlName = 'FPHTFullGain';
 project = simulinkproject; projectRoot = project.RootFolder;
 fontSize  = 9;
 outSize   = [15 8];
@@ -14,7 +13,10 @@ inputFolder = fullfile( projectRoot, 'data_results', 'sine_sweep' );
 filesToLoad = { 'SinusoidalSweep_FPHTFullGain_2020-04-26_19-10-59.mat', ...
                 'SinusoidalSweep_baseline_2020-04-26_19-38-45.mat', ...
                 'SinusoidalSweep_MIS_2020-04-26_19-55-42' };
-labels = { 'FPHT', 'Baseline', 'MIS' };
+filesToLoad = { 'SinusoidalSweep_FPHTFullGain_2020-09-01_12-30-42', ...
+                'SinusoidalSweep_baseline_2020-09-01_12-24-25' };
+labels = { 'FPHT', 'Baseline', 'MIS', 'FPHT New' };
+labels = {'FPHT', 'Baseline'};
 
 %% Load data
 for ii = 1:length( filesToLoad )
@@ -51,20 +53,23 @@ for ii = 1:length( filesToLoad )
         eulDes = QuatToEuler(qDes.Data);
         pitchDes = eulDes(:,2);
         
-%         figure; hold on; grid on; box on
+%         figure('Name', sprintf( 'F = %.2f Hz', windF(ii,jj) ))
+%         hold on; grid on; box on
+%         title( sprintf( 'F = %.2f Hz', windF(ii,jj) ) )
 %         plot( qDes.Time, pitchDes );
 
         % Find mean and magnitude for desired pitch
+        range = 3/4;
         % Guesses
-        yOffset = mean(pitchDes);
-        yMin = min( pitchDes( floor(end/2):end) );
-        yMax = max( pitchDes( floor(end/2):end) );
+        yOffset = mean(pitchDes( floor(end*range):end));
+        yMin = min( pitchDes( floor(end*range):end) );
+        yMax = max( pitchDes( floor(end*range):end) );
         
         % Estimate frequency by finding number of peaks
 %         nPeaks = sum( diff( (movmean(pitchDes,10)-mean(pitchDes))>0 ) > 0 );
 %         fEst = 2*pi*nPeaks / ( qDes.Time(end) - qDes.Time(1) );
         
-        mdl = fit( qDes.Time, pitchDes, ft, ...
+        mdl = fit( qDes.Time( floor(end*range):end), pitchDes( floor(end*range):end), ft, ...
             'startpoint', [0, windF(ii,jj), yMax-yMin, yOffset] );
 %         plot( qDes.Time, mdl.yoff+sin((qDes.Time-mdl.shift)*mdl.xscale)*mdl.yscale);
         pitchDesAmpl(ii,jj) = abs(mdl.yscale);
@@ -72,10 +77,10 @@ for ii = 1:length( filesToLoad )
         
         % Find mean and magnitude for pitch control
         % Guesses
-        yOffset = mean(actControls.Data(:,2));
-        yMin = min( actControls.Data( floor(end/2):end,2) );
-        yMax = max( actControls.Data( floor(end/2):end,2) );
-        mdl = fit( actControls.Time, actControls.Data(:,2), ft, ...
+        yOffset = mean(actControls.Data(floor(end*range):end,2));
+        yMin = min( actControls.Data( floor(end*range):end,2) );
+        yMax = max( actControls.Data( floor(end*range):end,2) );
+        mdl = fit( actControls.Time(floor(end*range):end), actControls.Data(floor(end*range):end,2), ft, ...
             'startpoint', [0, windF(ii,jj), yMax-yMin, yOffset] );
 %         plot( actControls.Time, mdl.yoff+sin((actControls.Time-mdl.shift)*mdl.xscale)*mdl.yscale);
         pitchTorqueAmpl(ii,jj) = abs(mdl.yscale);
@@ -83,16 +88,17 @@ for ii = 1:length( filesToLoad )
         
         % Find mean and magnitude for horizontal thrust
         % Guesses
-        yOffset = mean(horThrust.Data(:,1));
-        yMin = min( horThrust.Data( floor(end/2):end,1) );
-        yMax = max( horThrust.Data( floor(end/2):end,1) );
+        yOffset = mean(horThrust.Data(floor(end*range):end,1));
+        yMin = min( horThrust.Data( floor(end*range):end,1) );
+        yMax = max( horThrust.Data( floor(end*range):end,1) );
         
-        mdl = fit( horThrust.Time, horThrust.Data(:,1), ft, ...
+        mdl = fit( horThrust.Time(floor(end*range):end), horThrust.Data(floor(end*range):end,1), ft, ...
             'startpoint', [0, windF(ii,jj), yMax-yMin, yOffset] );
 %         plot( horThrust.Time, mdl.yoff+sin((horThrust.Time-mdl.shift)*mdl.xscale)*mdl.yscale);
         horThrustAmpl(ii,jj) = abs(mdl.yscale);
         horThrustMean(ii,jj) = mdl.yoff;
     end
+    disp('Done')
 end
 
 %% Plot response
