@@ -4,7 +4,7 @@
 
 %% First initialization
 close all; clc; clearvars;
-ctrlName = 'MIS';
+ctrlName = 'FPHTFullGain';
 project = simulinkproject; projectRoot = project.RootFolder;
 
 %% Generate output folder
@@ -30,7 +30,7 @@ switch ctrlName
     case 'IHT'
         InitializePx4v1_8IHT
     case 'FPHT'
-        InitializePx4v1_8FPHT    
+        InitializePx4v1_8FPHT
     case 'FPHTFullGain'
         InitializePx4v1_8FPHTFullGain
     case 'FPHTSimple'
@@ -49,7 +49,7 @@ Wind.Freq = [1;0;0];
 freqs = 2*pi*logspace(-1,2,50);
 periods = 2*pi./freqs;
 tEnd = 4*periods;
-tEnd( periods < 10 ) = tEnd( periods<10) + 10;
+tEnd( periods < 20 ) = tEnd( periods<20) + 20;
 
 for i = 1:size(freqs,2)
     simIn(i) = Simulink.SimulationInput( model );
