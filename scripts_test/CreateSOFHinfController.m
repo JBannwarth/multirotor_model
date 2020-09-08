@@ -104,47 +104,7 @@ P = struct( 'A', A, 'B1', B1, 'B2', B2, 'C1', C1, 'C2', C2, 'D11', D11, ...
 
 [Ksys, f, viol, loc] = hifoo(P)
 K = Ksys.d;
-
-% LQR
-Q = diag( 1./([ 0.5 0.5 0.5 1 1 1 0.1 0.1 0.1 ].^2) );
-R = diag( 1./([ 0.5 0.5 0.5 0.5 0.5 ].^2) );
-[K,S,e] = lqr( A, B2, Q, R );
-
-% Hinf
-g = 5; gSuccessful = 10; n = 0;
-while n < 30
-    suitable = true;
-    
-    P = are(A, -(B1*B1')/g^2 + B2*B2', C1'*C1);
-    
-    eigHinf = eig(A + ((B1*B1')/(g^2) - (B2*B2'))*P);
-
-    % Check stability
-    if max( real(eigHinf) > 0 )
-        suitable = false;
-    end
-
-    % Check spectral radius
-    if (max(abs(eig(P))) > g^2)
-        suitable = false;
-    end 
-    
-    if (suitable == false)
-        gTemp = g;
-        g = g + (gSuccessful(end) - g)/2;
-    else
-        gTemp = g;
-        g = g - (gSuccessful(end) - g)/2;
-        gSuccessful(end+1) = gTemp;
-    end
-    n = n + 1;
-end
-
-% Display results
-P
-eigHinf
-
-K = B2'*P
+Ctrl.K
 
 %% Prepare for manual testing
 Wind.StepTime = 2;
