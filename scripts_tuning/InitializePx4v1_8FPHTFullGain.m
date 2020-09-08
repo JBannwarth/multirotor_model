@@ -37,6 +37,9 @@ InitializeModel
 Ctrl.THROTTLE_HOVER = Uav.THROTTLE_HOVER;
 Ctrl.BYPASS_ROTATION = 1;
 Ctrl.K = K; clearvars K;
+if exist( 'deactivateRotation', 'var' ) && deactivateRotation
+    DeactivateRotationalAeroModel
+end
 
 %% Find operating point
 toLoad = { 'attRatePID' };
