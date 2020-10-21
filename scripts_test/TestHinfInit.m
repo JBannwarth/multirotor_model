@@ -21,15 +21,15 @@ r = 0.0001;
 %% Weighting functions
 % Actuator weighting functions
 order = 1;
-wCorner = 0.1*2*pi; % rad/s
+wCorner = 1*2*pi; % rad/s
 if order == 1
     % First order lead-lag compensators
     k1 = wCorner;     % rad/s
     k2 = wCorner*10; % rad/s
     k3 = wCorner;     % rad/s
     k4 = wCorner/10; % rad/s
-    tfAct1 = db2mag(-10)*tf( 10*[1 k1], [1,k2] );
-    tfAct2 = db2mag(-10)*tf(     [1 k3], [1,k4] );
+    tfAct1 = db2mag(0)*tf( 10*[1 k1], [1,k2] );
+    tfAct2 = db2mag(0)*tf(     [1 k3], [1,k4] );
 elseif order == 2
     % Second order butterworth filters
     [num1,den1] = butter( 2, wCorner*10, 'high', 's');
