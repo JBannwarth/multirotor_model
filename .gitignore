@@ -274,6 +274,9 @@ TSWLatexianTemp*
 # standalone packages
 *.sta
 
+# pdfs in top level
+/*.pdf
+
 # folders
 data_results/*
 data_wind/*
