@@ -27,8 +27,23 @@ io(1) = linio( [model, '/Tdes_x'], 1 );
 io(2) = linio( [model, '/Multiply'], 1, 'openoutput' );
 
 linsys = linearize( model, io, op );
-frd = frestimate( model, io, frest.Chirp('FreqRange', [0.1 1000]) );
-test = tfest( frd, 3);
+
+% Validate using nonlinear frequency response
+in = frest.Sinestream(linsys);
+in.Amplitude = 0.1;
+in = frest.Sinestream('Amplitude', in.Amplitude, ...
+    'Frequency', [0.01; in.Frequency], 'NumPeriods', [4; in.NumPeriods], ...
+    'SettlingPeriods', [1; in.SettlingPeriods])
+
+% Switch to accelerator mode to reduce simulation time
+set_param(model, 'AccelVerboseBuild', 'on')
+set_param(model, 'SimulationMode', 'normal');
+
+% Estimate frequency response
+frd = frestimate( model, op, io, in );
+
+%% Fit model
+linsys_frd_3 = tfest( frd, 3 );
 
 % Model reduction
 for i = 1:6
@@ -48,7 +63,7 @@ end
 legend_str{end+1} = 'Original';
 bode(linsys, 'k--', opts)
 legend_str{end+1} = 'FRD';
-bode(frd, opts)
+bode(frd, 'r*', opts)
 legend_str{end+1} = 'Test 2';
-bode(test, '-.', opts)
+bode(linsys_frd_3, '-.', opts)
 legend(legend_str)
