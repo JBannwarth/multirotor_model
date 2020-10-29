@@ -54,7 +54,7 @@ end
 figure('Name', 'Bode plot')
 hold on; grid on; box on
 opts = bodeoptions;
-opts.PhaseWrapping = 'on';
+%opts.PhaseWrapping = 'on';
 opts.FreqUnits = 'Hz';
 for i = 1:length(linsys_simple)
     bode( linsys_simple{i}, opts )
