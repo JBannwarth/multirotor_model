@@ -66,7 +66,10 @@ k7 = 10*2*pi; % rad/s
 
 %% Get model
 % Model without weighting functions
-act1 = tf(a, [1 a]);
+act1 = tf( [[0,1.87197943988383,-755.170330104751,1001631.65638892]], ...
+    [[1,182.254564775044,4903.14232057057,32448.0159675654]])/30.8688;
+
+% act1 = tf(a, [1 a]);
 act2 = tf(b, [1 b]);
 C = [act1, act2];
 G = [ tf(1, [M Cd 0]); tf(1, [M Cd])];
@@ -163,6 +166,8 @@ MatlabToLatexEps( 'bode_dist_to_input_static_2states' )
 % pzmap( CLStatic )
 % grid on; box on
 
+
+%% Check transfer functions
 % Equation derived by hand
 
 num = @(k) ( [k(1,2), (k(1,1) + a*k(1,2) + b*k(1,2)), (a*k(1,1) + b*k(1,1) + a*b*k(1,2)), a*b*k(1,1); % Actuator 1
