@@ -33,11 +33,7 @@ in = frest.Sinestream(linsys);
 in.Amplitude = 0.1;
 in = frest.Sinestream('Amplitude', in.Amplitude, ...
     'Frequency', [0.01; in.Frequency], 'NumPeriods', [4; in.NumPeriods], ...
-    'SettlingPeriods', [1; in.SettlingPeriods])
-
-% Switch to accelerator mode to reduce simulation time
-set_param(model, 'AccelVerboseBuild', 'on')
-set_param(model, 'SimulationMode', 'normal');
+    'SettlingPeriods', [1; in.SettlingPeriods]);
 
 % Estimate frequency response
 frd = frestimate( model, op, io, in );
@@ -47,23 +43,58 @@ linsys_frd_3 = tfest( frd, 3 );
 
 % Model reduction
 for i = 1:6
-    linsys_simple{i} = balred(linsys,i);
+    linsys_simple{i} = balred( linsys, i );
 end
 
-%% Plot results
+% Try different method
+linsys_simple_2 = reduce( linsys, 2 )
+
+%% Plot results - Bode Plots
 figure('Name', 'Bode plot')
 hold on; grid on; box on
 opts = bodeoptions;
-%opts.PhaseWrapping = 'on';
+opts.PhaseWrapping = 'on';
 opts.FreqUnits = 'Hz';
 for i = 1:length(linsys_simple)
     bode( linsys_simple{i}, opts )
-    legend_str{i} = sprintf('Order = %d', i);
+    legendStr{i} = sprintf('Order = %d', i);
 end
-legend_str{end+1} = 'Original';
+legendStr{end+1} = 'Original';
 bode(linsys, 'k--', opts)
-legend_str{end+1} = 'FRD';
+legendStr{end+1} = 'FRD';
 bode(frd, 'r*', opts)
-legend_str{end+1} = 'Test 2';
-bode(linsys_frd_3, '-.', opts)
-legend(legend_str)
+legendStr{end+1} = 'Test 2';
+bode(linsys_simple_2, '-.', opts)
+legend(legendStr)
+
+%% Plot results - Steps
+figure('Name', 'Steps')
+hold on; grid on; box on
+for i = 1:length(linsys_simple)
+    step( linsys_simple{i} )
+    legendStr{i} = sprintf('Order = %d', i);
+end
+legendStr{end+1} = 'Original';
+step(linsys, 'k--')
+legendStr{end+1} = 'Test 2';
+step(linsys_simple_2, '-.')
+legend(legendStr)
+
+%% Plot results - Sinusoidal
+t = 0:0.01:4;
+u = sin(10*t);
+figure('Name', 'Sinusoid')
+hold on; grid on; box on
+for i = 1:length(linsys_simple)
+    lsim( linsys_simple{i}, u, t )
+    legendStr{i} = sprintf('Order = %d', i);
+end
+legendStr{end+1} = 'Original';
+lsim(linsys, u, t, 'k--')
+legendStr{end+1} = 'Test 2';
+lsim(linsys_simple_2, u, t, '-.')
+legend(legendStr)
+
+%% Save results
+pitchTF = tf( linsys_simple_2 );
+save( fullfile( projectRoot, 'work', 'pitch_tf' ), 'pitchTF' )

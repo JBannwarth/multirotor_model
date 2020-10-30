@@ -7,6 +7,7 @@ addpath( fullfile( projectRoot, 'libraries', 'hanso' ) )
 
 % Load data
 load( fullfile( projectRoot, 'data_wind', 'TurbSimOC', 'TurbSim_50_01.mat' ) )
+load( fullfile( projectRoot, 'work', 'pitch_tf' ) )
 
 % Plant
 M = 1; % kg
@@ -66,8 +67,7 @@ k7 = 10*2*pi; % rad/s
 
 %% Get model
 % Model without weighting functions
-act1 = tf( [[0,1.87197943988383,-755.170330104751,1001631.65638892]], ...
-    [[1,182.254564775044,4903.14232057057,32448.0159675654]])/30.8688;
+act1 = pitchTF;
 
 % act1 = tf(a, [1 a]);
 act2 = tf(b, [1 b]);
