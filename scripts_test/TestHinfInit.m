@@ -22,7 +22,7 @@ r = 0.0001;
 %% Weighting functions
 % Actuator weighting functions
 order = 1;
-wCorner = 1*2*pi; % rad/s
+wCorner = 0.1*2*pi; % rad/s
 if order == 1
     % First order lead-lag compensators
     k1 = wCorner;     % rad/s
@@ -67,7 +67,11 @@ k7 = 10*2*pi; % rad/s
 
 %% Get model
 % Model without weighting functions
-act1 = pitchTF;
+if exist( 'pitchTF', 'var' )
+    act1 = pitchTF;
+else
+    error( 'Make sure to run AnalysePitchTimeConstant to generate pitchTF' )
+end
 
 % act1 = tf(a, [1 a]);
 act2 = tf(b, [1 b]);
