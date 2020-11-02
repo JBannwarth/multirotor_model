@@ -47,7 +47,7 @@ for i = 1:6
 end
 
 % Try different method
-linsys_simple_2 = reduce( linsys, 2 )
+linsys_simple_2 = reduce( linsys, 2 );
 
 %% Plot results - Bode Plots
 figure('Name', 'Bode plot')
@@ -70,6 +70,7 @@ legend(legendStr)
 %% Plot results - Steps
 figure('Name', 'Steps')
 hold on; grid on; box on
+clearvars legendStr
 for i = 1:length(linsys_simple)
     step( linsys_simple{i} )
     legendStr{i} = sprintf('Order = %d', i);
@@ -85,6 +86,7 @@ t = 0:0.01:4;
 u = sin(10*t);
 figure('Name', 'Sinusoid')
 hold on; grid on; box on
+clearvars legendStr
 for i = 1:length(linsys_simple)
     lsim( linsys_simple{i}, u, t )
     legendStr{i} = sprintf('Order = %d', i);
