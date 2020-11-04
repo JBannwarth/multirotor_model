@@ -24,7 +24,8 @@ pwmIn = Ctrl.THROTTLE_HOVER;
 %% Get linear model and reduce it
 op = findop( model );
 io(1) = linio( [model, '/Tdes_x'], 1 );
-io(2) = linio( [model, '/Multiply'], 1, 'openoutput' );
+io(2) = linio( [model, '/Thordes_x'], 1 );
+io(3) = linio( [model, '/SumOut'], 1, 'openoutput' );
 
 linsys = linearize( model, io, op );
 
@@ -32,8 +33,8 @@ linsys = linearize( model, io, op );
 in = frest.Sinestream(linsys);
 in.Amplitude = 0.1;
 in = frest.Sinestream('Amplitude', in.Amplitude, ...
-    'Frequency', [0.01; in.Frequency], 'NumPeriods', [4; in.NumPeriods], ...
-    'SettlingPeriods', [1; in.SettlingPeriods]);
+    'Frequency', [in.Frequency], 'NumPeriods', [in.NumPeriods], ...
+    'SettlingPeriods', [in.SettlingPeriods]);
 
 % Estimate frequency response
 frd = frestimate( model, op, io, in );
