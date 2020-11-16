@@ -69,6 +69,18 @@ B1 = sys.B(:,1:3);
 % such as ctrb and obsv
 A(abs(A)<1e-10) = 0; B2(abs(B2)<1e-10) = 0; C(abs(C)<1e-10) = 0; D(abs(D)<1e-10) = 0;
 
+% Add integrator for zero steady state error
+A = [ zeros(3, 6)        , eye(3, size(A,2)-3) ;
+      zeros(size(A,2), 3), A                  ];
+B1 = [ zeros(3, size(B1,2)) ;
+       B1                   ];
+B2 = [ zeros(3, size(B2,2)) ;
+       B2                   ];
+C = [eye(3, size(C,2)+3);
+     zeros(size(C,1), 3), C];
+D = [zeros(3, size(D,2)+3);
+     zeros(size(D,1), 3), D];
+
 % Weighting functions
 % Actuators
 % First order lead-lag compensators
@@ -85,7 +97,7 @@ WAct = [ WActHor 0       0       0       0;
          0       0       0       WActAtt 0;
          0       0       0       0       WActAtt];
 
-WReg = diag( [0.1 0.1 0.1 1 1 1] );
+WReg = diag( [1 1 1 1 1 1 1 1 1] );
 WSensor = eye( size(C, 1) );
 WDist = eye( size(B1, 2) );
 
