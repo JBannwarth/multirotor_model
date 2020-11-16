@@ -42,6 +42,8 @@ switch ctrlName
         InitializePx4v1_8IHT
     case 'FPHT'
         InitializePx4v1_8FPHT
+    case 'FPHTFullGain'
+        InitializePx4v1_8FPHTFullGain
     case 'FPHTSimple'
         InitializePx4v1_8FPHTTranslationOnly
     case 'MIS'
