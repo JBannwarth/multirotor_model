@@ -11,6 +11,9 @@ project = simulinkproject; projectRoot = project.RootFolder;
 tTmp = clock;
 outputFile = sprintf( 'StepDist_%s_%d-%02d-%02d_%02d-%02d-%02.f', ctrlName, tTmp(1:6));
 outputFolder = fullfile( projectRoot, 'data_results', 'step_dist' );
+if ~exist(outputFolder, 'dir')
+    mkdir(outputFolder)
+end
 
 %% Load wind data
 ULin = [4 0 0]; % About halfway through the wind tunnel range

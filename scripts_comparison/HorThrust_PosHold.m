@@ -11,6 +11,9 @@ project = simulinkproject; projectRoot = project.RootFolder;
 tTmp = clock;
 outputFile = sprintf( 'PosHold_%s_%d-%02d-%02d_%02d-%02d-%02.f', ctrlName, tTmp(1:6));
 outputFolder = fullfile( projectRoot, 'data_results', 'pos_hold' );
+if ~exist(outputFolder, 'dir')
+    mkdir(outputFolder)
+end
 
 %% Load wind data
 inFolder = fullfile( projectRoot, 'data_wind', 'TurbSimOC' );
