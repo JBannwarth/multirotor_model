@@ -95,11 +95,16 @@ WAct = [ WActHor 0       0       0       0;
          0       WActHor 0       0       0;
          0       0       WActAtt 0       0;
          0       0       0       WActAtt 0;
-         0       0       0       0       WActAtt];
+         0       0       0       0       WActAtt ];
 
 WReg = diag( [1 1 1 1 1 1 1 1 1] );
 WSensor = eye( size(C, 1) );
-WDist = eye( size(B1, 2) );
+wDistU = db2mag(0)        * tf(  24.1184, [1 24.1184] );
+wDistV = db2mag(-17.7392) * tf( 128.8783, [1 128.8783] );
+wDistW = db2mag(-20.1404) * tf( 163.7495, [1 163.7495] );
+WDist = [ wDistU 0      0;
+          0      wDistV 0;
+          0      0      wDistW ];
 
 % Model with weighting functions
 [sysA, sysB, sysC, sysD] = linmod( modelWeight );
@@ -130,3 +135,4 @@ Wind.StepInit = ULin;
 Wind.StepFinal = Wind.StepInit + [3 0 0];
 
 Ctrl.BYPASS_ROTATION = false;
+Ctrl.K = K;
