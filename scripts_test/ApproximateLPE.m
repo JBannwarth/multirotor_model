@@ -6,7 +6,7 @@ project = simulinkproject; projectRoot = project.RootFolder;
 
 %% Load data
 load( fullfile( projectRoot, 'data_results', ...
-    'HoverSim_2020-11-24_16-37-57_OC', 'TurbSim_25_01.mat' ) )
+    'HoverSim_2020-11-25_11-24-29_OC', 'TurbSim_30_01.mat' ) )
 
 %% Extract relevant signals
 tS = output.SimulationMetadata.UserData.Simulation.T_S;
@@ -23,16 +23,22 @@ for ii = 1:length(signals)
         valsMeas = logs.get(signalsMeas{ii}).Values.Data(:,ax);
         
         if length( valsMeas ) < length( vals )
-            [~, idx, ~] = intersect( logs.get(signals{ii}).Values.Time, ...
-                logs.get(signalsMeas{ii}).Values.Time );
+            [~, idx, ~] = intersect( ...
+                tS*round( (1/tS)*logs.get(signals{ii}).Values.Time ), ...
+                tS*round( (1/tS)*logs.get(signalsMeas{ii}).Values.Time ) );
             vals = vals( idx );
         end
-
-        ioData = iddata( vals, valsMeas, tS, ...
+        tSCur = median( diff( logs.get(signalsMeas{ii}).Values.Time ) );
+        ioData = iddata( vals, valsMeas, tSCur, ...
             'InputUnit', units{ii}, ...
             'OutputUnit', units{ii}, ...
             'InputName', [signals{ii} axes{ax}], ...
             'OutputName', [signalsMeas{ii} axes{ax}] );
         est{ii,ax} = tfest( ioData, 1, 0 );
+        if est{ii,ax}.Report.Fit.FitPercent < 80
+            est{ii,ax} = tfest( ioData, 1, 1 );
+        end
+        fprintf( '%s | Fit: %.1f%%\n', [signals{ii} axes{ax}], ...
+            est{ii,ax}.Report.Fit.FitPercent )
     end
 end
