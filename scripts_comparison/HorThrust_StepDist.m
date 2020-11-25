@@ -4,7 +4,7 @@
 
 %% First initialization
 close all; clc; clearvars;
-ctrlName = 'baseline';
+ctrlName = 'FPHTFullGain';
 project = simulinkproject; projectRoot = project.RootFolder;
 
 %% Generate output folder
@@ -37,13 +37,13 @@ end
 %% Finish setting up simulation
 Simulation.TS_MAX = 0.001;
 Simulation.TS_OUT = 0.01;
-Simulation.T_END = 30;
+Simulation.T_END = 50;
 Simulation.T_OUT = Simulation.TS_OUT:Simulation.TS_OUT:Simulation.T_END-Simulation.TS_OUT;
 
 set_param( [model '/Input choice'], 'Value', '3' )
 set_param( [model '/Step wind input'], 'Commented', 'off' )
 
-Wind.StepTime = 5;
+Wind.StepTime = 25;
 Wind.StepInit = ULin;
 Wind.StepFinal = ULin*1.5;
 steps = [3 5 6 7];
