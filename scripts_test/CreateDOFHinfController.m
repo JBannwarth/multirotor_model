@@ -55,8 +55,8 @@ set_param( [model '/Fixed attThrustDes'], 'Value', sprintf( '[%.15e;%.15e;%.15e]
 set_param( [model '/Fixed horThrustDes'], 'Value', sprintf( '[%.15e;%.15e]', op.Input(3).u ) )
 
 io(1) = linio( [model '/Input switch'], 1, 'input' );
-io(2) = linio( [model '/Manual Switch horThrustDes'], 1, 'input' );
-io(3) = linio( [model '/Manual Switch attThrustDes'], 1, 'input' );
+io(2) = linio( [model '/Manual Switch attThrustDes'], 1, 'input' );
+io(3) = linio( [model '/Manual Switch horThrustDes'], 1, 'input' );
 io(4) = linio( [model '/integrator_xiDot'], 1, 'output' );
 io(5) = linio( [model '/integrator_xi'], 1, 'output' );
 sys = linearize( model, io );
@@ -89,19 +89,19 @@ k1 = wCorner;    % rad/s
 k2 = wCorner*10; % rad/s
 k3 = wCorner;    % rad/s
 k4 = wCorner/10; % rad/s
-WActHor = db2mag(0)*tf( 10*[1 k1], [1,k2] );
-WActAtt = db2mag(0)*tf(    [1 k3], [1,k4] );
-WAct = [ WActHor 0       0       0       0;
-         0       WActHor 0       0       0;
+WActAtt = db2mag(-5)*tf( 10*[1 k1], [1,k2] );
+WActHor = db2mag(5)*tf(    [1 k3], [1,k4] );
+WAct = [ WActAtt 0       0       0       0;
+         0       WActAtt 0       0       0;
          0       0       WActAtt 0       0;
-         0       0       0       WActAtt 0;
-         0       0       0       0       WActAtt ];
+         0       0       0       WActHor 0;
+         0       0       0       0       WActHor ];
 
 WReg = diag( [1 1 1 1 1 1 1 1 1] );
 WSensor = eye( size(C, 1) );
-wDistU = db2mag(0)        * tf(  24.1184, [1 24.1184] );
-wDistV = db2mag(-17.7392) * tf( 128.8783, [1 128.8783] );
-wDistW = db2mag(-20.1404) * tf( 163.7495, [1 163.7495] );
+wDistU = db2mag(10)*db2mag(0)        * tf(  24.1184, [1 24.1184] );
+wDistV = db2mag(10)*db2mag(-17.7392) * tf( 128.8783, [1 128.8783] );
+wDistW = db2mag(10)*db2mag(-20.1404) * tf( 163.7495, [1 163.7495] );
 WDist = [ wDistU 0      0;
           0      wDistV 0;
           0      0      wDistW ];
@@ -127,7 +127,7 @@ opts = hinfsynOptions('Display', 'on');
 [K, CLweights, gamma] = hinfsyn(P, nMeas, nCont, opts);
 
 % OPTIONS.nrand = 10;
-% [K, F, VIOL, LOC] = hifoo( P, 1, [], [], [], OPTIONS );
+% [K, F, VIOL, LOC] = hifoo( P, 0, [], [], [], OPTIONS );
 
 %% Prepare for manual testing
 Wind.StepTime = 2;
@@ -136,3 +136,4 @@ Wind.StepFinal = Wind.StepInit + [3 0 0];
 
 Ctrl.BYPASS_ROTATION = false;
 Ctrl.K = K;
+save( fullfile( projectRoot, 'work', 'HinfGain.mat' ), 'K' )
