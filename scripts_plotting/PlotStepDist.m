@@ -150,7 +150,6 @@ for ii = 1:size(figH,2)
     % Controller outputs
     figure( figH(ii,3) )
     legend( axH{ii,3,3}, labels, 'Location', 'Best' )
-    SetFigProp( outSize , fontSize );
     
     % Fix zero
     for jj = 1:2
@@ -167,4 +166,6 @@ for ii = 1:size(figH,2)
         yLim2(3-maxIdx2) = -yLim2(maxIdx2);
         set( gca, 'Ylim', yLim2 )
     end
+    
+    SetFigProp( outSize , fontSize );
 end
