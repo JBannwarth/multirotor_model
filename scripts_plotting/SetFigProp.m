@@ -33,7 +33,18 @@ function SetFigProp(varargin)
     set( findall(gcf, '-property', 'FontSize'), 'FontSize', fontSize )
     set( findall(gcf, '-property', 'Interpreter'), 'Interpreter', 'latex' )
     set( findall(gcf, '-property', 'TickLabelInterpreter'), 'TickLabelInterpreter', 'latex' )
-    set( findall(gcf, '-property', 'XColor'), 'XColor', 'k' )
-    set( findall(gcf, '-property', 'YColor'), 'YColor', 'k' )
-    set( findall(gcf, '-property', 'ZColor'), 'ZColor', 'k' )
+    
+    % Only adjust axes colours if they are not part of the default set, in
+    % order not to break multi-axes plots
+    axs = 'XYZ';
+    defaultColours = lines();
+    for ii = 1:3
+        axHandles = findall(gcf, '-property', [ axs(ii) 'Color' ]);
+        for jj = 1:length( axHandles )
+            if ~nnz( ismember( defaultColours, ...
+                    get( axHandles(jj), [ axs(ii) 'Color' ] ), 'rows' ) )
+                set( axHandles(jj), [ axs(ii) 'Color' ], 'k' );
+            end
+        end
+    end
 end
