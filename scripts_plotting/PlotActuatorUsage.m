@@ -32,8 +32,33 @@ if isempty( idx )
         'speed' ] )
 end
 
-simOut = simOut{idx};
-simIn = simIn{idx};
+simOut = simOut(idx);
+simIn = simIn(idx);
 ULin = ULin(idx, :);
 
 %% Process data
+logsout = simOut.get('logsout');
+pwmData = logsout.get('realPwm').Values;
+t = pwmData.Time;
+pwm = pwmData.Data;
+
+pwmStd = std( pwm, 1 );
+
+fprintf( 'Standard dev. PWM values (us):' )
+for ii = 1:length(pwmStd)
+    fprintf( ' [%d] %.2f,', ii, pwmStd(ii) )
+end
+fprintf( ' [mean] %.2f, [min] %.2f, [max] %.2f\n', mean( pwmStd ), ...
+    min(pwmStd), max(pwmStd) )
+
+%% Plot data
+figSize = [15 15];
+fontSize = 12;
+
+figure( 'name', 'PWM signals' )
+plot( t, pwm )
+xlabel( 'Time (s)' )
+ylabel( 'PWM ($\mu$s)' )
+legend( compose( 'Rotor %d', 1:size(pwm, 2) ), 'location', 'best' )
+title( sprintf( '$\\bar{\\sigma}_\\mathrm{PWM} = %.2f \\,\\mu$s', mean( pwmStd ) ) )
+SetFigProp( figSize, fontSize )
