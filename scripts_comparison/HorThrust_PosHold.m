@@ -34,7 +34,8 @@ if ~exist( 'saveData', 'var' )
 end
 
 % Check the controller exists
-controllers = {'baseline', 'IHT', 'FPHT', 'FPHTSimple', 'MIS'};
+controllers = { 'baseline', 'IHT', 'FPHT', 'FPHTSimple', ...
+    'FPHTFullGain', 'MIS'};
 if ~any( strcmp( controllers, ctrlName ) )
     error( 'Unknown controller name, make sure it is in the list' )
 end
