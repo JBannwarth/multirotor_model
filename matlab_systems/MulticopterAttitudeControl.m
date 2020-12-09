@@ -591,8 +591,8 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
                 % Use the formula z_roll_pitch_sp = R_tilt * [0;0;1]
                 % R_tilt is computed from_euler; only true if cos(roll) not equal zero
                 % -> valid if roll is not +-pi/2;
-                attitude_setpoint.roll_body = -asinf(z_roll_pitch_sp(1));
-                attitude_setpoint.pitch_body = atan2f(z_roll_pitch_sp(0), z_roll_pitch_sp(2));
+                attitude_setpoint.roll_body = -asin(z_roll_pitch_sp(1));
+                attitude_setpoint.pitch_body = atan2(z_roll_pitch_sp(0), z_roll_pitch_sp(2));
             end
             
             % Publish the setpoint
