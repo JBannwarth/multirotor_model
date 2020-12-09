@@ -109,6 +109,7 @@ for ii = 1:length(windInputs)
     simIn(ii) = Simulink.SimulationInput( model );
     simIn(ii) = setVariable( simIn(ii), 'op', ops(ii) );
     simIn(ii) = setVariable( simIn(ii), 'windInput', windInputs{ii} );
+    simIn(ii) = setVariable( simIn(ii), 'windFile', windFiles{ii} );
     fprintf( '[Simulation %02d/%02d] Controller: % 10s, wind: % 20s\n', ...
         ii, length(windInputs), ctrlName, windFiles{ii} );
 end
