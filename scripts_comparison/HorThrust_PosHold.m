@@ -78,12 +78,12 @@ Simulation.TS_MAX = 0.001;
 Simulation.TS_OUT = 0.01;
 if isempty( tEnd ) || ( tEnd < 0 )
     Simulation.T_END = 20;
-else
-    if tEnd > windInputs{1}.Time(end)
+elseif tEnd > windInputs{1}.Time(end)
         warning( [ 'tEnd larger than length of wind profile, setting' ...
             ' it to maximum allowable value' ] )
-    end
     Simulation.T_END = windInputs{1}.Time(end);
+else
+    Simulation.T_END = tEnd;
 end
 
 %% Find OP for different wind speeds
