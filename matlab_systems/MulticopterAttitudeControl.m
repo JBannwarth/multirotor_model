@@ -118,7 +118,9 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
 
     methods(Access = protected)
         function setupImpl( obj )
-            % Perform one-time calculations, such as computing constants
+            %SETUPIMPL Perform one-time calculations, such as computing constants
+            %   Written:       J.X.J. Bannwarth, 2019/01/15
+            %   Last modified: J.X.J. Bannwarth, 2019/01/15
             obj.dt = 1 / obj.loop_update_rate_hz;
             LowPassFilter2pVectorSetCutOffFrequency( obj, obj.loop_update_rate_hz, obj.d_term_cutoff_freq );
             LowPassFilter2pVectorReset( obj, zeros(3,1) );
@@ -142,7 +144,9 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
         end
         
         function resetImpl( obj )
-            % Initialize / reset discrete-state properties
+            %RESETIMPL Initialize / reset discrete-state properties
+            %   Written:       J.X.J. Bannwarth, 2019/01/15
+            %   Last modified: J.X.J. Bannwarth, 2019/01/15
             obj.rates_int                    = zeros(3,1);
             obj.rates_prev                   = zeros(3,1);
             obj.rates_prev_filtered          = zeros(3,1);
@@ -157,6 +161,9 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
         end
 
         function num = getNumOutputsImpl( obj )
+            %GETNUMOUTPUTSIMPL Return number of outputs
+            %   Written:       J.X.J. Bannwarth, 2019/01/15
+            %   Last modified: J.X.J. Bannwarth, 2019/01/15
             if obj.output_rates
                 num = 2;
             else
@@ -165,7 +172,9 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
         end
         
         function num = getNumInputsImpl( obj )
-            % Inputs:
+            %GETNUMINPUTSIMPL Return number of inputs
+            %   Written:       J.X.J. Bannwarth, 2019/01/15
+            %   Last modified: J.X.J. Bannwarth, 2019/01/15
             if obj.simple_mode
                 num = 5;
             else
@@ -174,6 +183,9 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
         end
         
         function varargout = getOutputSizeImpl( obj )
+            %GETOUTPUTSIZEIMPL Return output size(s)
+            %   Written:       J.X.J. Bannwarth, 2019/01/15
+            %   Last modified: J.X.J. Bannwarth, 2019/01/15
             varargout{1} = [8 1];
             if obj.output_rates
                 varargout{2} = [3 1];
@@ -181,6 +193,9 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
         end
         
         function varargout = getOutputDataTypeImpl( obj )
+            %GETOUTPUTDATATYPEIMPL Return output data type(s)
+            %   Written:       J.X.J. Bannwarth, 2019/01/15
+            %   Last modified: J.X.J. Bannwarth, 2019/01/15
             varargout{1} = 'double';
             if obj.output_rates
                 varargout{2} = 'double';
@@ -188,6 +203,9 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
         end
         
         function varargout = isOutputComplexImpl( obj )
+            %ISOUTPUTCOMPLEXIMPL Return whether output is complex
+            %   Written:       J.X.J. Bannwarth, 2019/01/15
+            %   Last modified: J.X.J. Bannwarth, 2019/01/15
             varargout{1} = false;
             if obj.output_rates
                 varargout{2} = false;
@@ -195,6 +213,9 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
         end
         
         function varargout = isOutputFixedSizeImpl( obj )
+            %ISOUTPUTFIXEDSIZEIMPL Return whether output is fixed size
+            %   Written:       J.X.J. Bannwarth, 2019/01/15
+            %   Last modified: J.X.J. Bannwarth, 2019/01/15
             varargout{1} = true;
             if obj.output_rates
                 varargout{2} = true;
@@ -202,8 +223,11 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
         end
 
         function [sz,dt,cp] = getDiscreteStateSpecificationImpl( ~, name )
+            %GETDISCRETESTATESPECIFICATIONIMPL Return specs of des. state
             % Return size, data type, and complexity of discrete-state
             % specified in name
+            %   Written:       J.X.J. Bannwarth, 2019/01/15
+            %   Last modified: J.X.J. Bannwarth, 2019/01/15
             switch name
                 case 'rates_int'
                     sz = [3 1];
@@ -255,12 +279,16 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
         end
         
         function icon = getIconImpl( ~ )
-            % Define icon for System block
+            %GETICONIMPL Define icon for System block
+            %   Written:       J.X.J. Bannwarth, 2019/01/15
+            %   Last modified: J.X.J. Bannwarth, 2019/01/15
             icon = ["MulticopterAttitudeControl","","v1.82"];
         end
 
         function varargout = getInputNamesImpl( obj )
-            % Return input port names for System block
+            %GETINPUTNAMESIMPL Return input port names for System block
+            %   Written:       J.X.J. Bannwarth, 2019/01/15
+            %   Last modified: J.X.J. Bannwarth, 2019/01/15
             if obj.simple_mode
                 varargout = { ...
                     'qDes'      , ...
@@ -282,7 +310,9 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
         end
 
         function varargout = getOutputNamesImpl( obj )
-            % Return input port names for System block
+            %GETOUTPUTNAMESIMPL Return input port names for System block
+            %   Written:       J.X.J. Bannwarth, 2019/01/15
+            %   Last modified: J.X.J. Bannwarth, 2019/01/15
             varargout{1} = 'actuatorsControl';
             if obj.output_rates
                 varargout{2} = 'attRateSp';
@@ -290,13 +320,19 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
         end
         
         function sts = getSampleTimeImpl( obj )
+            %GETSAMPLETIMEIMPL Return sample time of the controller
+            %   Written:       J.X.J. Bannwarth, 2019/01/15
+            %   Last modified: J.X.J. Bannwarth, 2019/01/15
             sts = createSampleTime(obj, 'Type','Discrete', ...
                 'SampleTime', 1/obj.loop_update_rate_hz, ...
                 'OffsetTime', 0);
         end
     
         %% Main function
-        function varargout = stepImpl( obj, varargin )           
+        function varargout = stepImpl( obj, varargin )
+            %STEPIMPL Main function executed at each time step
+            %   Written:       J.X.J. Bannwarth, 2019/01/15
+            %   Last modified: J.X.J. Bannwarth, 2019/01/15
             % Initialize output
             actuators_control = zeros(8,1);
             att_control       = zeros(3,1);
@@ -862,7 +898,7 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
         end
         
         function LowPassFilter2pVectorSetCutOffFrequency( obj, sample_freq, cutoff_freq )
-            %LOWPASSFILTER2PVECTOR3SETCUTOFFFREQUENCY Set cutoff frequency
+            %LOWPASSFILTER2PVECTORSETCUTOFFFREQUENCY Set cutoff frequency
             %   Based on code from PX4 Firmware:
             %       https://github.com/PX4/Firmware/blob/master/src/lib/mathlib/math/filter/LowPassFilter2pVector3f.cpp
             %   Written:       J.X.J. Bannwarth, 2019/01/16
@@ -897,7 +933,7 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
         end
         
         function output = LowPassFilter2pVectorReset( obj, sample )
-            %LOWPASSFILTER2PVECTOR3SETCUTOFFFREQUENCY Set cutoff frequency
+            %LOWPASSFILTER2PVECTORRESET Reset low-pass filter
             %   Based on code from PX4 Firmware:
             %       https://github.com/PX4/Firmware/blob/master/src/lib/mathlib/math/filter/LowPassFilter2pVector3f.cpp
             %   Written:       J.X.J. Bannwarth, 2019/01/16
@@ -935,6 +971,9 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
 
         % Angle/orientation functions
         function euler = QuatToEuler( quat )
+            %QUATTOEULER Convert quaternion to Euler angles
+            %   Written:       J.X.J. Bannwarth, 2019/01/15
+            %   Last modified: J.X.J. Bannwarth, 2019/01/15
             quat_tmp = ones(4,1).*quat;
             euler = MulticopterAttitudeControl.DcmToEuler( MulticopterAttitudeControl.QuatToDcm( quat_tmp ) );
         end
@@ -1187,10 +1226,16 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
         
         % Math functions
         function out = normalize( in )
+            %NORMALIZE Normalise vector
+            %   Written:       J.X.J. Bannwarth, 2019/01/15
+            %   Last modified: J.X.J. Bannwarth, 2019/01/15
             out = in ./ norm(in);
         end
         
         function y = constrain( x, x_min, x_max )
+            %CONSTRAIN Constrain value between minimum and maximum
+            %   Written:       J.X.J. Bannwarth, 2019/01/15
+            %   Last modified: J.X.J. Bannwarth, 2019/01/15
             y = max( min(x, x_max), x_min );
         end
         
@@ -1224,7 +1269,7 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
         end
         
         function out = Expo( value, e )
-            %SUPEREXPO So called exponential curve function implementation
+            %EXPO So called exponential curve function implementation
             %   It is essentially a linear combination between a linear and a cubic function.
             %   Input:
             %       - value [-1,1] input value to function
