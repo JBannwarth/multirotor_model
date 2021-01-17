@@ -49,7 +49,7 @@ Uav.NOISE_TS = 0.002;
 %% INITIAL CONDITIONS
 % For quaternion:
 % q = [cos(alpha); sin(alpha)*rotX; sin(alpha)*rotY; sin(alpha)*rotZ]
-% where: - alpha is the angle the UAV is rotated aronud the rotation axis
+% where: - alpha is the angle the UAV is rotated around the rotation axis
 %        - [rotX, rotY, rotZ] is a unit vector defining the rotation axis
 if (~exist('Initial', 'var')) || (~isfield( Initial, 'XI' ))     % Initial position in inertial frame
     Initial.XI      = [0; 0; 0];
