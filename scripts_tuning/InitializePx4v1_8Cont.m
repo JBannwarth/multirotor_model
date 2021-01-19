@@ -1,4 +1,4 @@
-%INITIALIZEPX4V1_CONT Initialise the continuous PX4 implementation
+%INITIALIZEPX4V1_8CONT Initialise the continuous PX4 implementation
 %   Written by:    J.X.J. Bannwarth, 2019/05/15
 %	Last modified: J.X.J. Bannwarth, 2019/05/16
 

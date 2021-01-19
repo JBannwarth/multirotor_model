@@ -1,4 +1,4 @@
-%COMPARESTEADYSTATEHOVERANGLES Compare steady state hover angles
+%PLOTSTEADYSTATEHOVERANGLES Compare steady state hover angles
 %   Written by:    J.X.J. Bannwarth, 2017
 %   Last modified: J.X.J. Bannwarth, 2018/12/10
 close all;

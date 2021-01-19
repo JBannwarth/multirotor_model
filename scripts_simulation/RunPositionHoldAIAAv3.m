@@ -1,6 +1,6 @@
-%RUNPOSITIONHOLDSIM Run simulation for position hold case
+%RUNPOSITIONHOLDAIAAV3 Run simulation for position hold case
 %   Written by:    J.X.J. Bannwarth, 2017
-%   Last Modified: J.X.J. Bannwarth, 2019/04/15
+%   Last Modified: J.X.J. Bannwarth, 2021/01/19
 close all; clc;
 clear all; %#ok<CLALL>
 

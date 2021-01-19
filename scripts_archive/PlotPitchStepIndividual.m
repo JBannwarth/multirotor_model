@@ -1,4 +1,4 @@
-%CHECKATTITUDECONTROLPLOTINDIVIDUAL Plot step responses
+%PLOTPITCHSTEPINDIVIDUAL Plot step responses
 %   Written by: J.X.J. Bannwarth, 2017/08/21
 
 % close all;

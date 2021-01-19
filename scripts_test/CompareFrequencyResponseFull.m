@@ -1,4 +1,4 @@
-%COMPAREFREQUENCYRESPONSE Compare freq. responses of simple and full models
+%COMPAREFREQUENCYRESPONSEFULL Compare freq. responses of simple and full models
 %   Written by:    J.X.J. Bannwarth, 2019/07/17
 %	Last modified: J.X.J. Bannwarth, 2019/07/17
 

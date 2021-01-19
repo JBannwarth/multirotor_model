@@ -1,4 +1,4 @@
-%SWEEPHORTHRUSTGAINTURBULENTWIND Compare pos hold perf for diff gains
+%HORTHRUST_SWEEPHORTHRUSTGAINTURBULENTWIND Compare pos hold perf for diff gains
 %   Written by:    J.X.J. Bannwarth, 2018/03/14
 %	Last modified: J.X.J. Bannwarth, 2019/03/14
 

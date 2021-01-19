@@ -1,4 +1,4 @@
-%CREATEAIRFRAMEDEFINITION Create geometry definition used to compute mixer
+%CREATEGEOMETRYDEFINITION Create geometry definition used to compute mixer
 %   Output: .toml file in PX4 format
 %   See PX4 firmware for an example (retrieved 2019/02/05):
 %       https://github.com/PX4/Firmware/blob/master/src/lib/mixer/geometries/quad_x.toml

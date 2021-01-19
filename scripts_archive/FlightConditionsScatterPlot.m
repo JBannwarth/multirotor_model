@@ -1,3 +1,5 @@
+%FLIGHTCONDITIONSSCATTERPLOT
+%   Written: 2017, J.X.J. Bannwarth
 close all;
 
 plotHeight = 6;

@@ -1,4 +1,4 @@
-%CHECKATTITUDECONTROLPLOT Plot step responses
+%PLOTPITCHSTEPAIAAV3 Plot step responses
 %   Written by: J.X.J. Bannwarth, 2017/08/21
 
 close all; clearvars;

@@ -1,4 +1,4 @@
-%LOADPX4PARAMETERS Load PX4 parameters from structure to Simulink model
+%BACKUPPARAMETERS Back up PX4 parameters from model to structure
 %   Written by: J.X.J. Bannwarth, 2017/09/13
 
 %% Set-up

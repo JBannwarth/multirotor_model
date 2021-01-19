@@ -1,5 +1,4 @@
-% INIT_PARAM.M
-% Initialises parameters for quadcopter model
+%OLDINITIALIZEPARAMETERS Initialises parameters for quadcopter model
 %
 % Model properties based off of the quadcopter used for the ICUAS'16 paper:
 % Bannwarth, J.X.J., Chen, Z.J., Stol, K.A. and MacDonald, B.A. (2016)

@@ -1,4 +1,4 @@
-%PREPAREATTITUDESTEPDATA Prepare step data for attitude validation
+%PREPAREATTITUDESTEPDATASINGLEAXIS Prepare step data for attitude validation
 %   Written by: J.X.J. Bannwarth, 2017/08/21
 
 toPlot = false;

@@ -1,4 +1,4 @@
-%CHECKATTITUDECONTROLPLOTROTDRAG Plot step responses
+%PLOTPITCHSTEPROTDRAG Plot step responses
 %   Written by: J.X.J. Bannwarth, 2017/09/13
 
 % close all;

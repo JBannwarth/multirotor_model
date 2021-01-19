@@ -1,5 +1,5 @@
 function [ ] = PlotTimeseriesSingle( dataset1, signalToPlot )
-%PLOTTIMESERIES Summary of this function goes here
+%PLOTTIMESERIESSINGLE Summary of this function goes here
 %   Detailed explanation goes here
     signalToPlotName = char(signalToPlot.signalName);
     
