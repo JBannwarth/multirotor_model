@@ -1,21 +1,14 @@
-function SetFigProp(varargin)
+function SetFigProp( figSize, fontSize )
 %SETFIGPROP Set figure proportions
 %   SetFigProp()
 %   SetFigProp(figSize)
 %   SetFigProp(figSize, fontSize)
 %   Figsize = [width, height] (cm)
-%   Written by: Z.J. Chen
-%   Last modified by: J.X.J. Bannwarth, 11/10/2017
-
-    fontSize = 12;
-    figSize  = [8, 8];
-    if ~isempty(varargin)
-       figSize = varargin{1}; 
-    end
-    if (length(varargin) == 2)
-        fontSize = varargin{2};
-    elseif (length(varargin) > 2)
-        error('Too many input')
+%   Written:                   Z.J. Chen
+%   Last modified: 2021/01/19, J.X.J. Bannwarth
+    arguments
+        figSize  (1, 2) double {mustBeNumeric,mustBeReal} = [8 8]
+        fontSize (1, 1) double {mustBeNumeric,mustBeReal} = 12
     end
     
     set( findall(gcf, '-property', 'LineWidth'), 'LineWidth', 0.5)
