@@ -1,4 +1,4 @@
-%INITIALIZEPARAMETERSOCTOCOPTER Initialises parameters for octocopter model
+%INITIALIZEPARAMETERSOCTOCOPTERCANTED Init canted octo parameters
 %	Written by:    J.X.J. Bannwarth, 2019/01/09
 %	Last modified: J.X.J. Bannwarth, 2019/05/01
 

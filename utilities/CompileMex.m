@@ -1,3 +1,5 @@
+%COMPILEMEX Compile all mex files in the C code folder [outdated]
+%   Written: 2016, J.X.J. Bannwarth
 function CompileMex()
     currentFolder = pwd;
     project = simulinkproject;
