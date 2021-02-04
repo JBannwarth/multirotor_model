@@ -2,7 +2,7 @@
 %   Last configuration change:
 %       2019/01/09 - Start parameters
 %   Written by:    J.X.J. Bannwarth, 2019/01/09
-%   Last modified: J.X.J. Bannwarth, 2019/07/16
+%   Last modified: J.X.J. Bannwarth, 2021/02/04
 
 %% GEOMETRICAL PARAMETERS
 Uav.D_UAV = 0.5;
@@ -13,8 +13,6 @@ Uav.GAMMA = deg2rad(22.5:45:337.5)'; % Arm angles [rad]
 Uav.N_ROTORS = length(Uav.GAMMA); % Number of rotors [-]
 Uav.L    = (0.5 / 2) * ones(Uav.N_ROTORS,1); % Distances from centre to motor axis [m]
 % Notes:
-%   - Rotor directions for this specific UAV are inverted compared to
-%   default PX4 arrangement
 %   - The terms 'CCW' and 'CW' are defined with respect to the z-axis of
 %   the  motors' frames of reference, which by default are NED and aligned
 %   with the UAV's frame of reference (which is also NED)
