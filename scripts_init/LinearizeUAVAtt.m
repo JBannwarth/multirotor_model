@@ -6,7 +6,7 @@ project = simulinkproject; projectRoot = project.RootFolder;
 
 %% Configuration
 % Wind
-ULin = [3 0 0]';
+ULin = [0 0 0]';
 UStepInit = [3 0 0]';
 UStepEnd  = [5 0 0]';
 stepTime  = 5;
@@ -66,10 +66,17 @@ initAttGuess = [0 -deg2rad(10) 0]';
 
 % States
 stateSpecs = { ...
-               'omega'     , 'Min'  , zeros(Uav.N_ROTORS,1) ;
-               'nuBody'    , 'Known', [1 1 1]'              ;
-               'xiDot'     , 'Known', [1 1 1]'              ;
-               'xi'        , 'Known', [1 1 1]'              };
+               'omega'             , 'Min'  , zeros(Uav.N_ROTORS,1) ;
+               'nuBody'            , 'Known', [1 1 1]'              ;
+               'xiDot'             , 'Known', [1 1 1]'              ;
+               'xi'                , 'Known', [1 1 1]'              ;
+               'AttRatePID_D_roll' , 'Known', [1 1]                 ;
+               'AttRatePID_D_pitch', 'Known', [1 1]                 ;
+               'AttRatePID_D_yaw'  , 'Known', [1 1]                 ;
+               'AttRatePID_I_roll' , 'Known', 1                     ;
+               'AttRatePID_I_pitch', 'Known', 0                     ;
+               'AttRatePID_I_yaw'  , 'Known', 1                     ;
+               };
 
 if getSimulinkBlockHandle( [ model '/Quadrotor Quaternion Model' ]) == -1
     % Using Euler model
@@ -91,8 +98,9 @@ end
 inputSpecs = { ...
                'U'               , 'u'    , ULin         ;
                'U'               , 'Known', [ 1 1 1 ]'   ;
-               'virtualThrustDes', 'Known', [ 0 0 0 ]'   ;
-               'yawDes'          , 'Known', 1;
+               'virtualThrustDes', 'Known', [ 0 1 0 ]'   ;
+               'virtualThrustDes', 'u'    , [ 0 0 -0.5 ]';
+               'yawDes'          , 'Known', 1            ;
                'yawRateDes'      , 'Known', 1            ;
                'horThrustDes'    , 'Known', [ 1 1 ]'     ;
                };
