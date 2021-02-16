@@ -7,7 +7,6 @@
 loadBuses = false;
 InitializeParametersOctocopterCanted
 InitializeModel
-Uav.ROTOR_DIRECTION = Uav.ROTOR_DIRECTION .* -1;
 
 a = 2 / ( sin(Uav.CANT_ANGLE) );
 b = tan( Uav.BETA(1) );

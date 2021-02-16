@@ -12,8 +12,7 @@ Uav.A_PROP = (pi*Uav.D_PROP^2)/4;
 Uav.GAMMA = deg2rad(22.5:45:337.5)'; % Arm angles [rad]
 Uav.N_ROTORS = length(Uav.GAMMA); % Number of rotors [-]
 Uav.L    = (0.5 / 2) * ones(Uav.N_ROTORS,1); % Distances from centre to motor axis [m]
-% Note: rotor directions are inverted compared to default PX4 arrangement
-Uav.ROTOR_DIRECTION = (-1).^((1:Uav.N_ROTORS)-1); % 1 = CCW, -1 = CW [-]
+Uav.ROTOR_DIRECTION = -(-1).^(1:Uav.N_ROTORS); % 1 = CCW, -1 = CW [-]
 % Rotation matrices from motor to body frame for each rotor
 % E.g. Non-rotated rotors (rotors parallel to body z-axis)
 %      [ 1 0 0 | 1 0 0 | 1 0 0 | 1 0 0

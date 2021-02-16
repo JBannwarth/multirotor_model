@@ -16,7 +16,7 @@ Uav.L    = (0.5 / 2) * ones(Uav.N_ROTORS,1); % Distances from centre to motor ax
 %   - The terms 'CCW' and 'CW' are defined with respect to the z-axis of
 %   the  motors' frames of reference, which by default are NED and aligned
 %   with the UAV's frame of reference (which is also NED)
-Uav.ROTOR_DIRECTION = (-1).^(1:Uav.N_ROTORS); % 1 = CCW, -1 = CW [-]
+Uav.ROTOR_DIRECTION = -(-1).^(1:Uav.N_ROTORS); % 1 = CCW, -1 = CW [-]
 % Rotation matrices from motor to body frame for each rotor
 % E.g. Non-rotated rotors (rotors parallel to body z-axis)
 %      [ 1 0 0 | 1 0 0 | 1 0 0 | 1 0 0

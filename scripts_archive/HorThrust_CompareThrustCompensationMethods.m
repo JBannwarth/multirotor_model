@@ -45,7 +45,6 @@ set_param( [model '/Sinusoidal input'], 'commented', 'on' )
 loadBuses = false;
 InitializeParametersOctocopterCanted
 InitializeModel
-Uav.ROTOR_DIRECTION = Uav.ROTOR_DIRECTION .* -1;
 Motor.K = 0.5*Uav.RHO_AIR*Uav.D_PROP^2*Uav.A_PROP*Aero.Cz2.coefs(2);
 
 % Set controller parameters
