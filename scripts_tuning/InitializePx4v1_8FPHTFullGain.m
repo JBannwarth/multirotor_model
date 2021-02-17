@@ -15,7 +15,7 @@ end
 
 %% Load parameters
 load_system( model )
-load( fullfile( projectRoot, 'work', 'HinfGain.mat' ) )
+load( fullfile( projectRoot, 'work', 'HinfGain.mat' ), 'K' )
 
 % Get wind data and aero parameters
 load( fullfile( projectRoot, 'data_misc', 'AeroBodyOrientedAIAAv3' ) );
