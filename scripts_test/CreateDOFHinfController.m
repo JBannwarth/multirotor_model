@@ -1,5 +1,14 @@
 %CREATEDOFHINFCONTROLLER Create dynamic output feedback Hinf controller
-%   Written by:    J.X.J. Bannwarth, 2020/11/05
+%
+%   Reads Octocopter_LinMod_Att from the work folder. This file is created
+%   by running LinearizeUavAtt.
+%   Also loads simulation parameters for manual testing on linearised
+%   model.
+%
+%   See also LINEARIZEUAVATT, WEIGHTEDHINFMODEL, HINFMODELLINEAR, 
+%   MULTIROTORSIMPX4V1_8FPHTFULLGAINMATRIX.
+%
+%   Written: 2020/11/05, J.X.J. Bannwarth
 
 %% Initialization
 close all; clc; clearvars;
@@ -7,79 +16,78 @@ project = simulinkproject; projectRoot = project.RootFolder;
 addpath( fullfile( projectRoot, 'libraries', 'hifoo' ) )
 addpath( fullfile( projectRoot, 'libraries', 'hanso' ) )
 
-%% Load wind data
-ULin = [4 0 0];
+weightedModel = 'WeightedHinfModel';
 
-%% Set up simulation
-Simulation.TS_MAX = 0.001;
-Simulation.TS_OUT = 0.01;
-Simulation.T_END = 30; % windInputs{1}.Time(end);
+%% Load and prepare linearised model
+load( fullfile( projectRoot, 'work', 'Octocopter_LinMod_Att' ), ...
+    'linsys', 'op', 'ULin' )
 
-%% Simulation parameters - simple
-model = 'MultirotorSimPlantSimpleForceControl';
-modelWeight = 'WeightedHinfModel';
+% Rearrange states in order: [xi; xiDot; eta; nuBody; omega; pidStates]
+% Find indexes of main states
+xiIdx      = find( strcmp( linsys.StateName, 'xi' ) );
+xiDotIdx   = find( strcmp( linsys.StateName, 'xiDot' ) );
+etaIdx     = find( strcmp( linsys.StateName, 'eta' ) );
+nuBodyIdx  = find( strcmp( linsys.StateName, 'nuBody' ) );
+omegaIdx   = find( strcmp( linsys.StateName, 'omega' ) );
 
-%% Load parameters
-load_system( model )
-load_system( modelWeight )
+% Find remaining indexes (PID integrators, etc.)
+remIdx = ones( size( linsys.StateName ) );
+remIdx( [xiIdx; xiDotIdx; etaIdx; nuBodyIdx; omegaIdx] ) = 0;
+remIdx = find( remIdx );
 
-% Get wind data and aero parameters
-load( fullfile( projectRoot, 'data_misc', 'AeroBodyOrientedAIAAv3' ) );
-load( fullfile( projectRoot, 'data_wind', 'TurbSimOC', 'TurbSim_40_01' ) );
+linsys = xperm( linsys, [ xiIdx; xiDotIdx; etaIdx; nuBodyIdx; omegaIdx; remIdx ] );
 
-% Coment out what might cause issues
-set_param( [model '/Sinusoidal input']  , 'Commented', 'on' )
-set_param( [model '/Varying wind input'], 'Commented', 'on' )
-set_param( [model '/Step wind input']   , 'Commented', 'on' )
-set_param( [model '/Manual Switch attThrustDes'], 'sw', '0' )
-set_param( [model '/Manual Switch horThrustDes'], 'sw', '0' )
+%% Get state and input indexes
+% Use variables instead of hardcoding states
+% Select output states - indexes will have changed because of xperm call
+xiIdx      = find( strcmp( linsys.StateName, 'xi' ) );
+xiDotIdx   = find( strcmp( linsys.StateName, 'xiDot' ) );
+outputIdx = [xiIdx; xiDotIdx];
 
-% Load UAV parameters
-loadBuses = false;
-InitializeParametersOctocopterCanted
-InitializeModel
-Ctrl.THROTTLE_HOVER = Uav.THROTTLE_HOVER;
+% Get input indexes - note that there is no function for rearranging the
+% inputs in SS object
+virThrustIdx = find( contains( linsys.InputName, 'virtualThrustDes' ) );
+horThrustIdx = find( contains( linsys.InputName, 'horThrustDes' ) );
+yawIdx       = find( contains( linsys.InputName, 'yaw' ) );
+windIdx      = find( contains( linsys.InputName, '/U' ) );
 
-% Set wind speed
-set_param( [model '/Input choice'], 'Value', '2' )
-set_param( [model '/Fixed wind input'], 'Value', sprintf( '[%.15e;%.15e;%.15e]', ULin ) )
-
-%% Find operating point
-toLoad = { 'posOnly', 'fullInputThrustControl' };
-FindOpPx4v1_8Cont
-
-%% Finish setting up simulation
-set_param( [model '/Manual Switch attThrustDes'], 'sw', '1' )
-set_param( [model '/Manual Switch horThrustDes'], 'sw', '1' )
-set_param( [model '/Fixed attThrustDes'], 'Value', sprintf( '[%.15e;%.15e;%.15e]', op.Input(2).u ) )
-set_param( [model '/Fixed horThrustDes'], 'Value', sprintf( '[%.15e;%.15e]', op.Input(3).u ) )
-
-io(1) = linio( [model '/Input switch'], 1, 'input' );
-io(2) = linio( [model '/Manual Switch attThrustDes'], 1, 'input' );
-io(3) = linio( [model '/Manual Switch horThrustDes'], 1, 'input' );
-io(4) = linio( [model '/integrator_xiDot'], 1, 'output' );
-io(5) = linio( [model '/integrator_xi'], 1, 'output' );
-sys = linearize( model, io );
-sys = xperm( sys, [ 1:6 7 9 8 10 11 12 ] );
+% Separate into control inputs and disturbance inputs
+controlIdx = [virThrustIdx; horThrustIdx; yawIdx];
+distIdx    = windIdx;
 
 %% Design controller
-A = sys.A; B2 = sys.B(:,4:end); C = sys.C(1:6,:); D = sys.D(1:6,4:end);
-B1 = sys.B(:,1:3);
+% Extract state space matrices
+A  = linsys.A;
+B1 = linsys.B(:, distIdx);
+B2 = linsys.B(:, controlIdx);
+C  = linsys.C(outputIdx, :);
+D  = linsys.D(outputIdx, controlIdx);
+
 % Zero extremely small elements to get accurate answers when doing tests
 % such as ctrb and obsv
-A(abs(A)<1e-10) = 0; B2(abs(B2)<1e-10) = 0; C(abs(C)<1e-10) = 0; D(abs(D)<1e-10) = 0;
+tol = 1e-10;
+A(abs(A) < tol)   = 0;
+B1(abs(B1) < tol) = 0;
+B2(abs(B2) < tol) = 0;
+C(abs(C) < tol)   = 0;
+D(abs(D) < tol)   = 0;
+
+% Sizes
+n = size( linsys.A, 1 );
+m1 = length( distIdx );
+m2 = length( controlIdx );
+p = length( outputIdx );
 
 % Add integrator for zero steady state error
-A = [ zeros(3, 6)        , eye(3, size(A,2)-3) ;
-      zeros(size(A,2), 3), A                  ];
-B1 = [ zeros(3, size(B1,2)) ;
-       B1                   ];
-B2 = [ zeros(3, size(B2,2)) ;
-       B2                   ];
-C = [eye(3, size(C,2)+3);
-     zeros(size(C,1), 3), C];
-D = [zeros(3, size(D,2)+3);
-     zeros(size(D,1), 3), D];
+A = [ zeros(n+3, 3), [ eye(3, n); A ] ];
+B1 = [ zeros(3, m1) ;
+       B1           ];
+B2 = [ zeros(3, m2) ;
+       B2           ];
+C = [ eye(3, n+3)    ;
+      zeros(p, 3), C ];
+D = [ zeros(3, m2) ;
+      D            ];
 
 % Weighting functions
 % Actuators
@@ -90,12 +98,15 @@ k2 = wCorner*10; % rad/s
 k3 = wCorner;    % rad/s
 k4 = wCorner/10; % rad/s
 WActAtt = db2mag(-5)*tf( 10*[1 k1], [1,k2] );
-WActHor = db2mag(5)*tf(    [1 k3], [1,k4] );
-WAct = [ WActAtt 0       0       0       0;
-         0       WActAtt 0       0       0;
-         0       0       WActAtt 0       0;
-         0       0       0       WActHor 0;
-         0       0       0       0       WActHor ];
+WActHor = db2mag(5) *tf(    [1 k3], [1,k4] );
+WActYaw = db2mag(0) *tf(    [1 k1], [1,k2] );
+WAct = [ WActAtt 0       0       0       0       0       0       ;
+         0       WActAtt 0       0       0       0       0       ;
+         0       0       WActAtt 0       0       0       0       ;
+         0       0       0       WActHor 0       0       0       ;
+         0       0       0       0       WActHor 0       0       ;
+         0       0       0       0       0       WActYaw 0       ;
+         0       0       0       0       0       0       WActYaw ];
 
 WReg = diag( [1 1 1 1 1 1 1 1 1] );
 WSensor = eye( size(C, 1) );
@@ -107,19 +118,19 @@ WDist = [ wDistU 0      0;
           0      0      wDistW ];
 
 % Model with weighting functions
-[sysA, sysB, sysC, sysD] = linmod( modelWeight );
-n = size(sysA,1);
-m = size(sysB,2);
-q = size(sysC,1);
+[AHat, BHat, CHat, DHat] = linmod( weightedModel );
+nHat = size(AHat,1);
+mHat = size(BHat,2);
+pHat = size(CHat,1);
 nMeas = size(C, 1);
 nCont = size(B2, 2);
-P = ss(sysA, sysB, sysC, sysD);
+P = ss(AHat, BHat, CHat, DHat);
 
 % Add information about index partitioning to SS object
-inputGroup.U1 = 1:(m-nCont);
-inputGroup.U2 = (m-nCont+1):m;
-outputGroup.Y1 = 1:(q-nMeas);
-outputGroup.Y2 = (q-nMeas+1):q;
+inputGroup.U1 = 1:(mHat-nCont);
+inputGroup.U2 = (mHat-nCont+1):mHat;
+outputGroup.Y1 = 1:(pHat-nMeas);
+outputGroup.Y2 = (pHat-nMeas+1):pHat;
 set( P, 'InputGroup' , inputGroup );
 set( P, 'OutputGroup', outputGroup );
 
@@ -136,4 +147,4 @@ Wind.StepFinal = Wind.StepInit + [3 0 0];
 
 Ctrl.BYPASS_ROTATION = false;
 Ctrl.K = K;
-save( fullfile( projectRoot, 'work', 'HinfGain.mat' ), 'K' )
+save( fullfile( projectRoot, 'work', 'HinfGain.mat' ), 'K', 'ULin' )
