@@ -1,6 +1,7 @@
 %HORTHRUST_POSHOLD Run position hold for des. controller and wind profile(s)
 %   Inputs:
-%       - ctrlName : 'baseline', 'IHT', 'FPHT', 'FPHTSimple', or 'MIS'
+%       - ctrlName : 'baseline', 'IHT', 'FPHT', 'FPHTSimple',
+%                    'FPHTFullGain', or 'MIS'
 %       - windFiles: wind profiles to run position hold for (default: all)
 %       - tEnd     : how long to run simulation for (default: until end of
 %                    wind file)
@@ -14,7 +15,7 @@
 %         from the base workspace
 %
 %   Written by:    J.X.J. Bannwarth, 2019/05/16
-%   Last modified: J.X.J. Bannwarth, 2020/12/09
+%   Last modified: J.X.J. Bannwarth, 2020/02/17
 
 %% Input processing
 if ~exist( 'ctrlName', 'var' )
