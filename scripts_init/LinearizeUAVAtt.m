@@ -1,14 +1,18 @@
 %LINEARIZEUAVATT Linearize UAV model with attitude controller
-%   Written by:    J.X.J. Bannwarth, 2019/05/02
+%
+%   See also MULTIROTORSIMPX4V1_8CONTATTONLYFORCECONTROL,
+%   CREATEDOFHINFCONTROLLER.
+%
+%   Written: 2019/05/02, J.X.J. Bannwarth
 
 clearvars;
 project = simulinkproject; projectRoot = project.RootFolder;
 
 %% Configuration
 % Wind
-ULin = [0 0 0]';
-UStepInit = [3 0 0]';
-UStepEnd  = [5 0 0]';
+ULin = [5 0 0];
+UStepInit = [3 0 0];
+UStepEnd  = [5 0 0];
 stepTime  = 5;
 
 % Model
@@ -160,4 +164,5 @@ end
 
 linsys = linearize( model, io, op );
 
-% save( fullfile( projectRoot, 'work', 'Octocopter_LinMod_Att'), 'linsys', 'op' )
+save( fullfile( projectRoot, 'work', 'Octocopter_LinMod_Att'), ...
+    'linsys', 'op', 'ULin' )
