@@ -37,6 +37,7 @@ end
 maxLen = max( cellfun( @(s)(length(s)), resultFile ) );
 
 %% Process results
+hXi = figure( 'Name', 'xi' );
 for ii = 1:length( resultFile )
     %% Load data and select desired response
     load( fullfile( resultFolder, resultFile{ii} ), 'ULin', 'simIn', 'simOut'  )
@@ -83,4 +84,17 @@ for ii = 1:length( resultFile )
     title( sprintf( '$\\bar{\\sigma}_\\mathrm{PWM} = %.2f \\,\\mu$s', ...
         mean( pwmStd ) ) )
     SetFigProp( figSize, fontSize )
+    
+    % Plot position error
+    set( 0, 'CurrentFigure', hXi )
+    xi = logsout.get('xi').Values;
+    axs = {'North, x', 'East, y', 'Down, z'};
+    for jj = 1:3
+        subplot( 3, 1, jj )
+        hold on; grid on; box on
+        plot( xi.Time, xi.Data(:,jj) )
+        ylabel( sprintf( '%s pos (m)', axs{jj} ) )
+    end
+    xlabel( 'Time (s)' )
+    legend( 'FPHT', 'BL' )
 end
