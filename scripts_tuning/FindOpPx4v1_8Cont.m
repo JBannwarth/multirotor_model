@@ -150,3 +150,6 @@ set_param( model, 'InitialState', 'getstatestruct(op)' );
 
 % Go back to initial input
 set_param( [model '/Input choice'], 'Value', initInput );
+
+% Switch off rotation bypass
+Ctrl.BYPASS_ROTATION = 0;
