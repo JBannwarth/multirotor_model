@@ -9,7 +9,9 @@ project = simulinkproject; projectRoot = project.RootFolder;
 model = 'MultirotorSimPx4v1_8FPHTTranslationOnlyForceControl';
 Simulation.TS_MAX = 0.001;
 Simulation.TS_OUT = 0.01;
-Simulation.T_END = 20;
+if ~isfield( Simulation, 'T_END' )
+    Simulation.T_END = 20;
+end
 
 %% Load parameters
 load_system( model )
