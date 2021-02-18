@@ -77,7 +77,7 @@ for ii = 1:length(windFiles)
 end
 clearvars windInput
 
-%% Set up simulation
+%% Set up simulation length
 if isempty( tEnd ) || ( tEnd < 0 )
     % Default to length of wind file
     tEnd = windInputs{1}.Time(end);
