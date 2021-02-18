@@ -14,6 +14,8 @@
 %   Note: cannot be written as a function because operspec always reads
 %         from the base workspace
 %
+%   See also PLOTACTUATORUSAGE.
+%
 %   Written by:    J.X.J. Bannwarth, 2019/05/16
 %   Last modified: J.X.J. Bannwarth, 2020/02/17
 
