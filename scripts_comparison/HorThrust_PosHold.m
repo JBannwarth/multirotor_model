@@ -78,33 +78,20 @@ end
 clearvars windInput
 
 %% Set up simulation
-Simulation.TS_MAX = 0.001;
-Simulation.TS_OUT = 0.01;
 if isempty( tEnd ) || ( tEnd < 0 )
-    Simulation.T_END = 20;
+    % Default to length of wind file
+    tEnd = windInputs{1}.Time(end);
 elseif tEnd > windInputs{1}.Time(end)
-        warning( [ 'tEnd larger than length of wind profile, setting' ...
-            ' it to maximum allowable value' ] )
-    Simulation.T_END = windInputs{1}.Time(end);
-else
-    Simulation.T_END = tEnd;
+    % Later than end of wind file
+    warning( [ 'tEnd larger than length of wind profile, setting' ...
+        ' it to maximum allowable value' ] )
+    tEnd = windInputs{1}.Time(end);
 end
 
-%% Find OP for different wind speeds
-switch ctrlName
-    case 'baseline'
-        InitializePx4v1_8Cont
-    case 'IHT'
-        InitializePx4v1_8IHT
-    case 'FPHT'
-        InitializePx4v1_8FPHT
-    case 'FPHTFullGain'
-        InitializePx4v1_8FPHTFullGain
-    case 'FPHTSimple'
-        InitializePx4v1_8FPHTTranslationOnly
-    case 'MIS'
-        InitializePx4v1_8MIS
-end
+%% Initialize and find OP for different wind speeds
+[ Aero, Ctrl, Initial, model, Motor, Simulation, Uav, ~, toLoad ] = InitializePx4( ...
+    ctrlName, tEnd );
+FindOpPx4v1_8Cont
 
 %% Finish setting up simulation
 set_param( [model '/Input choice'], 'Value', '1' )
