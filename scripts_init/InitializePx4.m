@@ -21,7 +21,7 @@ function [Aero, Ctrl, Initial, model, Motor, Simulation, Uav, windInput, toLoad]
 %
 %   Note that this function does not trim the system.
 %
-%   See also FINDOPPX4.
+%   See also FINDOPPX4V1_8CONT.
 %
 %   Written: 2021/02/18, J.X.J. Bannwarth
     arguments
@@ -48,9 +48,7 @@ function [Aero, Ctrl, Initial, model, Motor, Simulation, Uav, windInput, toLoad]
     % Simulation parameters
     Simulation.TS_MAX = 0.001;
     Simulation.TS_OUT = 0.01;
-    if ~isfield( Simulation, 'T_END' )
-        Simulation.T_END = 20;
-    end
+    Simulation.T_END  = tEnd;
 
     %% Load parameters
     load_system( model )
