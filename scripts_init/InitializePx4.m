@@ -25,8 +25,8 @@ function [Aero, Ctrl, Initial, model, Motor, Simulation, Uav, windInput, toLoad]
 %
 %   Written: 2021/02/18, J.X.J. Bannwarth
     arguments
-        ctrlName (1,:) char = 'baseline'
-        tEnd     (1,:) char = 20
+        ctrlName (1,:) char   = 'baseline'
+        tEnd     (1,1) double = 20
     end
     
     %% Set-up
