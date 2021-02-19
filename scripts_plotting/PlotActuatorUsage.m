@@ -30,12 +30,19 @@ end
 
 % Get legends
 legendStr = split( resultFile, '_' );
-legendStr = legendStr(:,:,2);
+if size( legendStr, 2) == 1
+    legendStr = legendStr(2); % 1 file
+else
+    legendStr = legendStr(:,:,2); % > 1 file
+end
 
 if ~exist( 'windFile', 'var' )
     % Select highest wind speed
-    windFile = 'TurbSim_40_01.mat';
+    windFile = 'TurbSim_40_01';
 end
+
+% Strip extensions
+[~, windFile, ~] = fileparts( windFile );
 
 if ~iscell( resultFile )
     % To prevent errors when calling resultFile{ii}
@@ -52,8 +59,15 @@ for ii = 1:length( resultFile )
     load( fullfile( resultFolder, resultFile{ii} ), 'ULin', 'simIn', 'simOut'  )
     fprintf( sprintf('[%% %ds] ', maxLen), resultFile{ii} )
 
-    windFiles = simIn.getVariable( 'windFile' );
-    idx = find( ismember( windFiles, windFile ) );
+    analysedWindFiles = simIn.getVariable( 'windFile' );
+    % Strip extensions
+    [~, analysedWindFiles, ~] = fileparts( analysedWindFiles );
+    if ~iscell(analysedWindFiles)
+        analysedWindFiles = {analysedWindFiles};
+    end
+    
+    % Check the desired wind file exists
+    idx = find( ismember( analysedWindFiles, windFile ) );
     if isempty( idx )
         error( [ 'The result file does not contain results for the desired ' ...
             'speed' ] )
