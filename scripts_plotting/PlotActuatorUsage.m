@@ -19,9 +19,18 @@ resultFolder = fullfile( projectRoot, 'data_results', 'pos_hold' );
 windFolder = fullfile( projectRoot, 'data_wind', 'TurbSimOC' );
 
 if ~exist( 'resultFile', 'var' )
-    % Select latest file
-    resultFile = GetLatestFile( resultFolder, '*.mat' );
+    % Select latest baseline file and latest file
+    resultFile{1} = GetLatestFile( resultFolder, 'PosHold_baseline*.mat' );
+    resultFile{2} = GetLatestFile( resultFolder, '*.mat' );
+    if strcmp( resultFile{1}, resultFile{2} )
+        % Latest file is latest baseline
+        resultFile = resultFile{1};
+    end
 end
+
+% Get legends
+legendStr = split( resultFile, '_' );
+legendStr = legendStr(:,:,2);
 
 if ~exist( 'windFile', 'var' )
     % Select highest wind speed
@@ -56,19 +65,32 @@ for ii = 1:length( resultFile )
 
     %% Process data
     logsout = simOut.get('logsout');
+    
+    % Calculate actuator metrics
     pwmData = logsout.get('realPwm').Values;
     t = pwmData.Time;
     pwm = pwmData.Data;
 
     pwmStd = std( pwm, 1 );
 
-    % Print standard deviations
+    % Print standard deviations of PWM signals
     fprintf( 'PWM std (us):' )
     for jj = 1:length(pwmStd)
         fprintf( ' [%d]% 6.2f,', jj, pwmStd(jj) )
     end
     fprintf( ' [mean]% 6.2f, [min]% 6.2f, [max]% 6.2f\n', mean( pwmStd ), ...
         min(pwmStd), max(pwmStd) )
+    
+    % Calculate position metrics
+    xiRms = rms( logsout.get( 'xi' ).Values.Data );
+    xiMax = max( logsout.get( 'xi' ).Values.Data );
+    
+    % Print position metrics
+    fprintf( sprintf('[%% %ds] ', maxLen), resultFile{ii} )
+    fprintf( 'Pos error (m): [rms] (%.4f, %.4f %.4f) [max] (%.4f, %.4f %.4f)\n', ...
+        xiRms(1), xiRms(2), xiRms(3), xiMax(1), xiMax(2), xiMax(3) )
+    
+    %
 
     %% Plot data
     figSize = [15 15];
@@ -96,5 +118,8 @@ for ii = 1:length( resultFile )
         ylabel( sprintf( '%s pos (m)', axs{jj} ) )
     end
     xlabel( 'Time (s)' )
-    legend( 'FPHT', 'BL' )
 end
+
+% Add legends
+set( 0, 'CurrentFigure', hXi )
+legend( legendStr )
