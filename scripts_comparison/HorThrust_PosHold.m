@@ -75,7 +75,6 @@ for ii = 1:length(windFiles)
     ULin(ii,:) = mean( windInputs{ii} );
     ULin( ULin < 1e-3 ) = 0; % Makes trimming easier
 end
-clearvars windInput
 
 %% Set up simulation length
 if isempty( tEnd ) || ( tEnd < 0 )
@@ -91,6 +90,7 @@ end
 %% Initialize and find OP for different wind speeds
 [ Aero, Ctrl, Initial, model, Motor, Simulation, Uav, ~, toLoad ] = InitializePx4( ...
     ctrlName, tEnd );
+Ctrl.U_OPERATING = [0; 0; -Ctrl.THROTTLE_HOVER; 0; 0];
 FindOpPx4v1_8Cont
 
 %% Finish setting up simulation

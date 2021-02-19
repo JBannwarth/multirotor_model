@@ -20,7 +20,7 @@ set_param( [model '/Input choice'], 'Value', '4' );
 % Need to load data first
 opspec = operspec( model, [size(ULin,1) 1] );
 
-initAttGuess = [0 -deg2rad(10) 0]';
+initAttGuess = [0 -deg2rad(5) 0]';
 
 % States
 if any( strcmp( toLoad, 'posOnly' ) )

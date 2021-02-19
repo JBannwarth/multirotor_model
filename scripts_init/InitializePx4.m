@@ -83,11 +83,12 @@ function [Aero, Ctrl, Initial, model, Motor, Simulation, Uav, windInput, toLoad]
             Ctrl.BYPASS_ROTATION = 1;
             ctrlFile = fullfile( projectRoot, 'work', 'HinfGain.mat' );
             if isfile( ctrlFile )
-                load( ctrlFile, 'K' )
+                load( ctrlFile, 'K', 'thrustOp' )
             else
                 error( 'Controller file %s not found', ctrlFile )
             end
             Ctrl.K = K;
+            Ctrl.U_OPERATING = thrustOp;
         case 'IHT'
             Ctrl.CONTROLLER_TYPE = 3;
     end
