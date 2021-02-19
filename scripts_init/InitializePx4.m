@@ -6,8 +6,8 @@ function [Aero, Ctrl, Initial, model, Motor, Simulation, Uav, windInput, toLoad]
 %
 %   Inputs:
 %       - ctrlName: controller to use. Recognised controllers:
-%                   'baseline', 'IHT', 'MIS', 'FPHT', 'FPHT_FullGain',
-%                   'FPHT_TranslationOnly', 'FPHT_TranslationOnlyThrust'
+%                   'baseline', 'IHT', 'MIS', 'FPHT', 'FPHTFullGain',
+%                   'FPHTTranslationOnly', 'FPHTTranslationOnlyThrust'
 %       - tEnd:     end time of the simulation (default 20s)
 %   Outputs:
 %       - Aero:       aerodynamic model parameters
@@ -36,13 +36,13 @@ function [Aero, Ctrl, Initial, model, Motor, Simulation, Uav, windInput, toLoad]
     %% Simulation parameters
     % Get model name
     ctrlFiles = ...
-        { 'baseline'                  , 'MultirotorSimPx4v1_8Cont' ;
-          'IHT'                       , 'MultirotorSimPx4v1_8IHT'  ;
-          'MIS'                       , 'MultirotorSimPx4v1_8MIS'  ;
-          'FPHT'                      , 'MultirotorSimPx4v1_8FPHT' ;
-          'FPHT_FullGain'             , 'MultirotorSimPx4v1_8FPHTFullGainMatrix'  ;
-          'FPHT_TranslationOnly'      , 'MultirotorSimPx4v1_8FPHTTranslationOnly' ;
-          'FPHT_TranslationOnlyThrust', 'MultirotorSimPx4v1_8FPHTTranslationOnlyForceControl' };
+        { 'baseline'                 , 'MultirotorSimPx4v1_8Cont' ;
+          'IHT'                      , 'MultirotorSimPx4v1_8IHT'  ;
+          'MIS'                      , 'MultirotorSimPx4v1_8MIS'  ;
+          'FPHT'                     , 'MultirotorSimPx4v1_8FPHT' ;
+          'FPHTFullGain'             , 'MultirotorSimPx4v1_8FPHTFullGainMatrix'  ;
+          'FPHTTranslationOnly'      , 'MultirotorSimPx4v1_8FPHTTranslationOnly' ;
+          'FPHTTranslationOnlyThrust', 'MultirotorSimPx4v1_8FPHTTranslationOnlyForceControl' };
     model = ctrlFiles{ strcmp( ctrlFiles(:,1), ctrlName ), 2};
 
     % Simulation parameters
@@ -79,7 +79,7 @@ function [Aero, Ctrl, Initial, model, Motor, Simulation, Uav, windInput, toLoad]
 
     %% Controller-dependent parameters
     switch ctrlName
-        case 'FPHT_FullGain'
+        case 'FPHTFullGain'
             Ctrl.BYPASS_ROTATION = 1;
             ctrlFile = fullfile( projectRoot, 'work', 'HinfGain.mat' );
             if isfile( ctrlFile )
@@ -94,12 +94,12 @@ function [Aero, Ctrl, Initial, model, Motor, Simulation, Uav, windInput, toLoad]
     
     % States for finding operating point
     opSpecs = ...
-        { 'baseline'                  , { 'attRatePID', 'velPID' };
-          'IHT'                       , { 'attRatePID', 'velPID', 'leadComp' };
-          'MIS'                       , { 'attRatePID', 'velPID', 'lpThrust' };
-          'FPHT'                      , { 'attRatePID', 'velD' };
-          'FPHT_FullGain'             , { 'attRatePID' };
-          'FPHT_TranslationOnly'      , { 'posOnly', 'velD' } ;
-          'FPHT_TranslationOnlyThrust', { 'posOnly', 'velD' } };
+        { 'baseline'                 , { 'attRatePID', 'velPID' };
+          'IHT'                      , { 'attRatePID', 'velPID', 'leadComp' };
+          'MIS'                      , { 'attRatePID', 'velPID', 'lpThrust' };
+          'FPHT'                     , { 'attRatePID', 'velD' };
+          'FPHTFullGain'             , { 'attRatePID' };
+          'FPHTTranslationOnly'      , { 'posOnly', 'velD' } ;
+          'FPHTTranslationOnlyThrust', { 'posOnly', 'velD' } };
     toLoad = opSpecs{ strcmp( opSpecs(:,1), ctrlName ), 2};
 end
