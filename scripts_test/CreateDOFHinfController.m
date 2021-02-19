@@ -52,7 +52,7 @@ yawIdx       = find( contains( linsys.InputName, 'yaw' ) );
 windIdx      = find( contains( linsys.InputName, '/U' ) );
 
 % Separate into control inputs and disturbance inputs
-controlIdx = [virThrustIdx; horThrustIdx; yawIdx];
+controlIdx = [virThrustIdx; horThrustIdx];
 distIdx    = windIdx;
 
 %% Design controller
@@ -99,14 +99,11 @@ k3 = wCorner;    % rad/s
 k4 = wCorner/10; % rad/s
 WActAtt = db2mag(-5)*tf( 10*[1 k1], [1,k2] );
 WActHor = db2mag(5) *tf(    [1 k3], [1,k4] );
-WActYaw = db2mag(0) *tf(    [1 k1], [1,k2] );
-WAct = [ WActAtt 0       0       0       0       0       0       ;
-         0       WActAtt 0       0       0       0       0       ;
-         0       0       WActAtt 0       0       0       0       ;
-         0       0       0       WActHor 0       0       0       ;
-         0       0       0       0       WActHor 0       0       ;
-         0       0       0       0       0       WActYaw 0       ;
-         0       0       0       0       0       0       WActYaw ];
+WAct = [ WActAtt 0       0       0       0       ;
+         0       WActAtt 0       0       0       ;
+         0       0       WActAtt 0       0       ;
+         0       0       0       WActHor 0       ;
+         0       0       0       0       WActHor ];
 
 WReg = diag( [1 1 1 1 1 1 1 1 1] );
 WSensor = eye( size(C, 1) );
@@ -140,11 +137,14 @@ opts = hinfsynOptions('Display', 'on');
 % OPTIONS.nrand = 10;
 % [K, F, VIOL, LOC] = hifoo( P, 0, [], [], [], OPTIONS );
 
-%% Prepare for manual testing
-Wind.StepTime = 2;
-Wind.StepInit = ULin;
-Wind.StepFinal = Wind.StepInit + [3 0 0];
+%% Save data
+% Operating point
+for ii = 1:length( op.Inputs )
+    inputNames{ii} = op.Inputs(ii).Block;
+end
+virThrustOp = op.Input( find(contains( inputNames, 'virtualThrust' )) ).u;
+horThrustOp = op.Input( find(contains( inputNames, 'horThrust' )) ).u;
+thrustOp = [ virThrustOp; horThrustOp ];
 
-Ctrl.BYPASS_ROTATION = false;
-Ctrl.K = K;
-save( fullfile( projectRoot, 'work', 'HinfGain.mat' ), 'K', 'ULin' )
+save( fullfile( projectRoot, 'work', 'HinfGain.mat' ), ...
+    'K', 'ULin', 'thrustOp' )
