@@ -11,9 +11,6 @@ project = simulinkproject; projectRoot = project.RootFolder;
 %% Configuration
 % Wind
 ULin = [5 0 0];
-UStepInit = [3 0 0];
-UStepEnd  = [5 0 0];
-stepTime  = 5;
 
 % Model
 model = 'MultirotorSimPx4v1_8ContAttOnlyForceControl';
@@ -53,9 +50,6 @@ end
 loadBuses = false;
 InitializeParametersOctocopterCanted
 InitializeModel
-% Use measured motor thrust constant - more accurate than using the
-% value extrapolated from the static drag testing
-% Aero.Cz2.coefs(2) = Motor.K / (0.5 .* Uav.RHO_AIR .* Uav.D_PROP^2 .* Uav.A_PROP);
 
 %% Trim model
 % Deactivate initial states/input since we aim to find them
