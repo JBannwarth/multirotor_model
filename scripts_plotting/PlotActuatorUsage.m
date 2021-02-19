@@ -104,8 +104,25 @@ for ii = 1:length( resultFile )
     fprintf( 'Pos error (m): [rms] (%.4f, %.4f %.4f) [max] (%.4f, %.4f %.4f)\n', ...
         xiRms(1), xiRms(2), xiRms(3), xiMax(1), xiMax(2), xiMax(3) )
     
-    %
+    % Calculate actuator frequency usage
+    figure( 'name', 'Thrust spectrum' )
+    hold on; grid on; box on
+    attThrust = logsout.get( 'Td' ).Values.Data;
+    for jj = 1:3
+        [ f, P1v ] = SingleSidedSpectrum( t, attThrust(:,jj) );
+        plot( f, P1v )
+    end
+    if ~strcmp( legendStr{ii}, 'baseline' )
+        horThrust = logsout.get( 'horThrustDes' ).Values.Data;
+        [ fx, P1x ] = SingleSidedSpectrum( t, horThrust(:,1) );
+        [ fy, P1y ] = SingleSidedSpectrum( t, horThrust(:,2) );
 
+        plot( fx, P1x, fy, P1y )
+        xlabel( 'f (Hz)' )
+        ylabel( '|P_1(f)|' )
+    end
+    legend( {'axf', 'ayf', 'azf', 'hxf', 'hyf'} )
+    
     %% Plot data
     figSize = [15 15];
     fontSize = 12;
