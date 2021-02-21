@@ -136,7 +136,7 @@ for ii = 1:length( resultFile )
     legend( compose( 'Rotor %d', 1:size(pwm, 2) ), 'location', 'best' )
     title( sprintf( '$\\bar{\\sigma}_\\mathrm{PWM} = %.2f \\,\\mu$s', ...
         mean( pwmStd ) ) )
-    SetFigProp( figSize, fontSize )
+    FormatFigure( figSize, fontSize )
     
     % Plot position error
     set( 0, 'CurrentFigure', hXi )

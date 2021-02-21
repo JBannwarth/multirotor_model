@@ -69,6 +69,6 @@ legend( { 'Des', 'Exp', 'Sim', 'SimRD' }, 'location', 'southeast', 'interpreter'
 
 if ( printResults )
     fileName = [ outFolder '/' fileNameCurrent(1:end-4)];
-    SetFigProp( outSize , fontSize );
-    MatlabToLatexEps( fileName, [], false );
+    FormatFigure( outSize , fontSize );
+    PrintFigure( fileName );
 end

@@ -123,7 +123,7 @@ ylabel( '$z$-error (m)' )
 xlabel( 'Time (s)' )
 legend( {'Exp', 'Sim'}, 'orientation', 'horizontal', 'Location', 'southwest' )
 
-SetFigProp( outSize, fontSize )
+FormatFigure( outSize, fontSize )
 
 % Save simulation results
 if (printResults)
@@ -175,7 +175,7 @@ legend( { '$x_\mathrm{exp}$', '$x_\mathrm{sim}$'  , ...
     'Location', 'northeastoutside', 'interpreter', 'latex' )
 xlabel( '$U_\mathrm{mean}$ (m/s)' )
 ylabel( 'Error standard dev. (m)' )
-SetFigProp
+FormatFigure
 
 %% Plot data - Angles
 c = get(gca,'colororder');
@@ -192,7 +192,7 @@ legend( { '$\phi_\mathrm{exp}$'  , '$\phi_\mathrm{sim}$'  , ...
     'Location', 'northeastoutside', 'interpreter', 'latex' )
 xlabel( '$U_\mathrm{mean}$ (m/s)' )
 ylabel( 'Angle standard dev. ($^\circ$)' )
-SetFigProp
+FormatFigure
 
 figure('name', 'Bannwarth et al. (2018) Fig. 10.b'); grid on; box on; hold on
 ax = { 'roll', 'pitch', 'yaw' };
@@ -202,7 +202,7 @@ plot( meanWindSpeed, meanAngleSim(:,2), 's-' )
 xlabel( '$U_\mathrm{mean}$ (m/s)' )
 ylabel( 'Mean pitch angle ($^\circ$)' )
 legend( 'Exp', 'Sim' )
-SetFigProp
+FormatFigure
 
 %% Export data
 if printResults

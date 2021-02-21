@@ -16,9 +16,9 @@ xlabel('Mean wind speed (m/s)' );
 ylim([-15 0])
 ylabel( 'Mean hover pitch angle ($^\circ$)' );
 legend( {'exp', 'sim'}, 'location', 'northeast' )
-SetFigProp( outSize , fontSize );
+FormatFigure( outSize , fontSize );
 
 if ( printResults )
     fileName = [ outFolder '/' 'PitchMean-' 'simvexp'];
-    MatlabToLatexEps( fileName, [], false );
+    PrintFigure( fileName );
 end

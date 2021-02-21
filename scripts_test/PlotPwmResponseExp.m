@@ -14,6 +14,6 @@ plot(tExp, rad2deg(eulExp.Pitch) );
 xlim([0,inf]);
 xlabel('Time (s)'); ylabel('Pitch (deg)');
 
-SetFigProp([12 15])
+FormatFigure([12 15])
 
-MatlabToLatexEps( 'PwmPitch' )
+PrintFigure( 'PwmPitch' )

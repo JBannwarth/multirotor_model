@@ -197,12 +197,12 @@ end
 % Legend
 set(0, 'currentfigure', f1); set(f1, 'currentaxes', axX);
 legend( compose('Gain = %.2f', gainVals) )
-SetFigProp( [12,20] )
+FormatFigure( [12,20] )
 
 set(0, 'currentfigure', f2); set(f2, 'currentaxes', axRoll);
 legend( compose('Gain = %.2f', gainVals) )
-SetFigProp( [12,20] )
+FormatFigure( [12,20] )
 
 set(0, 'currentfigure', f3); set(f3, 'currentaxes', axTx);
 legend( compose('Gain = %.2f', gainVals) )
-SetFigProp( [12,20] )
+FormatFigure( [12,20] )

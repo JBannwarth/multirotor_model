@@ -125,4 +125,4 @@ xlabel( 'Wind frequency (Hz)' )
 ylabel( 'Gain (dB)' )
 title( 'Solid: pitch torque, dash-dotted: des pitch, dashed: horizontal thrust' )
 
-SetFigProp( outSize , fontSize );
+FormatFigure( outSize , fontSize );

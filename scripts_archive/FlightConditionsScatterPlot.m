@@ -38,7 +38,7 @@ for i = 1:3
     grid on
     ylabel( [ ylabelStr{i} ] )
     legend( {'world', 'body'} )
-    SetFigProp([plotWidth plotHeight], fontSize)
+    FormatFigure([plotWidth plotHeight], fontSize)
 end
 xlabel('time(s)')
 
@@ -53,10 +53,10 @@ xlabel( 'Time (s)' )
 legend( {'Body', 'World (incorrect)'} )
 xlim([-inf,inf])
 ylim([-inf,inf])
-SetFigProp([plotWidth plotHeight], fontSize)
+FormatFigure([plotWidth plotHeight], fontSize)
 
 if saveFigures
-    matlabToLatexEps( [outputFolder 'incidentAngle'], [] )
+    PrintFigure( [outputFolder 'incidentAngle'] )
 end
 
 figure('Name', 'Wind speed'); grid on; box on; hold on;
@@ -66,10 +66,10 @@ xlabel( 'Time (s)' )
 legend( {'Applied', 'Absolute'} )
 xlim([-inf,inf])
 ylim([-inf,inf])
-SetFigProp([plotWidth plotHeight], fontSize)
+FormatFigure([plotWidth plotHeight], fontSize)
 
 if saveFigures
-    matlabToLatexEps( [outputFolder 'windSpeed'], [] )
+    PrintFigure( [outputFolder 'windSpeed'] )
 end
 
 % Find average rotor speed
@@ -80,10 +80,10 @@ ylabel( 'Average rotor speed (RPM)' )
 xlabel( 'Time (s)' )
 xlim([-inf,inf])
 ylim([-inf,inf])
-SetFigProp([plotWidth plotHeight], fontSize)
+FormatFigure([plotWidth plotHeight], fontSize)
 
 if saveFigures
-    matlabToLatexEps( [outputFolder 'rotorSpeed'], [] )
+    PrintFigure( [outputFolder 'rotorSpeed'] )
 end
 
 % Statistics
@@ -101,12 +101,12 @@ plot( [muhat + 2*sigmahat, muhat + 2*sigmahat], [0 ylimits(2)], 'r--', ...
       [muhat + 3*sigmahat, muhat + 3*sigmahat], [0 ylimits(2)], 'g--')
 legend( {'Data', 'fit', '$\pm 2 \sigma$', '$\pm 3 \sigma$'}, ...
     'interpreter', 'latex')
-SetFigProp([plotWidth plotHeight], fontSize)
+FormatFigure([plotWidth plotHeight], fontSize)
 xlim([-inf,inf])
 ylim([-inf,inf])
 
 if saveFigures
-    matlabToLatexEps( [outputFolder 'incidentAngleHist'], [] )
+    PrintFigure( [outputFolder 'incidentAngleHist'] )
 end
 
 figure;
@@ -124,10 +124,10 @@ legend( {'Data', 'fit', '$\pm 2 \sigma$', '$\pm 3 \sigma$'}, ...
     'interpreter', 'latex')
 xlim([-inf,inf])
 ylim([-inf,inf])
-SetFigProp([plotWidth plotHeight], fontSize)
+FormatFigure([plotWidth plotHeight], fontSize)
 
 if saveFigures
-    matlabToLatexEps( [outputFolder 'omegaHist'], [] )
+    PrintFigure( [outputFolder 'omegaHist'] )
 end
 
 figure;
@@ -145,10 +145,10 @@ legend( {'Data', 'fit', '$\pm 2 \sigma$', '$\pm 3 \sigma$'}, ...
     'interpreter', 'latex')
 xlim([-inf,inf])
 ylim([-inf,inf])
-SetFigProp([plotWidth plotHeight], fontSize)
+FormatFigure([plotWidth plotHeight], fontSize)
 
 if saveFigures
-    matlabToLatexEps( [outputFolder 'windSpeedHist'], [] )
+    PrintFigure( [outputFolder 'windSpeedHist'] )
 end
 
 %% Plot data
@@ -160,5 +160,5 @@ for i = 1:length(toPlot)
     plot( logsout.get( toPlot{i} ).Values );
     xlim([-inf,inf])
     ylim([-inf,inf])
-    SetFigProp([plotWidth plotHeight], fontSize)
+    FormatFigure([plotWidth plotHeight], fontSize)
 end

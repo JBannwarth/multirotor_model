@@ -55,9 +55,9 @@ hold on; grid on; box on
 ylim([-100, 100])
 title('')
 legend( {'$W_{\mathrm{act},11}(s)$', '$W_{\mathrm{act},22}(s)$'}, 'location', 'best' )
-SetFigProp([14,10], 12)
+FormatFigure([14,10], 12)
 legend( {'$W_{\mathrm{act},11}(s)$', '$W_{\mathrm{act},22}(s)$'}, 'location', 'best' )
-MatlabToLatexEps( 'weighting_functions' )
+PrintFigure( 'weighting_functions' )
 hold off
 
 % Wind up to 5 Hz
@@ -130,9 +130,9 @@ bodeplot(XWTFStatic(1), 'k', XWTFRed(1), '--k', XWTF(1), 'ok')
 hold on; grid on; box on
 title('')
 legend( {'Static', 'Dynamic 1 state', 'Dynamic full state'}, 'location', 'northeast' )
-SetFigProp([14,10], 12)
+FormatFigure([14,10], 12)
 hold off
-MatlabToLatexEps( 'bode_dist_to_output_2states' )
+PrintFigure( 'bode_dist_to_output_2states' )
 
 % Examine bode plot - U/W dynamic
 distTF = minreal(tf(feedback( series( G, K ), C, +1 )));
@@ -142,10 +142,10 @@ bodeplot(distTF(1), 'k', distTF(2), '--k')
 hold on; grid on; box on
 title('')
 legend( {'$U_1(s)/W_d(s)$', '$U_2(s)/W_d(s)$'}, 'location', 'northeast' )
-SetFigProp([14,10], 12)
+FormatFigure([14,10], 12)
 legend( {'$U_1(s)/W_d(s)$', '$U_2(s)/W_d(s)$'}, 'location', 'northeast' )
 hold off
-MatlabToLatexEps( 'bode_dist_to_input_2states' )
+PrintFigure( 'bode_dist_to_input_2states' )
 
 % Examine bode plot - U/W static
 distTFStatic = minreal(tf(feedback( series( G, KStatic ), C, +1 )));
@@ -155,10 +155,10 @@ bodeplot(distTFStatic(1), 'k', distTFStatic(2), '--k')
 hold on; grid on; box on
 title('')
 legend( {'$U_1(s)/W_d(s)$', '$U_2(s)/W_d(s)$'}, 'location', 'northeast' )
-SetFigProp([14,10], 12)
+FormatFigure([14,10], 12)
 legend( {'$U_1(s)/W_d(s)$', '$U_2(s)/W_d(s)$'}, 'location', 'northeast' )
 hold off
-MatlabToLatexEps( 'bode_dist_to_input_static_2states' )
+PrintFigure( 'bode_dist_to_input_static_2states' )
 
 % Plot poles
 % figure( 4 )

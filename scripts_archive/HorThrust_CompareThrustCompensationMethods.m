@@ -216,15 +216,15 @@ legendStr = compose( 'Gain = %.2f', gainVals );
 
 set(0, 'currentfigure', f1); set(f1, 'currentaxes', axX);
 legend( legendStr )
-SetFigProp( [12,20] )
-MatlabToLatexEps( fullfile( projectRoot, 'work', 'StepComp_x' ) )
+FormatFigure( [12,20] )
+PrintFigure( fullfile( projectRoot, 'work', 'StepComp_x' ) )
 
 set(0, 'currentfigure', f2); set(f2, 'currentaxes', axRoll);
 legend( legendStr )
-SetFigProp( [12,20] )
-MatlabToLatexEps( fullfile( projectRoot, 'work', 'StepComp_eta' ) )
+FormatFigure( [12,20] )
+PrintFigure( fullfile( projectRoot, 'work', 'StepComp_eta' ) )
 
 set(0, 'currentfigure', f3); set(f3, 'currentaxes', axTx);
 legend( legendStr )
-SetFigProp( [12,20] )
-MatlabToLatexEps( fullfile( projectRoot, 'work', 'StepComp_TBody' ) )
+FormatFigure( [12,20] )
+PrintFigure( fullfile( projectRoot, 'work', 'StepComp_TBody' ) )

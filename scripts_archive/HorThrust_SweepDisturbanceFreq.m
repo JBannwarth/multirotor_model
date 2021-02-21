@@ -220,13 +220,13 @@ legendStr = compose('$%.2f$', gainVals);
 
 set(0, 'currentfigure', axMean.f); set(axMean.f, 'currentaxes', axMean.X);
 legend( legendStr, 'Orientation', 'vertical', 'Location', 'best' )
-SetFigProp( [12,20], 10 )
-MatlabToLatexEps( fullfile( projectRoot, 'work', 'PropGain_MeanFreq' ) )
+FormatFigure( [12,20], 10 )
+PrintFigure( fullfile( projectRoot, 'work', 'PropGain_MeanFreq' ) )
 
 set(0, 'currentfigure', axStd.f); set(axStd.f, 'currentaxes', axStd.X);
 legend( legendStr, 'Orientation', 'vertical', 'Location', 'best' )
-SetFigProp( [12,20], 10 )
-MatlabToLatexEps( fullfile( projectRoot, 'work', 'PropGain_StdFreq' ) )
+FormatFigure( [12,20], 10 )
+PrintFigure( fullfile( projectRoot, 'work', 'PropGain_StdFreq' ) )
 
 %% Actuator usage
 
@@ -296,12 +296,12 @@ legendStr = compose('Gain = %.2f, mode = %d', ...
 
 set(0, 'currentfigure', f1); set(f1, 'currentaxes', axX);
 legend( legendStr )
-SetFigProp( [12,20] )
+FormatFigure( [12,20] )
 
 set(0, 'currentfigure', f2); set(f2, 'currentaxes', axRoll);
 legend( legendStr )
-SetFigProp( [12,20] )
+FormatFigure( [12,20] )
 
 set(0, 'currentfigure', f3); set(f3, 'currentaxes', axTx);
 legend( legendStr )
-SetFigProp( [12,20] )
+FormatFigure( [12,20] )

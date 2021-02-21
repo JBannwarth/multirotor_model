@@ -1,3 +1,6 @@
 [submodule "libraries/quat"]
 	path = libraries/quat
 	url = https://github.com/JBannwarth/matlab_quaternion_library
+[submodule "libraries/format"]
+	path = libraries/format
+	url = https://github.com/JBannwarth/matlab_academic_formatter

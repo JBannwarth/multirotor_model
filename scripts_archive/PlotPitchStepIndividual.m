@@ -129,8 +129,8 @@ xlabel( 'Time (s)' )
 ylabel( 'PWM magnitude (-)' )
 legend( {'Exp1', 'Sim1', 'Exp2', 'Sim2', 'Exp3', 'Sim3', 'Exp4', 'Sim4'} )
 
-SetFigProp( outSize , fontSize );
+FormatFigure( outSize , fontSize );
 if ( printResults )
     fileName = [ outFolder '/' fileNameCurrent(1:end-4)];
-    MatlabToLatexEps( fileName );
+    PrintFigure( fileName );
 end

@@ -140,12 +140,12 @@ for ii = 1:size(figH,2)
     % Actuator
     figure( figH(ii,1) )
     legend( axH{ii,1,1}, labels, 'Location', 'Best' )
-    SetFigProp( outSize , fontSize );
+    FormatFigure( outSize , fontSize );
     
     % Position
     figure( figH(ii,2) )
     legend( axH{ii,2,1}, labels, 'Location', 'Best' )
-    SetFigProp( outSize , fontSize );
+    FormatFigure( outSize , fontSize );
     
     % Controller outputs
     figure( figH(ii,3) )
@@ -167,5 +167,5 @@ for ii = 1:size(figH,2)
         set( gca, 'Ylim', yLim2 )
     end
     
-    SetFigProp( outSize , fontSize );
+    FormatFigure( outSize , fontSize );
 end

@@ -174,11 +174,11 @@ for i = 1:length(ax)
     
     xlim( windXLimits )
     ylim( [0 axErr(1).YLim(2)] )
-    SetFigProp( outSize , fontSize );
+    FormatFigure( outSize , fontSize );
     
     if ( printResults )
         fileName = [ outFolder '/' 'UavErrorMean-' ax(i) '-simvexp' suffix];
-        MatlabToLatexEps( fileName, [], false );
+        PrintFigure( fileName );
     end
 end
 
@@ -201,12 +201,12 @@ for i = 1:length( ax )
 
     xlim( windXLimits )
     ylim([0 axA.YLim(2)])
-    SetFigProp( outSize , fontSize );
+    FormatFigure( outSize , fontSize );
 end
 
 if ( printResults )
     fileName = [ outFolder '/' 'PitchMean-' 'simvexp' suffix];
-    MatlabToLatexEps( fileName, [], false );
+    PrintFigure( fileName );
 end
 
 % Angles std
@@ -226,10 +226,10 @@ for i = 1:length( ax )
 
     xlim( windXLimits )
     ylim([0 axAStd.YLim(2)])
-    SetFigProp( outSize , fontSize );
+    FormatFigure( outSize , fontSize );
 end
 
 if ( printResults )
     fileName = [ outFolder '/' 'PitchStd-' 'simvexp' suffix];
-    MatlabToLatexEps( fileName, [], false );
+    PrintFigure( fileName );
 end

@@ -32,5 +32,5 @@ else
     legend( {'FR', 'BR', 'BL', 'FL' })
 end
 
-SetFigProp([17 13])
-MatlabToLatexEps( fullfile( 'work', 'MasseResults' ) );
+FormatFigure([17 13])
+PrintFigure( fullfile( 'work', 'MasseResults' ) );

@@ -108,8 +108,8 @@ for ax = ['x', 'y', 'z']
     
     if ( printResults )
         fileName = [ outFolder '/' 'UavErrorMean-' ax '-simvexp' suffix];
-        SetFigProp( outSize , fontSize );
-        MatlabToLatexEps( fileName, [], false );
+        FormatFigure( outSize , fontSize );
+        PrintFigure( fileName );
     end
     
 end
@@ -127,8 +127,8 @@ legend( {'sim', 'sim+est', 'exp' }, 'location', 'northwest', 'Interpreter', 'lat
 
 if ( printResults )
     fileName = [ outFolder '/' 'PitchMean-' 'simvexp' suffix];
-    SetFigProp( outSize , fontSize );
-    MatlabToLatexEps( fileName, [], false );
+    FormatFigure( outSize , fontSize );
+    PrintFigure( fileName );
 end
 
 % Angles
@@ -150,6 +150,6 @@ legend( {'sim', 'sim+est', 'exp'}, 'location', 'northwest', 'Interpreter', 'late
 
 if ( printResults )
     fileName = [ outFolder '/' 'PitchStd-' 'simvexp' suffix];
-    SetFigProp( outSize , fontSize );
-    MatlabToLatexEps( fileName, [], false );
+    FormatFigure( outSize , fontSize );
+    PrintFigure( fileName );
 end

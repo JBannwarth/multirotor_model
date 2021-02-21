@@ -116,11 +116,11 @@ for i = 1:length( inputFiles )
     xlabel( 'Time (s)' )
     ylabel( [ 'Pitch ($^\circ$)' ] )
     legend( { 'Des', 'Exp', 'Sim' }, 'location', 'best')
-    SetFigProp( outSize , fontSize );
+    FormatFigure( outSize , fontSize );
     
     if ( printResults && ( i == indexToPrint ) )
         fileName = fullfile( outFolder, 'PitchStep_PitchResponse' );
-        MatlabToLatexEps( fileName );
+        PrintFigure( fileName );
         if ( i == toSave )
             % Exp
             data = [ pitchExp.Time, rad2deg(pitchExp.Data), rad2deg(pitchDesExp.Data) ];
@@ -160,12 +160,12 @@ for i = 1:length( inputFiles )
     hleg = legend( {'FL', 'BL', 'BR', 'FR'}, ...
         'Orientation', 'horizontal', 'location', 'northoutside');
     title( hleg, 'solid: experiment, dot: simulation' )
-    SetFigProp( outSize , fontSize );
+    FormatFigure( outSize , fontSize );
     legend('boxoff')
     
     if ( printResults && ( i == indexToPrint ) )
         fileName = fullfile( outFolder, 'PitchStep_PWMResponse' );
-        MatlabToLatexEps( fileName );
+        PrintFigure( fileName );
         
         if ( i == toSave )
 %           % Exp

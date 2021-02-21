@@ -143,6 +143,6 @@ for col = 1:length(inputs)
     xlim( wLims )
     ylabel( 'Phase (deg)' )
     xlabel( 'Frequency (rad/s)' )
-    SetFigProp( [5, 8], 11 )
-    MatlabToLatexEps( fullfile( projectRoot, 'work', [inputs{col} '-' outputs{row}] ) )
+    FormatFigure( [5, 8], 11 )
+    PrintFigure( fullfile( projectRoot, 'work', [inputs{col} '-' outputs{row}] ) )
 end

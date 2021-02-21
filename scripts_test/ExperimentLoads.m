@@ -104,8 +104,8 @@ ylim( [-inf inf] )
 zlim( [-inf inf] )
 if ( printResults )
     fileName = [ outFolder '/' 'StaticTest-' 'FD-omega-theta'];
-    SetFigProp( outSize , fontSize );
-    MatlabToLatexEps( fileName, [], false );
+    FormatFigure( outSize , fontSize );
+    PrintFigure( fileName );
 end
 
 figure('color',[1,1,1],'name','FL')
@@ -137,8 +137,8 @@ ylim( [-inf inf] )
 zlim( [-inf inf] )
 if ( printResults )
     fileName = [ outFolder '/' 'StaticTest-' 'thrust-omega-theta'];
-    SetFigProp( outSize , fontSize );
-    MatlabToLatexEps( fileName, [], false );
+    FormatFigure( outSize , fontSize );
+    PrintFigure( fileName );
 end
 
 figure('color',[1,1,1],'name','T')
@@ -190,8 +190,8 @@ ylim( [-inf inf] )
 %zlim( [-inf inf] )
 if ( printResults )
     fileName = [ outFolder '/' 'StaticTest-' 'A-' num2str(round(U)) 'mps'];
-    SetFigProp( outSize , fontSize );
-    MatlabToLatexEps( fileName, [], false );
+    FormatFigure( outSize , fontSize );
+    PrintFigure( fileName );
 end
 
 figure('color',[1,1,1],'name','B')
@@ -217,8 +217,8 @@ ylim( [-inf inf] )
 %zlim( [-inf inf] )
 if ( printResults )
     fileName = [ outFolder '/' 'StaticTest-' 'B-' num2str(round(U)) 'mps'];
-    SetFigProp( outSize , fontSize );
-    MatlabToLatexEps( fileName, [], false );
+    FormatFigure( outSize , fontSize );
+    PrintFigure( fileName );
 end
 
 figure('color',[1,1,1],'name','K')
@@ -260,8 +260,8 @@ ylim( [-inf inf] )
 %zlim( [-inf inf] )
 if ( printResults )
     fileName = [ outFolder '/' 'StaticTest-' 'k-' num2str(round(U)) 'mps'];
-    SetFigProp( outSize , fontSize );
-    MatlabToLatexEps( fileName, [], false );
+    FormatFigure( outSize , fontSize );
+    PrintFigure( fileName );
 end
 
 %% FORCES/MOMENTS ON JR3
