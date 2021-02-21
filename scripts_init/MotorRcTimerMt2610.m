@@ -1,12 +1,16 @@
-function Motor = MotorRcTimerMt2610( )
+function Motor = MotorRcTimerMt2610( nRotors )
 %MOTORRCTIMERMT2610 Load motor parameters
-%   MOTOR = MOTORRCTIMERMT2610( ) loads motor parameters.
+%   MOTOR = MOTORRCTIMERMT2610( ) loads motor parameters for 4 motors.
+%   MOTOR = MOTORRCTIMERMT2610( NROTORS ) defines the number of rotors.
 %
 %   Model: RCTimer MT2610, 920KV.
 %
 %   See also MOTORTMOTORMN1806.
 %
 %   Written: 2016, J.X.J. Bannwarth
+    arguments
+        nRotors (1,1) double = 4
+    end
 
     %% MOTOR ELECTRICAL PROPERTIES
     % RCTimer MT2610, 920KV - modelled as brushed DC motor
@@ -19,7 +23,7 @@ function Motor = MotorRcTimerMt2610( )
     Motor.K = 7.59588e-6;
 
     % Rotor drag coefficient
-    Motor.B = 4.4335282346e-7 .*ones(1,Uav.N_ROTORS);
+    Motor.B = 4.4335282346e-7 .* ones(1, nRotors);
 
     % Masses
     Motor.M_M = 0.054; % Motor
@@ -40,7 +44,7 @@ function Motor = MotorRcTimerMt2610( )
     Motor.M_R = 0;
     Motor.R_R = 0;
     Motor.H_R = 0;
-    for i = 1:Uav.N_ROTORS
+    for i = 1:nRotors
         Motor.I_R(:,:,i) = (Motor.I_M + Motor.I_P);
     end
     Motor.I_R_ZZ = reshape( Motor.I_R(3,3,:), [1, size(Motor.I_R,3)]);
