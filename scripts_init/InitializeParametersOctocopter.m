@@ -10,8 +10,7 @@
 GRAVITY = 9.80665; % [m/s^2]
 
 % Call the appropriate components
-Uav.ZETA = deg2rad(0); % Cant angle
-UavOctocopter500mm
+Uav = UavOctocopter500mm( 0 );
 MotorRcTimerMt2610
 
 %% AERO PARAMETERS
