@@ -1,53 +1,50 @@
-%INITIALIZEMODEL Load parameters
-%   Written by:    J.X.J. Bannwarth, 2017
-%   Last Modified: J.X.J. Bannwarth, 2019/01/10
-%% Load UAV parameters
-if ~exist( 'GRAVITY', 'var' )
-    InitializeParametersQuadcopterAIAAv3
-end
+function [Simulation, Initial] = InitializeModel( modelName, Initial, tEnd, loadBuses )
+%INITIALIZEMODEL Initialize simulation model.
+%
+%   See also INITIALIZEPARAMETERSOCTOCOPTER.
+%
+%   Written:    J.X.J. Bannwarth, 2017
 
-%% Set simulation parameters
-if (~exist('Simulation', 'var')) || (~isfield( Simulation, 'TS_MAX' ))
+    arguments
+        modelName (1,:) char    = 'MultirotorSimPx4'
+        tEnd      (1,1) double  = 20    % [s]
+        loadBuses (1,1) logical = false
+    end
+
+    %% Initial Conditions
+    % For quaternion:
+    % q = [cos(alpha); sin(alpha)*rotX; sin(alpha)*rotY; sin(alpha)*rotZ]
+    % where: - alpha is the angle the UAV is rotated aronud the rotation axis
+    %        - [rotX, rotY, rotZ] is a unit vector defining the rotation axis  
+    Initial.XI      = [0; 0; 0];            % Initial position in inertial frame
+    Initial.XI_DOT  = [0; 0; 0];            % Initial velocity in inertial frame
+    Initial.ETA     = rad2deg( [0; 0; 0] ); % Initial orientation (roll, pitch, yaw)
+    Initial.Q       = [1; 0; 0; 0];         % Initial orientation (quaternion)
+    Initial.NU_BODY = [0; 0; 0];            % Initial angular velocity in body frame
+    Initial.OMEGA   = Uav.OMEGA_HOVER .* ones(Uav.N_ROTORS,1); % Initial rotor speed
+
+    %% Simulation parameters
+    Simulation.T_END = tEnd;
     Simulation.TS_MAX = 0.01;
-end
-if ~isfield( Simulation, 'TS_OUT' )
     Simulation.TS_OUT = Simulation.TS_MAX;
-end
-if ~isfield( Simulation, 'T_END' )
-    Simulation.T_END = 60;
-end
-Simulation.T_OUT = Simulation.TS_OUT:Simulation.TS_OUT:Simulation.T_END-Simulation.TS_OUT;
-if ~isfield( Simulation, 'T_START_STEP' )
+    Simulation.T_OUT = Simulation.TS_OUT:Simulation.TS_OUT:Simulation.T_END-Simulation.TS_OUT;
     Simulation.T_START_STEP = 0;
-end
 
-%% Set initial orientation
-if ~exist( 'Initial', 'var' ) || ~isfield( Initial, 'Q' )      % Initial orientation (quaternion)
-    init_eta = [0, 0, 0];
-    Initial.Q = EulerToQuat(init_eta)';
-end
+    %% Set initial orientation
+    load_system(modelName);
+    try
+        set_param( [ modelName '/Sensor Model/attitude_estimator_q' ], ...
+            'INIT_Q', [ '[' num2str( Initial.Q' ) ']' ] )
+    catch
+        warning( 'No sensor model' )
+    end
 
-if ~exist( 'model', 'var' )
-    % Default
-    model = 'MultirotorSimPx4';
-    %error( 'Need to define variable ''model'' before calling this function' );
+    %% Load buses for controllers
+    % Ideally should rewrite controller to remove the need for this - would
+    % clear up workspace a lot)
+    if loadBuses
+        Px4Bus;
+        selfBus;
+        mpc_self;
+    end
 end
-
-try
-    load_system(model);
-    set_param( [ model '/Sensor Model/attitude_estimator_q' ], ...
-        'INIT_Q', [ '[' num2str( Initial.Q' ) ']' ] )
-catch
-    warning( 'No sensor model' )
-end
-
-%% Load buses for controllers
-% Ideally should rewrite controller to remove the need for this - would
-% clear up workspace a lot)
-if ~exist( 'loadBuses', 'var' ) || loadBuses
-    Px4Bus;
-    selfBus;
-    mpc_self;
-end
-
-clearvars i ans init_eta loadBuses
