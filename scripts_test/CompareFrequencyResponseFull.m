@@ -50,7 +50,7 @@ set_param( [model '/Fixed wind input'], 'Value', sprintf( '[%.15e;%.15e;%.15e]',
 
 %% Find operating point
 toLoad = { 'fullInput', 'attRatePID' };
-FindOpPx4v1_8Cont
+FindOpPx4
 
 %% Finish setting up simulation
 set_param( [model '/Manual Switch etaDes']      , 'sw', '1' )
@@ -92,7 +92,7 @@ set_param( [model '/Fixed wind input'], 'Value', sprintf( '[%.15e;%.15e;%.15e]',
 
 %% Find operating point
 toLoad = { 'posOnly', 'fullInput' };
-FindOpPx4v1_8Cont
+FindOpPx4
 
 %% Finish setting up simulation
 set_param( [model '/Manual Switch etaDes']      , 'sw', '1' )

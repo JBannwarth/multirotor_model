@@ -37,4 +37,4 @@ Ctrl.THROTTLE_HOVER = Uav.THROTTLE_HOVER;
 
 %% Find operating point
 toLoad = { 'attRatePID', 'velPID' };
-FindOpPx4v1_8Cont
+FindOpPx4

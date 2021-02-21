@@ -46,7 +46,7 @@ Ctrl.THROTTLE_HOVER = Uav.THROTTLE_HOVER;
 
 %% Find operating point
 toLoad = { 'attRatePID', 'fullInput' };
-FindOpPx4v1_8Cont
+FindOpPx4
 
 %% Finish setting up simulation
 set_param( [model '/Manual Switch etaDes']      , 'sw', '1' )

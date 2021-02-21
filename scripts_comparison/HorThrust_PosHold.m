@@ -91,7 +91,7 @@ end
 [ Aero, Ctrl, Initial, model, Motor, Simulation, Uav, ~, toLoad ] = InitializePx4( ...
     ctrlName, tEnd );
 Ctrl.U_OPERATING = [0; 0; -Ctrl.THROTTLE_HOVER; 0; 0];
-FindOpPx4v1_8Cont
+FindOpPx4
 
 %% Finish setting up simulation
 set_param( [model '/Input choice'], 'Value', '1' )

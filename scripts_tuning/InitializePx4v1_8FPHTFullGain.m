@@ -43,7 +43,7 @@ end
 
 %% Find operating point
 toLoad = { 'attRatePID' };
-FindOpPx4v1_8Cont
+FindOpPx4
 
 %% Load real model
 % modelLin = model;

@@ -1,8 +1,7 @@
-%FINDOPPX4V1_8CONT Find the operating point of the continuous px4 impl.
+%FINDOPPX4 Find the operating point of the continuous px4 impl.
 %   Parameters need to be loaded up before running this script
 %   Use the 'toLoad' variable to control which states are set to 0
-%   Written by:    J.X.J. Bannwarth, 2019/05/15
-%	Last modified: J.X.J. Bannwarth, 2019/07/09
+%   Written: 2019/05/15, J.X.J. Bannwarth
 
 % Deactivate initial states/input since we aim to find them
 set_param( model, 'LoadInitialState', 'off' );

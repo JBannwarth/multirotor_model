@@ -38,7 +38,7 @@ Ctrl.BYPASS_ROTATION = 1;
 
 %% Find operating point
 toLoad = { 'attRatePID', 'velD' };
-FindOpPx4v1_8Cont
+FindOpPx4
 
 %% Load real model
 % modelLin = model;

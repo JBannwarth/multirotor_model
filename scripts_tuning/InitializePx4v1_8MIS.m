@@ -38,5 +38,5 @@ Ctrl.BYPASS_ROTATION = 1;
 
 %% Find operating point
 toLoad = { 'attRatePID', 'velPID', 'lpThrust' };
-FindOpPx4v1_8Cont
+FindOpPx4
 Ctrl.BYPASS_ROTATION = 0;

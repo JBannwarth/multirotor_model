@@ -39,6 +39,6 @@ Ctrl.CONTROLLER_TYPE = 3;
 
 %% Find operating point
 toLoad = { 'attRatePID', 'velPID', 'leadComp' };
-FindOpPx4v1_8Cont
+FindOpPx4
 
 Ctrl.BYPASS_ROTATION = 0;
