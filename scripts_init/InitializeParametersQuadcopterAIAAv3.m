@@ -17,7 +17,7 @@ GRAVITY = 9.80665; % [m/s^2]
 
 % Call the appropriate components
 Uav = UavQuadcopter460mm( );
-MotorRcTimerMt2610
+Motor = MotorRcTimerMt2610( );
 
 %% AERO PARAMETERS
 if ~exist( 'Aero', 'var' )
