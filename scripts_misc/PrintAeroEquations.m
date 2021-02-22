@@ -1,4 +1,4 @@
-%DISPLAYAEROEQUATIONS Display aerodynamic factors equations in LaTeX format
+%PRINTAEROEQUATIONS Display aerodynamic factors equations in LaTeX format
 %   Written: 2021/01/17, J.X.J. Bannwarth
 
 clearvars;
