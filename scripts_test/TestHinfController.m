@@ -1,4 +1,4 @@
-%TESTHINFINIT Create simple H-infinity controller
+%TESTHINFCONTROLLER Create simple H-infinity controller
 %   Written by: J.X.J. Bannwarth, 2020/10/26
 
 %% Initialisation

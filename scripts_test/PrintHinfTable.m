@@ -1,4 +1,7 @@
-clc
+%PRINTHINFTABLE Print LaTeX table showing matrices used in H-inf design.
+%   Written: 2018, J.X.J. Bannwarth
+
+clearvars; clc
 x = { '\int x', '\int y', '\int z', ...
     '\dot{x}', '\dot{y}', '\dot{z}', 'x', 'y', 'z' };
 omega = [ 'U_x', 'U_y', 'U_z', strcat( x, '_n' ) ];
