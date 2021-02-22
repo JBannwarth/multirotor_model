@@ -34,8 +34,6 @@ function Simulation = InitializeModel( modelName, Initial, tEnd, loadBuses )
     % Ideally should rewrite controller to remove the need for this - would
     % clear up workspace a lot)
     if loadBuses
-        BusAttitudeParameters;
-        BusAttitude;
         BusPosition;
     end
 end
