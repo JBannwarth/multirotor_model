@@ -19,20 +19,8 @@ end
 ULin = [4 0 0]; % About halfway through the wind tunnel range
 
 %% Find OP
-switch ctrlName
-    case 'baseline'
-        InitializePx4v1_8Cont
-    case 'IHT'
-        InitializePx4v1_8IHT
-    case 'FPHT'
-        InitializePx4v1_8FPHT
-    case 'FPHTFullGain'
-        InitializePx4v1_8FPHTFullGain
-    case 'FPHTSimple'
-        InitializePx4v1_8FPHTTranslationOnly
-    case 'MIS'
-        InitializePx4v1_8MIS
-end
+[Aero, Ctrl, Initial, model, Motor, Simulation, Uav, windInput, toLoad] = InitializePx4( ctrlName );
+FindOpPx4
 
 %% Finish setting up simulation
 Simulation.TS_MAX = 0.001;
