@@ -14,8 +14,8 @@ set_param( 'MultirotorSimPx4SeparateRotors/Sensor Model/attitude_estimator_q', .
     'INIT_Q', [ '[' num2str( Initial.Q' ) ']''' ] )
 clearvars -except Input Simulation init_eta Initial
 
-Px4Bus;
-selfBus;
-mpc_self;
+BusAttitudeParameters;
+BusAttitude;
+BusPosition;
 
 [Uav, Motor, Aero, Initial] = InitializeParametersQuadcopter( );;

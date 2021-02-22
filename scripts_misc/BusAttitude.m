@@ -1,5 +1,5 @@
-function cellInfo = bus(varargin)
-% BUS returns a cell array containing bus object information
+function cellInfo = BusAttitude(varargin)
+%BUSATTITUDE Returns a cell array containing bus object information.
 %
 % Optional Input: 'false' will suppress a call to Simulink.Bus.cellToObject
 %                 when the MATLAB file is executed.

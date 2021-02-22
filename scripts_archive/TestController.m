@@ -11,9 +11,9 @@ init_eta = deg2rad( [ 10, 10, -30 ] );
 Initial.Q = EulerToQuaternionM(init_eta);
 clearvars -except Input Simulation init_eta Initial
 
-Px4Bus;
-selfBus;
-mpc_self;
+BusAttitudeParameters;
+BusAttitude;
+BusPosition;
 
 %% Load model
 model = 'MultirotorSimulationController';

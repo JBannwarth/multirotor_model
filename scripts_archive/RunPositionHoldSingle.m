@@ -9,9 +9,9 @@ init_eta = [0, 0, 0];
 Initial.Q = EulerToQuaternionM(init_eta);
 clearvars -except Input Simulation init_eta Initial
 
-Px4Bus;
-selfBus;
-mpc_self;
+BusAttitudeParameters;
+BusAttitude;
+BusPosition;
 
 [Uav, Motor, Aero, Initial] = InitializeParametersQuadcopter( );
 
