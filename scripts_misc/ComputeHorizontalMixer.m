@@ -4,9 +4,7 @@
 %   Last modified: J.X.J. Bannwarth, 2019/05/01
 
 % Load parameters
-loadBuses = false;
-InitializeParametersOctocopterCanted
-InitializeModel
+Uav = InitializeParametersOctocopter( true );
 
 a = 2 / ( sin(Uav.CANT_ANGLE) );
 b = tan( Uav.BETA(1) );

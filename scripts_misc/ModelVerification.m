@@ -1,7 +1,7 @@
 clear all; %#ok<CLALL>
 
 %% Create input profile
-InitializeParametersQuadcopter
+[Uav, Motor, Aero, Initial] = InitializeParametersQuadcopter( );
 Simulation.TS_MAX = 0.01;
 Simulation.T_END = 100;
 Input.PWM_IN = SinusoidInputPWM([0; 0; 0; 0], [0, 0, 0, 0], ...

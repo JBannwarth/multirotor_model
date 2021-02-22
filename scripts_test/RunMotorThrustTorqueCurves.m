@@ -12,12 +12,9 @@ load_system( model )
 load( fullfile( projectRoot, 'data_misc', 'AeroBodyOrientedAIAAv3' ) );
 
 % Load UAV parameters
-loadBuses = false;
-Simulation.TS_MAX = 0.001;
-Simulation.TS_OUT = 0.01;
-Simulation.T_END = 2;
-InitializeParametersOctocopterCanted
-InitializeModel
+tEnd = 2;
+[Uav, Motor, Aero, Initial] = InitializeParametersOctocopter( true );
+Simulation = InitializeModel( model, Initial, tEnd );
 
 %% Set-up Simulation
 pwmNormIn = 0:0.05:1;

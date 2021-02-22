@@ -29,9 +29,7 @@ clearvars windInput
 
 % Model
 model = 'TestMultirotorSimPx4v1_8Hinf';
-Simulation.TS_MAX = 0.001;
-Simulation.TS_OUT = 0.01;
-Simulation.T_END = 150;
+tEnd = 150;
 
 %% Load parameters
 load_system( model )
@@ -53,9 +51,8 @@ set_param( model, 'LoadInitialState', 'off' );
 set_param( model, 'LoadExternalInput', 'off' );
 
 % Load UAV parameters
-loadBuses = false;
-InitializeParametersOctocopterCanted
-InitializeModel
+[Uav, Motor, Aero, Initial] = InitializeParametersOctocopter( true );
+Simulation = InitializeModel( model, Initial, tEnd );
 
 % Set controller parameters
 Ctrl.HOR_GAIN = 0;

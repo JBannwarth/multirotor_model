@@ -1,8 +1,8 @@
 %MASSE_INITIALIZEHINF Initialize Masse et al.'s H_inf controller
 %   Controller structure from:
 %   Masse, Catherine, Gougeon, Olivier, Nguyen, Duc-Tien and Saussie, David.
-%   “Modeling and Control of a Quadcopter Flying in a Wind Field: A
-%   Comparison Between LQR and Structured Hinf Control Techniques.” 2018
+%   ï¿½Modeling and Control of a Quadcopter Flying in a Wind Field: A
+%   Comparison Between LQR and Structured Hinf Control Techniques.ï¿½ 2018
 %   International Conference on Unmanned Aircraft Systems (ICUAS) (2018):
 %   1408-1417.
 %   Written by:    J.X.J. Bannwarth, 2018/11/26
@@ -27,13 +27,13 @@ load( fullfile( projectRoot, 'data_wind', 'TurbSimOC', 'TurbSim_40_01' ) );
 
 switch layout 
     case 'octo' 
-        InitializeParametersOctocopter
-        InitializeModel
+        [Uav, Motor, Aero, Initial] = InitializeParametersOctocopter( true );
     case 'quad'
-        InitializeModel
+        [Uav, Motor, Aero, Initial] = InitializeParametersQuadcopter( );
     otherwise
-        InitializeModel
+        [Uav, Motor, Aero, Initial] = InitializeParametersQuadcopter( );
 end
+Simulation = InitializeModel( model, Initial );
 
 if useWind
     UMean = mean( windInput );
@@ -92,11 +92,8 @@ else
     UseWindProfile( model, false );
 end
 
-
-Simulation.TS_MAX = 0.001;
-Simulation.TS_OUT = 0.01;
-Simulation.T_END = 30;
-InitializeModel
+% Get new simulation structure
+Simulation = InitializeModel( model, Initial, 30 );
 
 % Cols: thrust, roll, pitch, yaw
 Upsilon = [ -0.25, -0.25,  0.25, -0.25 ;

@@ -10,9 +10,7 @@ project = simulinkproject; projectRoot = project.RootFolder;
 ULin = [4 0 0];
 
 %% Set up simulation
-Simulation.TS_MAX = 0.001;
-Simulation.TS_OUT = 0.01;
-Simulation.T_END = 20; % windInputs{1}.Time(end);
+tEnd = 20;
 
 project = simulinkproject; projectRoot = project.RootFolder;
 
@@ -37,9 +35,8 @@ set_param( [model '/Manual Switch attThrustDes'], 'sw', '0' )
 set_param( [model '/Manual Switch horThrustDes'], 'sw', '0' )
 
 % Load UAV parameters
-loadBuses = false;
-InitializeParametersOctocopterCanted
-InitializeModel
+[Uav, Motor, Aero, Initial] = InitializeParametersOctocopter( true );
+Simulation = InitializeModel( model, Initial, tEnd );
 Ctrl.THROTTLE_HOVER = Uav.THROTTLE_HOVER;
 
 % Set wind speed

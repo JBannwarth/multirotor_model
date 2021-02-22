@@ -14,9 +14,7 @@ ULin = [5 0 0];
 
 % Model
 model = 'MultirotorSimPx4v1_8ContAttOnlyForceControl';
-Simulation.TS_MAX = 0.001;
-Simulation.TS_OUT = 0.01;
-Simulation.T_END = 50;
+tEnd = 50;
 
 %% Load parameters
 load_system( model )
@@ -47,9 +45,8 @@ for ii = 1:length(constants)
 end
     
 % Load UAV parameters
-loadBuses = false;
-InitializeParametersOctocopterCanted
-InitializeModel
+[Uav, Motor, Aero, Initial] = InitializeParametersOctocopter( true );
+Simulation = InitializeModel( model, Initial );
 
 %% Trim model
 % Deactivate initial states/input since we aim to find them

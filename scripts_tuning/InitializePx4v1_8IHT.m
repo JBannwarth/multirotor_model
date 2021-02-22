@@ -7,10 +7,8 @@ project = simulinkproject; projectRoot = project.RootFolder;
 %% Simulation parameters
 % Model
 model = 'MultirotorSimPx4v1_8IHT';
-Simulation.TS_MAX = 0.001;
-Simulation.TS_OUT = 0.01;
-if ~isfield( Simulation, 'T_END' )
-    Simulation.T_END = 20;
+if ~exist( 'tEnd', 'var')
+    tEnd = 20;
 end
 
 %% Load parameters
@@ -30,9 +28,8 @@ set_param( [model '/Varying wind input'], 'Commented', 'on' )
 set_param( [model '/Step wind input'], 'Commented', 'on' )
 
 % Load UAV parameters
-loadBuses = false;
-InitializeParametersOctocopterCanted
-InitializeModel
+[Uav, Motor, Aero, Initial] = InitializeParametersOctocopter( true );
+Simulation = InitializeModel( model, Initial, tEnd );
 Ctrl.THROTTLE_HOVER = Uav.THROTTLE_HOVER;
 Ctrl.BYPASS_ROTATION = 1;
 Ctrl.CONTROLLER_TYPE = 3;

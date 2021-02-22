@@ -6,7 +6,7 @@ function [Uav, Motor, Aero, Initial] = InitializeParametersOctocopter( canted )
 %   Input:
 %       - canted: whether the UAV is canted or not.
 %
-%   See also INITIALIZEPARAMETERSQUADCOPTERAIAAV3.
+%   See also INITIALIZEPARAMETERSQUADCOPTER.
 %
 %	Written: 2019/01/09, J.X.J. Bannwarth
 
@@ -21,7 +21,7 @@ function [Uav, Motor, Aero, Initial] = InitializeParametersOctocopter( canted )
     else
         Uav = UavOctocopter500mm( deg2rad(31) );
     end
-    Motor = MotorRcTimerMt2610( );
+    Motor = MotorTMotorMn1806( Uav.N_ROTORS );
 
     %% AERO PARAMETERS
     load( 'AeroBothAIAAv3.mat', 'Aero' );

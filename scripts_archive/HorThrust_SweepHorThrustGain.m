@@ -14,9 +14,7 @@ stepTime  = 5;
 
 % Model
 model = 'MultirotorSimPx4v1_8Cont';
-Simulation.TS_MAX = 0.001;
-Simulation.TS_OUT = 0.01;
-Simulation.T_END = 50;
+tEnd = 50;
 
 %% Load parameters
 load_system( model )
@@ -40,12 +38,8 @@ set_param( model, 'LoadInitialState', 'off' );
 set_param( model, 'LoadExternalInput', 'off' );
 
 % Load UAV parameters
-loadBuses = false;
-InitializeParametersOctocopterCanted
-InitializeModel
-% Use measured motor thrust constant - more accurate than using the
-% value extrapolated from the static drag testing
-Aero.Cz2.coefs(2) = Motor.K / (0.5 .* Uav.RHO_AIR .* Uav.D_PROP^2 .* Uav.A_PROP);
+[Uav, Motor, Aero, Initial] = InitializeParametersOctocopter( true );
+Simulation = InitializeModel( model, Initial, tEnd );
 
 % Set controller parameters
 Ctrl.HOR_GAIN = 0;

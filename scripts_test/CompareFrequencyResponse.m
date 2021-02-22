@@ -19,9 +19,7 @@ project = simulinkproject; projectRoot = project.RootFolder;
 %% Simulation parameters
 % Model
 model = 'MultirotorSimPx4v1_8ContAttOnly';
-Simulation.TS_MAX = 0.001;
-Simulation.TS_OUT = 0.01;
-Simulation.T_END = 20;
+tEnd = 20;
 
 %% Load parameters
 load_system( model )
@@ -39,9 +37,8 @@ set_param( [model '/Manual Switch thrustDes']   , 'sw', '0' )
 set_param( [model '/Manual Switch horThrustDes'], 'sw', '0' )
 
 % Load UAV parameters
-loadBuses = false;
-InitializeParametersOctocopterCanted
-InitializeModel
+[Uav, Motor, Aero, Initial] = InitializeParametersOctocopter( true );
+Simulation = InitializeModel( model, Initial, tEnd );
 Ctrl.THROTTLE_HOVER = Uav.THROTTLE_HOVER;
 
 %% Find operating point

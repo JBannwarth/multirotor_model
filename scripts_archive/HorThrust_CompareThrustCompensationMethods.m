@@ -15,9 +15,7 @@ stepTime  = 5;
 
 % Model
 model = 'TestMultirotorSimPx4v1_8Hinf';
-Simulation.TS_MAX = 0.001;
-Simulation.TS_OUT = 0.01;
-Simulation.T_END = 50;
+tEnd = 50;
 
 %% Load parameters
 load_system( model )
@@ -42,10 +40,8 @@ set_param( model, 'LoadExternalInput', 'off' );
 set_param( [model '/Sinusoidal input'], 'commented', 'on' )
 
 % Load UAV parameters
-loadBuses = false;
-InitializeParametersOctocopterCanted
-InitializeModel
-Motor.K = 0.5*Uav.RHO_AIR*Uav.D_PROP^2*Uav.A_PROP*Aero.Cz2.coefs(2);
+[Uav, Motor, Aero, Initial] = InitializeParametersOctocopter( true );
+Simulation = InitializeModel( model, Initial, tEnd );
 
 % Set controller parameters
 Ctrl.HOR_GAIN = 0;

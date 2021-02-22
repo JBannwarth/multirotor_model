@@ -1,7 +1,7 @@
 clear all; %#ok<CLALL>
 
 %% Create input profile
-InitializeParametersQuadcopter
+[Uav, Motor, Aero, Initial] = InitializeParametersQuadcopter( );
 
 Simulation.TS_MAX = 0.01;
 Simulation.T_END = 60;
@@ -18,4 +18,4 @@ Px4Bus;
 selfBus;
 mpc_self;
 
-InitializeParametersQuadcopter;
+[Uav, Motor, Aero, Initial] = InitializeParametersQuadcopter( );;

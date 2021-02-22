@@ -45,11 +45,6 @@ function [Aero, Ctrl, Initial, model, Motor, Simulation, Uav, windInput, toLoad]
           'FPHTTranslationOnlyThrust', 'MultirotorSimPx4v1_8FPHTTranslationOnlyForceControl' };
     model = ctrlFiles{ strcmp( ctrlFiles(:,1), ctrlName ), 2};
 
-    % Simulation parameters
-    Simulation.TS_MAX = 0.001;
-    Simulation.TS_OUT = 0.01;
-    Simulation.T_END  = tEnd;
-
     %% Load parameters
     load_system( model )
 
@@ -71,9 +66,10 @@ function [Aero, Ctrl, Initial, model, Motor, Simulation, Uav, windInput, toLoad]
     set_param( [model '/Step wind input'], 'Commented', 'on' )
 
     % Load UAV parameters
-    loadBuses = false;
-    InitializeParametersOctocopterCanted
-    InitializeModel
+    [Uav, Motor, Aero, Initial] = InitializeParametersOctocopter( true );
+    Simulation = InitializeModel( model, Initial, tEnd );
+
+    % Controller parameters
     Ctrl.THROTTLE_HOVER = Uav.THROTTLE_HOVER;
     Ctrl.BYPASS_ROTATION = 1;
 

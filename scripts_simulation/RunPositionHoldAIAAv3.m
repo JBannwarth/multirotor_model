@@ -49,11 +49,10 @@ set_param( [model '/Motor model'], 'ModelName', 'MotorModelAIAAv3' );
 
 %% 5) Loop over the number of iterations
 load( fullfile( inFolder , windFiles{1} ) )
-Simulation.TS_MAX = 0.001;
-Simulation.TS_OUT = 0.01;
-Simulation.T_END = windInput.Time(end);
+tEnd = windInput.Time(end);
 load( fullfile( projectRoot, 'data_misc', 'AeroBodyOrientedAIAAv3' ) );
-InitializeModel;
+[Uav, Motor, Aero, Initial] = InitializeParametersQuadcopter( );
+Simulation = InitializeModel( model, Initial, tEnd );
 clearvars( 'windInput' )
 
 % No wind

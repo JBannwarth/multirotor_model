@@ -12,12 +12,10 @@ SwitchRotorNumber( model, 4 );
 %% Initialization
 project = simulinkproject;
 projectRoot = project.RootFolder;
-Simulation.TS_MAX = 0.01;
 load( 'AeroBothAIAAv3.mat' )
-InitializeModel
-Px4Bus;
-selfBus;
-mpc_self;
+
+[Uav, Motor, Aero, Initial] = InitializeParametersQuadcopter( );
+Simulation = InitializeModel( model, Initial, 20, true );
 
 %% Set up model
 % Set switches and comment out unneeded blocks
@@ -59,9 +57,9 @@ for n = 1:length( inputFiles )
     Initial.Q = AttInput.qDes(1,2:end)';
     
     % Set all simulation parameters
-    Simulation.T_END = AttInput.qDes(end,1);
+    tEnd = AttInput.qDes(end,1);
     load( 'AeroBothAIAAv3.mat' )
-    InitializeModel
+    Simulation = InitializeModel( model, Initial, tEnd );
     Uav.PITCH_ONLY = 1;
     Simulation.T_START_STEP = AttInput.tDesOffset;
     LoadPx4Parameters( model, params )
@@ -90,12 +88,3 @@ for n = 1:length( inputFiles )
     % Save to file
     save( fullfile( outputFolder, [ inputFiles{n}(1:end-4) 'Sim.mat' ] ), 'output' );
 end
-
-% CheckAttitudeControlPlot;
-
-% tableOut = '';
-% for i = 1:length( tableStrs )
-%     tableOut = sprintf( '%s%s\n', tableOut, tableStrs{i});
-% end
-% 
-% disp(tableOut)
