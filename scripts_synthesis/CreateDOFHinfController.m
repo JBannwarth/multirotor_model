@@ -97,19 +97,22 @@ k1 = wCorner;    % rad/s
 k2 = wCorner*10; % rad/s
 k3 = wCorner;    % rad/s
 k4 = wCorner/10; % rad/s
-WActAtt = db2mag(-5)*tf( 10*[1 k1], [1,k2] );
-WActHor = db2mag(5) *tf(    [1 k3], [1,k4] );
-WAct = [ WActAtt 0       0       0       0       ;
-         0       WActAtt 0       0       0       ;
-         0       0       WActAtt 0       0       ;
-         0       0       0       WActHor 0       ;
-         0       0       0       0       WActHor ];
+WActAtt = db2mag(-20) * tf( 10*[1 k1], [1,k2] );
+WActAttZ = db2mag(-20) * tf( 10*[1 k2], [1,10*k2] );
+WActHor = db2mag(-20) * tf(    [1 k3], [1,k4] );
+WAct = [ WActAtt 0       0        0       0       ;
+         0       WActAtt 0        0       0       ;
+         0       0       WActAttZ 0       0       ;
+         0       0       0        WActHor 0       ;
+         0       0       0        0       WActHor ];
 
-WReg = diag( [1 1 1 1 1 1 1 1 1] );
-WSensor = eye( size(C, 1) );
+WReg = diag( [1 1 2 1 1 2 1 1 2] );
+WSensor = 0.1*eye( size(C, 1) );
 wDistU = db2mag(10)*db2mag(0)        * tf(  24.1184, [1 24.1184] );
-wDistV = db2mag(10)*db2mag(-17.7392) * tf( 128.8783, [1 128.8783] );
-wDistW = db2mag(10)*db2mag(-20.1404) * tf( 163.7495, [1 163.7495] );
+wDistV = wDistU;
+wDistW = wDistU;
+% wDistV = db2mag(10)*db2mag(-17.7392) * tf( 128.8783, [1 128.8783] );
+% wDistW = db2mag(10)*db2mag(-20.1404) * tf( 163.7495, [1 163.7495] );
 WDist = [ wDistU 0      0;
           0      wDistV 0;
           0      0      wDistW ];
