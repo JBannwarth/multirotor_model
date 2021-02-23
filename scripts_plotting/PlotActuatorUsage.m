@@ -19,9 +19,9 @@ resultFolder = fullfile( projectRoot, 'data_results', 'pos_hold' );
 windFolder = fullfile( projectRoot, 'data_wind', 'TurbSimOC' );
 
 if ~exist( 'resultFile', 'var' )
-    % Select latest baseline file and latest file
-    resultFile{1} = GetLatestFile( resultFolder, 'PosHold_baseline*.mat' );
-    resultFile{2} = GetLatestFile( resultFolder, '*.mat' );
+    % Select latest baseline file and latest other file
+    resultFile{1} = GetLatestFile( resultFolder, '*baseline*.mat' );
+    resultFile{2} = GetLatestFile( resultFolder, '*.mat', 'baseline' );
     if strcmp( resultFile{1}, resultFile{2} )
         % Latest file is latest baseline
         resultFile = resultFile{1};
@@ -35,6 +35,9 @@ if size( legendStr, 2) == 1
 else
     legendStr = legendStr(:,:,2); % > 1 file
 end
+
+% Set colors for comparison plots
+colors = lines( length(legendStr) );
 
 if ~exist( 'windFile', 'var' )
     % Select highest wind speed
@@ -53,11 +56,16 @@ end
 maxLen = max( cellfun( @(s)(length(s)), resultFile ) );
 
 %% Process results
-hXi = figure( 'Name', 'xi' );
+% Figure handles
+hXi   = figure( 'Name', 'xi' );
+hAct  = figure( 'Name', 'Actuator usage' );
+hSpec = figure( 'Name', 'Spectrum' );
+
+% Process
 for ii = 1:length( resultFile )
     %% Load data and select desired response
     load( fullfile( resultFolder, resultFile{ii} ), 'ULin', 'simIn', 'simOut'  )
-    fprintf( sprintf('[%% %ds] ', maxLen), resultFile{ii} )
+    fprintf( sprintf('[%% %ds] ', maxLen), resultFile{ii} );
 
     analysedWindFiles = simIn.getVariable( 'windFile' );
     % Strip extensions
@@ -100,18 +108,18 @@ for ii = 1:length( resultFile )
     xiMax = max( logsout.get( 'xi' ).Values.Data );
     
     % Print position metrics
-    fprintf( sprintf('[%% %ds] ', maxLen), resultFile{ii} )
+    fprintf( sprintf('[%% %ds] ', maxLen), resultFile{ii} );
     fprintf( 'Pos error (m): [rms] (%.4f, %.4f %.4f) [max] (%.4f, %.4f %.4f)\n', ...
-        xiRms(1), xiRms(2), xiRms(3), xiMax(1), xiMax(2), xiMax(3) )
+        xiRms(1), xiRms(2), xiRms(3), xiMax(1), xiMax(2), xiMax(3) );
     
     % Calculate actuator frequency usage
-    figure( 'name', 'Thrust spectrum' )
-    hold on; grid on; box on
+    % Attitude thrust
     attThrust = logsout.get( 'Td' ).Values.Data;
     for jj = 1:3
-        [ f, P1v ] = SingleSidedSpectrum( t, attThrust(:,jj) );
-        plot( f, P1v )
+        [ fVert{jj}, P1Vert{jj} ] = SingleSidedSpectrum( t, attThrust(:,jj) );
     end
+    
+    % Horizontal thrust
     if ~strcmp( legendStr{ii}, 'baseline' )
         horThrust = logsout.get( 'horThrustDes' ).Values.Data;
         [ fx, P1x ] = SingleSidedSpectrum( t, horThrust(:,1) );
@@ -121,7 +129,6 @@ for ii = 1:length( resultFile )
         xlabel( 'f (Hz)' )
         ylabel( '|P_1(f)|' )
     end
-    legend( {'axf', 'ayf', 'azf', 'hxf', 'hyf'} )
     
     %% Plot data
     figSize = [15 15];
@@ -141,16 +148,61 @@ for ii = 1:length( resultFile )
     % Plot position error
     set( 0, 'CurrentFigure', hXi )
     xi = logsout.get('xi').Values;
-    axs = {'North, x', 'East, y', 'Down, z'};
+    axsLong = {'North, x', 'East, y', 'Down, z'};
     for jj = 1:3
         subplot( 3, 1, jj )
         hold on; grid on; box on
         plot( xi.Time, xi.Data(:,jj) )
-        ylabel( sprintf( '%s pos (m)', axs{jj} ) )
+        ylabel( sprintf( '%s pos (m)', axsLong{jj} ) )
     end
     xlabel( 'Time (s)' )
+    
+    % Plot actuators
+    set( 0, 'CurrentFigure', hAct )
+    axs = {'x', 'y', 'z'};
+    for jj = 1:3
+        subplot( 5, 1, jj )
+        hold on; grid on; box on
+        plot(t, attThrust(:,jj) )
+        ylabel( sprintf( 'T_%s (-)', axs{jj} ) )
+    end
+    if exist( 'fx', 'var' )
+        subplot( 5, 1, 4 )
+        hold on; grid on; box on;
+        plot( t, horThrust(:,1), 'Color', colors(ii,:) )
+        ylabel( 'T_{x,H} (-)' )
+        
+        subplot( 5, 1, 5 )
+        hold on; grid on; box on;
+        plot( t, horThrust(:,2), 'Color', colors(ii,:) )
+        ylabel( 'T_{y,H} (-)' )
+    end
+    xlabel( 'Time (s)' )
+    
+    % Plot frequency usage
+    set( 0, 'CurrentFigure', hSpec )
+    for jj = 1:3
+        hSpecSub{jj} = subplot( 5, 1, jj );
+        hold on; grid on; box on
+        plot( fVert{jj}, P1Vert{jj}, 'Color', colors(ii,:) )
+        ylabel( sprintf( '|T_%s| (-)', axs{jj} ) )
+    end
+    if exist( 'fx', 'var' )
+        subplot( 5, 1, 4 )
+        hold on; grid on; box on;
+        plot( fx, P1x, 'Color', colors(ii,:) )
+        ylabel( '|T_{x,H}| (-)' )
+        
+        subplot( 5, 1, 5 )
+        hold on; grid on; box on;
+        plot( fx, P1x, 'Color', colors(ii,:) )
+        ylabel( '|T_{y,H}| (-)' )
+    end
+    xlabel( 'Frequency (Hz)' )
 end
 
 % Add legends
 set( 0, 'CurrentFigure', hXi )
 legend( legendStr )
+set( 0, 'CurrentFigure', hSpec )
+legend( hSpecSub{1}, legendStr )
