@@ -10,7 +10,7 @@ project = simulinkproject; projectRoot = project.RootFolder;
 
 %% Configuration
 % Wind
-ULin = [5 0 0];
+ULin = [4.09 0 0];
 
 % Model
 model = 'MultirotorSimPx4v1_8ContAttOnlyForceControl';
@@ -20,7 +20,6 @@ tEnd = 50;
 load_system( model )
 
 % Get wind data and aero parameters
-load( fullfile( projectRoot, 'data_misc', 'AeroBodyOrientedAIAAv3' ) );
 load( fullfile( projectRoot, 'data_wind', 'TurbSimOC', 'TurbSim_40_01' ) );
 
 % Select submodels
