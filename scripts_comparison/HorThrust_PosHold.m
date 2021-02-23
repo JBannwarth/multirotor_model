@@ -16,10 +16,10 @@
 %
 %   See also PLOTACTUATORUSAGE.
 %
-%   Written by:    J.X.J. Bannwarth, 2019/05/16
-%   Last modified: J.X.J. Bannwarth, 2020/02/17
+%   Written: 2019/05/16, J.X.J. Bannwarth
 
 %% Input processing
+clearvars -except ctrlName windFiles tEnd saveData
 if ~exist( 'ctrlName', 'var' )
     ctrlName = 'baseline';
 end
@@ -90,7 +90,7 @@ end
 %% Initialize and find OP for different wind speeds
 [ Aero, Ctrl, Initial, model, Motor, Simulation, Uav, ~, toLoad ] = InitializePx4( ...
     ctrlName, tEnd );
-Ctrl.U_OPERATING = [0; 0; -Ctrl.THROTTLE_HOVER; 0; 0];
+% Ctrl.U_OPERATING = [0; 0; -Ctrl.THROTTLE_HOVER; 0; 0];
 FindOpPx4
 
 %% Finish setting up simulation
@@ -101,8 +101,8 @@ for ii = 1:length(windInputs)
     simIn(ii) = setVariable( simIn(ii), 'op', ops(ii) );
     simIn(ii) = setVariable( simIn(ii), 'windInput', windInputs{ii} );
     simIn(ii) = setVariable( simIn(ii), 'windFile', windFiles{ii} );
-    fprintf( '[Simulation %02d/%02d] Controller: % 10s, wind: % 20s\n', ...
-        ii, length(windInputs), ctrlName, windFiles{ii} );
+    fprintf( '[Simulation %02d/%02d] Controller: % 10s, wind: % 20s, tEnd: % 5ds\n', ...
+        ii, length(windInputs), ctrlName, windFiles{ii}, tEnd );
 end
 
 %% Run simulation
