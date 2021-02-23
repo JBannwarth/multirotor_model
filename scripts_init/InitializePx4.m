@@ -21,7 +21,7 @@ function [Aero, Ctrl, Initial, model, Motor, Simulation, Uav, windInput, toLoad]
 %
 %   Note that this function does not trim the system.
 %
-%   See also FINDOPPX4V1_8CONT.
+%   See also FINDOPPX4.
 %
 %   Written: 2021/02/18, J.X.J. Bannwarth
     arguments
@@ -49,8 +49,6 @@ function [Aero, Ctrl, Initial, model, Motor, Simulation, Uav, windInput, toLoad]
     load_system( model )
 
     % Get wind data and aero parameters
-    load( fullfile( projectRoot, 'data_misc', 'AeroBodyOrientedAIAAv3' ), ...
-        'Aero' );
     load( fullfile( projectRoot, 'data_wind', 'TurbSimOC', 'TurbSim_40_01' ), ...
         'windInput' );
 
@@ -79,12 +77,13 @@ function [Aero, Ctrl, Initial, model, Motor, Simulation, Uav, windInput, toLoad]
             Ctrl.BYPASS_ROTATION = 1;
             ctrlFile = fullfile( projectRoot, 'work', 'HinfGain.mat' );
             if isfile( ctrlFile )
-                load( ctrlFile, 'K', 'thrustOp' )
+                load( ctrlFile, 'K', 'thrustOp', 'ULin' )
             else
                 error( 'Controller file %s not found', ctrlFile )
             end
             Ctrl.K = K;
             Ctrl.U_OPERATING = thrustOp;
+            Ctrl.WIND_OPERATING = ULin;
         case 'IHT'
             Ctrl.CONTROLLER_TYPE = 3;
     end
