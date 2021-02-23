@@ -4,8 +4,8 @@
 %   H-infinity controller. Requires HinfGain.mat to have been generated in
 %   the work folder by CreateDOFHinfController.
 %
-%   See also CREATEDOFHINFCONTROLLER,
-%   MULTIROTORSIMPX4v1_8FPHTFULLGAINMATRIX, INITIALIZEPX4V1_8FPHTFULLGAIN.
+%   See also CREATEDOFHINFCONTROLLER, INITIALIZEPX4,
+%   MULTIROTORSIMPX4v1_8FPHTFULLGAINMATRIX.
 %
 %   Written by: 2018/02/06, J.X.J. Bannwarth
 
@@ -14,11 +14,15 @@ project = simulinkproject; projectRoot = project.RootFolder;
 
 %% Configuration
 % Simulation settings
-Simulation.TS_MAX = 0.001;
-Simulation.TS_OUT = 0.01;
-Simulation.T_END = 30;
+ctrlName = 'FPHTFullGain';
+tEnd = 30;
 
 %% Set-up model
-InitializePx4v1_8FPHTFullGain
+[Aero, Ctrl, Initial, model, Motor, Simulation, Uav, windInput, toLoad] = InitializePx4( ctrlName, tEnd );
+
+ULin = Ctrl.WIND_OPERATING;
+
+FindOpPx4
+
 set_param( [model '/Fixed wind input'], 'Value', mat2str( ULin ) )
 set_param( [model '/Input choice'], 'Value', '2' )
