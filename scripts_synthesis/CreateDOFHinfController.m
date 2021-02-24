@@ -61,7 +61,8 @@ A  = linsys.A;
 B1 = linsys.B(:, distIdx);
 B2 = linsys.B(:, controlIdx);
 C  = linsys.C(outputIdx, :);
-D  = linsys.D(outputIdx, controlIdx);
+D21 = linsys.D(outputIdx, distIdx);
+D22  = linsys.D(outputIdx, controlIdx);
 
 % Zero extremely small elements to get accurate answers when doing tests
 % such as ctrb and obsv
@@ -70,7 +71,7 @@ A(abs(A) < tol)   = 0;
 B1(abs(B1) < tol) = 0;
 B2(abs(B2) < tol) = 0;
 C(abs(C) < tol)   = 0;
-D(abs(D) < tol)   = 0;
+D22(abs(D22) < tol)   = 0;
 
 % Sizes
 n = size( linsys.A, 1 );
@@ -80,14 +81,34 @@ p = length( outputIdx );
 
 % Add integrator for zero steady state error
 A = [ zeros(n+3, 3), [ eye(3, n); A ] ];
-B1 = [ zeros(3, m1) ;
+B1 = [ zeros(3, m1)  ;
        B1           ];
-B2 = [ zeros(3, m2) ;
+B2 = [ zeros(3, m2)  ;
        B2           ];
-C = [ eye(3, n+3)    ;
+C = [ eye(3, n+3)     ;
       zeros(p, 3), C ];
-D = [ zeros(3, m2) ;
-      D            ];
+D21 = [ zeros(3, m1)  ;
+        D21          ];
+D22 = [ zeros(3, m2)  ;
+        D22          ];
+D = [D21 D22];
+G = ss( A, [B1 B2], C, [D21 D22] );
+G.InputName = { 'U_u' , 'U_v' , 'U_w' , ...
+                'T_ax', 'T_ay', 'T_az', ...
+                'T_hx', 'T_hy' }';
+G.OutputName = { 'xInt', 'yInt', 'zInt' , ...
+                 'x'   , 'y'   , 'z'    , ...
+                 'xDot', 'yDot', 'zDot' }';
+G.StateName = { 'xInt', 'yInt', 'zInt', ...
+                'x'   , 'y'   , 'z'   , ...
+                'xDot', 'yDot', 'zDot', ...
+                'roll', 'pitch', 'yaw', ...
+                'nu_x', 'nu_y', 'nu_z', ...
+                'omega_1', 'omega_2', 'omega_3', 'omega_4', ...
+                'omega_5', 'omega_6', 'omega_7', 'omega_8', ...
+                'PID_D_pitch1', 'PID_D_pitch2', 'PID_I_pitch', ...
+                'PID_D_roll1' , 'PID_D_roll2' , 'PID_I_roll' , ...
+                'PID_I_yaw' }';
 
 % Weighting functions
 % Actuators
@@ -97,9 +118,10 @@ k1 = wCorner;    % rad/s
 k2 = wCorner*10; % rad/s
 k3 = wCorner;    % rad/s
 k4 = wCorner/10; % rad/s
-WActAtt = db2mag(-20) * tf( 10*[1 k1], [1,k2] );
-WActAttZ = db2mag(-20) * tf( 10*[1 k2], [1,10*k2] );
-WActHor = db2mag(-20) * tf(    [1 k3], [1,k4] );
+kZ = 3*2*pi;     % rad/s
+WActAtt  = db2mag(0) * tf( 10*[1 k1], [1,k2] );
+WActAttZ = db2mag(0) * tf( 10*[1 kZ/10], [1, kZ] );
+WActHor  = db2mag(-20) * tf(    [1 k3], [1,k4] );
 WAct = [ WActAtt 0       0        0       0       ;
          0       WActAtt 0        0       0       ;
          0       0       WActAttZ 0       0       ;
@@ -108,7 +130,7 @@ WAct = [ WActAtt 0       0        0       0       ;
 
 WReg = diag( [1 1 2 1 1 2 1 1 2] );
 WSensor = 0.1*eye( size(C, 1) );
-wDistU = db2mag(10)*db2mag(0)        * tf(  24.1184, [1 24.1184] );
+wDistU = db2mag(20)*db2mag(0)        * tf(  24.1184, [1 24.1184] );
 wDistV = wDistU;
 wDistW = wDistU;
 % wDistV = db2mag(10)*db2mag(-17.7392) * tf( 128.8783, [1 128.8783] );
@@ -139,6 +161,12 @@ opts = hinfsynOptions('Display', 'on');
 
 % OPTIONS.nrand = 10;
 % [K, F, VIOL, LOC] = hifoo( P, 0, [], [], [], OPTIONS );
+
+% Add details to controller
+K.InputName = { 'xInt', 'yInt', 'zInt' , ...
+                'x'   , 'y'   , 'z'    , ...
+                'xDot', 'yDot', 'zDot' };
+K.OutputName = { 'T_ax', 'T_ay', 'T_az', 'T_hx', 'T_hy' };
 
 %% Save data
 % Operating point
