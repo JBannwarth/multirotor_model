@@ -124,10 +124,6 @@ for ii = 1:length( resultFile )
         horThrust = logsout.get( 'horThrustDes' ).Values.Data;
         [ fx, P1x ] = SingleSidedSpectrum( t, horThrust(:,1) );
         [ fy, P1y ] = SingleSidedSpectrum( t, horThrust(:,2) );
-
-        plot( fx, P1x, fy, P1y )
-        xlabel( 'f (Hz)' )
-        ylabel( '|P_1(f)|' )
     end
     
     %% Plot data
@@ -161,7 +157,7 @@ for ii = 1:length( resultFile )
     set( 0, 'CurrentFigure', hAct )
     axs = {'x', 'y', 'z'};
     for jj = 1:3
-        subplot( 5, 1, jj )
+        hActSub{jj} = subplot( 5, 1, jj );
         hold on; grid on; box on
         plot(t, attThrust(:,jj) )
         ylabel( sprintf( 'T_%s (-)', axs{jj} ) )
@@ -195,8 +191,9 @@ for ii = 1:length( resultFile )
         
         subplot( 5, 1, 5 )
         hold on; grid on; box on;
-        plot( fx, P1x, 'Color', colors(ii,:) )
+        plot( fy, P1y, 'Color', colors(ii,:) )
         ylabel( '|T_{y,H}| (-)' )
+        clearvars fx P1x fy P1y
     end
     xlabel( 'Frequency (Hz)' )
 end
@@ -206,3 +203,5 @@ set( 0, 'CurrentFigure', hXi )
 legend( legendStr )
 set( 0, 'CurrentFigure', hSpec )
 legend( hSpecSub{1}, legendStr )
+set( 0, 'CurrentFigure', hAct )
+legend( hActSub{1}, legendStr )
