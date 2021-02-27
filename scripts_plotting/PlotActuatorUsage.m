@@ -58,6 +58,7 @@ maxLen = max( cellfun( @(s)(length(s)), resultFile ) );
 %% Process results
 % Figure handles
 hXi   = figure( 'Name', 'xi' );
+hAtt  = figure( 'Name', 'Attitude' );
 hAct  = figure( 'Name', 'Actuator usage' );
 hSpec = figure( 'Name', 'Spectrum' );
 
@@ -152,6 +153,18 @@ for ii = 1:length( resultFile )
         ylabel( sprintf( '%s pos (m)', axsLong{jj} ) )
     end
     xlabel( 'Time (s)' )
+
+    % Plot attitude
+    set( 0, 'CurrentFigure', hAtt )
+    eta = logsout.get('eta').Values;
+    axsAtt = {'Roll', 'Pitch', 'Yaw'};
+    for jj = 1:3
+        subplot( 3, 1, jj )
+        hold on; grid on; box on
+        plot( eta.Time, rad2deg( eta.Data(:,jj) ) )
+        ylabel( sprintf( '%s angle (deg)', axsAtt{jj} ) )
+    end
+    xlabel( 'Time (s)' )
     
     % Plot actuators
     set( 0, 'CurrentFigure', hAct )
@@ -200,6 +213,8 @@ end
 
 % Add legends
 set( 0, 'CurrentFigure', hXi )
+legend( legendStr )
+set( 0, 'CurrentFigure', hAtt )
 legend( legendStr )
 set( 0, 'CurrentFigure', hSpec )
 legend( hSpecSub{1}, legendStr )
