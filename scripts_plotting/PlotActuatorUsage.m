@@ -41,7 +41,7 @@ colors = lines( length(legendStr) );
 
 if ~exist( 'windFile', 'var' )
     % Select highest wind speed
-    windFile = 'TurbSim_40_01';
+    windFile = 'turbsim_35_01';
 end
 
 % Strip extensions

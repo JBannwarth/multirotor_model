@@ -17,7 +17,7 @@ load( fullfile( projectRoot, 'work', 'HinfGain.mat' ), 'K' )
 
 % Get wind data and aero parameters
 load( fullfile( projectRoot, 'data_misc', 'AeroBodyOrientedAIAAv3' ) );
-load( fullfile( projectRoot, 'data_wind', 'TurbSimOC', 'TurbSim_40_01' ) );
+load( fullfile( projectRoot, 'data_wind', 'TurbSimOC', 'turbsim_35_01' ) );
 
 % Select submodels
 set_param( [model '/Drag model'],  'ModelName', 'DragModelAIAAv3' );
