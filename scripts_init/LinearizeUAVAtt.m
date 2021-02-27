@@ -10,7 +10,7 @@ project = simulinkproject; projectRoot = project.RootFolder;
 
 %% Configuration
 % Wind
-ULin = [4.09 0 0];
+ULin = [7.4 0 0];
 
 % Model
 model = 'MultirotorSimPx4v1_8ContAttOnlyForceControl';
