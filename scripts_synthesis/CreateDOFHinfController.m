@@ -18,44 +18,29 @@ addpath( fullfile( projectRoot, 'libraries', 'hanso' ) )
 
 weightedModel = 'WeightedHinfModel';
 
-%% Load and prepare linearised model
+%% Load linearised model
 load( fullfile( projectRoot, 'work', 'Octocopter_LinMod_Att' ), ...
     'linsys', 'op', 'ULin' )
 
-% Rearrange states in order: [xi; xiDot; eta; nuBody; omega; pidStates]
-% Find indexes of main states
-xiIdx      = find( strcmp( linsys.StateName, 'xi' ) );
-xiDotIdx   = find( strcmp( linsys.StateName, 'xiDot' ) );
-etaIdx     = find( strcmp( linsys.StateName, 'eta' ) );
-nuBodyIdx  = find( strcmp( linsys.StateName, 'nuBody' ) );
-omegaIdx   = find( strcmp( linsys.StateName, 'omega' ) );
-
-% Find remaining indexes (PID integrators, etc.)
-remIdx = ones( size( linsys.StateName ) );
-remIdx( [xiIdx; xiDotIdx; etaIdx; nuBodyIdx; omegaIdx] ) = 0;
-remIdx = find( remIdx );
-
-linsys = xperm( linsys, [ xiIdx; xiDotIdx; etaIdx; nuBodyIdx; omegaIdx; remIdx ] );
-
 %% Get state and input indexes
 % Use variables instead of hardcoding states
-% Select output states - indexes will have changed because of xperm call
-xiIdx      = find( strcmp( linsys.StateName, 'xi' ) );
-xiDotIdx   = find( strcmp( linsys.StateName, 'xiDot' ) );
+% Select output states
+xiIdx      = find( startsWith( linsys.StateName, 'xi_' ) );
+xiDotIdx   = find( startsWith( linsys.StateName, 'xiDot_' ) );
 outputIdx = [xiIdx; xiDotIdx];
 
 % Get input indexes - note that there is no function for rearranging the
 % inputs in SS object
-virThrustIdx = find( contains( linsys.InputName, 'virtualThrustDes' ) );
-horThrustIdx = find( contains( linsys.InputName, 'horThrustDes' ) );
-yawIdx       = find( contains( linsys.InputName, 'yaw' ) );
-windIdx      = find( contains( linsys.InputName, '/U' ) );
+virThrustIdx = find( contains( linsys.InputName, 'T_a' ) );
+horThrustIdx = find( contains( linsys.InputName, 'T_h' ) );
+yawIdx       = find( contains( linsys.InputName, 'yaw' ) ); % Not used
+windIdx      = find( startsWith( linsys.InputName, 'U' ) );
 
 % Separate into control inputs and disturbance inputs
 controlIdx = [virThrustIdx; horThrustIdx];
 distIdx    = windIdx;
 
-%% Design controller
+%% Augment state space model with integrators
 % Extract state space matrices
 A  = linsys.A;
 B1 = linsys.B(:, distIdx);
@@ -92,28 +77,23 @@ D21 = [ zeros(3, m1)  ;
 D22 = [ zeros(3, m2)  ;
         D22          ];
 D = [D21 D22];
-G = ss( A, [B1 B2], C, [D21 D22] );
-G.InputName = { 'U_u' , 'U_v' , 'U_w' , ...
-                'T_ax', 'T_ay', 'T_az', ...
-                'T_hx', 'T_hy' }';
-G.OutputName = { 'xInt', 'yInt', 'zInt' , ...
-                 'x'   , 'y'   , 'z'    , ...
-                 'xDot', 'yDot', 'zDot' }';
-G.StateName = { 'xInt', 'yInt', 'zInt', ...
-                'x'   , 'y'   , 'z'   , ...
-                'xDot', 'yDot', 'zDot', ...
-                'roll', 'pitch', 'yaw', ...
-                'nu_x', 'nu_y', 'nu_z', ...
-                'omega_1', 'omega_2', 'omega_3', 'omega_4', ...
-                'omega_5', 'omega_6', 'omega_7', 'omega_8', ...
-                'PID_D_pitch1', 'PID_D_pitch2', 'PID_I_pitch', ...
-                'PID_D_roll1' , 'PID_D_roll2' , 'PID_I_roll' , ...
-                'PID_I_yaw' }';
 
+% Create new state space object
+G = ss( A, [B1 B2], C, [D21 D22] );
+G.InputName = linsys.InputName( [distIdx; controlIdx] ) ;
+G.OutputName = [ 'xiInt_x'; 'xiInt_y'; 'xiInt_z';
+                 linsys.OutputName( outputIdx ) ];
+G.StateName = [ 'xiInt_x'; 'xiInt_y'; 'xiInt_z'; linsys.StateName ];
+
+% Input groups
+G.InputGroup.dist = distIdx';
+G.InputGroup.controls = controlIdx';
+
+%% Define weighting functions
 % Weighting functions
 % Actuators
 % First order lead-lag compensators
-wCorner = 0.1*2*pi; % rad/s
+wCorner = 0.05*2*pi; % rad/s
 k1 = wCorner;    % rad/s
 k2 = wCorner*10; % rad/s
 k3 = wCorner;    % rad/s
@@ -121,16 +101,16 @@ k4 = wCorner/10; % rad/s
 kZ = 3*2*pi;     % rad/s
 WActAtt  = db2mag(0) * tf( 10*[1 k1], [1,k2] );
 WActAttZ = db2mag(0) * tf( 10*[1 kZ/10], [1, kZ] );
-WActHor  = db2mag(-20) * tf(    [1 k3], [1,k4] );
+WActHor  = db2mag(-10) * tf(    [1 k3], [1,k4] );
 WAct = [ WActAtt 0       0        0       0       ;
          0       WActAtt 0        0       0       ;
          0       0       WActAttZ 0       0       ;
          0       0       0        WActHor 0       ;
          0       0       0        0       WActHor ];
 
-WReg = diag( [1 1 2 1 1 2 1 1 2] );
-WSensor = 0.1*eye( size(C, 1) );
-wDistU = db2mag(20)*db2mag(0)        * tf(  24.1184, [1 24.1184] );
+WReg = 0.5*diag( [1 1 1 1 1 1 1 1 1] );
+WSensor = 0.5*eye( size(C, 1) );
+wDistU = db2mag(15)*db2mag(0) * tf(  24.1184, [1 24.1184] );
 wDistV = wDistU;
 wDistW = wDistU;
 % wDistV = db2mag(10)*db2mag(-17.7392) * tf( 128.8783, [1 128.8783] );
@@ -139,14 +119,15 @@ WDist = [ wDistU 0      0;
           0      wDistV 0;
           0      0      wDistW ];
 
-% Model with weighting functions
-[AHat, BHat, CHat, DHat] = linmod( weightedModel );
-nHat = size(AHat,1);
-mHat = size(BHat,2);
-pHat = size(CHat,1);
+% Get model with weighting functions
+% The system is already linear, so the linearisation does not induce any
+% additional simplification
+P = linearize( weightedModel );
+nHat = size(P.A,1);
+mHat = size(P.B,2);
+pHat = size(P.C,1);
 nMeas = size(C, 1);
 nCont = size(B2, 2);
-P = ss(AHat, BHat, CHat, DHat);
 
 % Add information about index partitioning to SS object
 inputGroup.U1 = 1:(mHat-nCont);
@@ -156,6 +137,7 @@ outputGroup.Y2 = (pHat-nMeas+1):pHat;
 set( P, 'InputGroup' , inputGroup );
 set( P, 'OutputGroup', outputGroup );
 
+%% Create controller
 opts = hinfsynOptions('Display', 'on');
 [K, CLweights, gamma] = hinfsyn(P, nMeas, nCont, opts);
 
@@ -163,10 +145,8 @@ opts = hinfsynOptions('Display', 'on');
 % [K, F, VIOL, LOC] = hifoo( P, 0, [], [], [], OPTIONS );
 
 % Add details to controller
-K.InputName = { 'xInt', 'yInt', 'zInt' , ...
-                'x'   , 'y'   , 'z'    , ...
-                'xDot', 'yDot', 'zDot' };
-K.OutputName = { 'T_ax', 'T_ay', 'T_az', 'T_hx', 'T_hy' };
+K.InputName = G.OutputName;
+K.OutputName = G(:,'controls').InputName;
 
 %% Save data
 % Operating point

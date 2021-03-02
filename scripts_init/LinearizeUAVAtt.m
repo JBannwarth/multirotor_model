@@ -154,5 +154,52 @@ end
 
 linsys = linearize( model, io, op );
 
+%% Rearrange and rename states
+% Rearrange states in order: [xi; xiDot; eta; nuBody; omega; pidStates]
+% Find indexes of main states
+xiIdx      = find( strcmp( linsys.StateName, 'xi' ) );
+xiDotIdx   = find( strcmp( linsys.StateName, 'xiDot' ) );
+etaIdx     = find( strcmp( linsys.StateName, 'eta' ) );
+nuBodyIdx  = find( strcmp( linsys.StateName, 'nuBody' ) );
+omegaIdx   = find( strcmp( linsys.StateName, 'omega' ) );
+
+% Find remaining indexes (PID integrators, etc.)
+remIdx = ones( size( linsys.StateName ) );
+remIdx( [xiIdx; xiDotIdx; etaIdx; nuBodyIdx; omegaIdx] ) = 0;
+remIdx = find( remIdx );
+
+% Find input indexes
+virThrustIdx = find( contains( linsys.InputName, 'virtualThrustDes' ) );
+horThrustIdx = find( contains( linsys.InputName, 'horThrustDes' ) );
+yawIdx       = find( contains( linsys.InputName, 'yaw' ) );
+windIdx      = find( contains( linsys.InputName, '/U' ) );
+
+% Find output indexes
+xiOutIdx    = find( startsWith( linsys.OutputName, 'xi(' ) );
+xiDotOutIdx = find( startsWith( linsys.OutputName, 'xiDot' ) );
+
+% Rename states
+linsys.StateName(xiIdx)     = { 'xi_x'; 'xi_y'; 'xi_z' };
+linsys.StateName(xiDotIdx)  = { 'xiDot_x'; 'xiDot_y'; 'xiDot_z' };
+linsys.StateName(etaIdx)    = { 'roll'; 'pitch'; 'yaw' };
+linsys.StateName(nuBodyIdx) = { 'nu_x'; 'nu_y'; 'nu_z' };
+linsys.StateName(omegaIdx)  = { 'omega_1', 'omega_2', 'omega_3', 'omega_4', ...
+                                'omega_5', 'omega_6', 'omega_7', 'omega_8' };
+linsys.StateName(remIdx)    = { 'PID_D_pitch1', 'PID_D_pitch2', 'PID_I_pitch', ...
+                                'PID_D_roll1' , 'PID_D_roll2' , 'PID_I_roll' , ...
+                                'PID_I_yaw' };
+% Rename Inputs
+linsys.InputName(virThrustIdx) = { 'T_ax', 'T_ay', 'T_az' };
+linsys.InputName(horThrustIdx) = { 'T_hx', 'T_hy' };
+linsys.InputName(windIdx)      = { 'U_u' , 'U_v' , 'U_w' };
+
+% Rename outputs
+linsys.OutputName(xiOutIdx)     = linsys.StateName(xiIdx);
+linsys.OutputName(xiDotOutIdx)  = linsys.StateName(xiDotIdx);
+
+% Swap states around
+linsys = xperm( linsys, [ xiIdx; xiDotIdx; etaIdx; nuBodyIdx; omegaIdx; remIdx ] );
+
+%% Save data
 save( fullfile( projectRoot, 'work', 'Octocopter_LinMod_Att'), ...
     'linsys', 'op', 'ULin' )
