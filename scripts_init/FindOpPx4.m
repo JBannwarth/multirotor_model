@@ -41,7 +41,7 @@ if any( strcmp( toLoad, 'attRatePID' ) )
                        'AttRatePID_D_pitch', 'Known', [1 1]';
                        'AttRatePID_D_yaw'  , 'Known', [1 1]';
                        'AttRatePID_I_roll' , 'Known', 1;
-                       'AttRatePID_I_yaw'  , 'Known', 1;
+                       'AttRatePID_I_yaw'  , 'Known', 0;
                      };
                  ];
 end
