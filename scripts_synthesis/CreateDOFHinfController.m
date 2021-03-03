@@ -11,7 +11,14 @@
 %   Written: 2020/11/05, J.X.J. Bannwarth
 
 %% Initialization
-close all; clc; clearvars;
+clearvars -except ctrlOrder reduceModel
+if ~exist( 'ctrlOrder', 'var' )
+    ctrlOrder = -1;
+end
+if ~exist( 'reduceModel', 'var' )
+    reduceModel = false;
+end
+
 project = simulinkproject; projectRoot = project.RootFolder;
 addpath( fullfile( projectRoot, 'libraries', 'hifoo' ) )
 addpath( fullfile( projectRoot, 'libraries', 'hanso' ) )
@@ -93,15 +100,15 @@ G.InputGroup.controls = controlIdx';
 % Weighting functions
 % Actuators
 % First order lead-lag compensators
-wCorner = 0.05*2*pi; % rad/s
+wCorner = 0.5*2*pi; % rad/s
 k1 = wCorner;    % rad/s
 k2 = wCorner*10; % rad/s
 k3 = wCorner;    % rad/s
 k4 = wCorner/10; % rad/s
 kZ = 3*2*pi;     % rad/s
-WActAtt  = db2mag(0) * tf( 10*[1 k1], [1,k2] );
-WActAttZ = db2mag(0) * tf( 10*[1 kZ/10], [1, kZ] );
-WActHor  = db2mag(-10) * tf(    [1 k3], [1,k4] );
+WActAtt  = db2mag(10) * tf( 10*[1 k1], [1,k2] );
+WActAttZ = db2mag(10) * tf( 10*[1 kZ/10], [1, kZ] );
+WActHor  = db2mag(10) * tf(    [1 k3], [1,k4] );
 WAct = [ WActAtt 0       0        0       0       ;
          0       WActAtt 0        0       0       ;
          0       0       WActAttZ 0       0       ;
@@ -109,7 +116,7 @@ WAct = [ WActAtt 0       0        0       0       ;
          0       0       0        0       WActHor ];
 
 WReg = 0.5*diag( [1 1 1 1 1 1 1 1 1] );
-WSensor = 0.5*eye( size(C, 1) );
+WSensor = 0.05*eye( size(C, 1) );
 wDistU = db2mag(15)*db2mag(0) * tf(  24.1184, [1 24.1184] );
 wDistV = wDistU;
 wDistW = wDistU;
@@ -130,23 +137,44 @@ nMeas = size(C, 1);
 nCont = size(B2, 2);
 
 % Add information about index partitioning to SS object
-inputGroup.U1 = 1:(mHat-nCont);
-inputGroup.U2 = (mHat-nCont+1):mHat;
-outputGroup.Y1 = 1:(pHat-nMeas);
-outputGroup.Y2 = (pHat-nMeas+1):pHat;
+inputGroup.U1 = 1:(mHat-nCont);       % Disturbances
+inputGroup.U2 = (mHat-nCont+1):mHat;  % Controls
+outputGroup.Y1 = 1:(pHat-nMeas);      % Regulated output
+outputGroup.Y2 = (pHat-nMeas+1):pHat; % Output
 set( P, 'InputGroup' , inputGroup );
 set( P, 'OutputGroup', outputGroup );
 
 %% Create controller
 opts = hinfsynOptions('Display', 'on');
-[K, CLweights, gamma] = hinfsyn(P, nMeas, nCont, opts);
 
-% OPTIONS.nrand = 10;
-% [K, F, VIOL, LOC] = hifoo( P, 0, [], [], [], OPTIONS );
+disp( 'Creating controller...' )
+tic;
+if ctrlOrder == -1
+    % Full order controller
+    [ K, CLweights, gamma ] = hinfsyn(P, nMeas, nCont, opts);
+else
+    % Use HIFOO to create reduced order controller
+    OPTIONS.nrand = 3;
+    [ K, F, VIOL, LOC ] = hifoo( P, ctrlOrder, [], [], [], OPTIONS );
+end
+
+% Display time taken to create controller
+tElapsed = seconds( toc );
+tElapsed.Format = 'hh:mm:ss.SSS';
+fprintf( 'Controller created. Time taken: %s s\n', tElapsed )
 
 % Add details to controller
 K.InputName = G.OutputName;
 K.OutputName = G(:,'controls').InputName;
+
+%% Check controller
+CLTF = feedback( G(:,'controls'), K, 'name', +1 );
+if ~isstable( CLTF )
+    [p, z] = pzmap( CLTF );
+    pRHP = p( p > 0 );
+    pStr = sprintf( '\tp = %.3f\n', pRHP );
+    warning( 'Close loop system not stable. RHP poles at:\n%s', pStr )
+end
 
 %% Save data
 % Operating point
