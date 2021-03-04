@@ -19,7 +19,7 @@ load_system( model )
 
 % Get wind data and aero parameters
 load( fullfile( projectRoot, 'data_misc', 'AeroBodyOrientedAIAAv3' ) );
-load( fullfile( projectRoot, 'data_wind', 'TurbSimOC', 'turbsim_35_01' ) );
+load( fullfile( projectRoot, 'data_wind', 'blwt', 'turbsim_35_01' ) );
 
 % Coment out what might cause issues
 set_param( [model '/Sinusoidal input']  , 'Commented', 'on' )

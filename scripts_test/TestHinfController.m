@@ -8,7 +8,7 @@ addpath( fullfile( projectRoot, 'libraries', 'hifoo' ) )
 addpath( fullfile( projectRoot, 'libraries', 'hanso' ) )
 
 % Load data
-load( fullfile( projectRoot, 'data_wind', 'TurbSimOC', 'TurbSim_50_01.mat' ) )
+load( fullfile( projectRoot, 'data_wind', 'blwt', 'TurbSim_50_01.mat' ) )
 load( fullfile( projectRoot, 'work', 'pitch_tf' ) )
 
 % Plant

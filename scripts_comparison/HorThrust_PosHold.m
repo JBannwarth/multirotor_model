@@ -60,7 +60,7 @@ if saveData
 end
 
 %% Load wind data
-inFolder = fullfile( projectRoot, 'data_wind', 'TurbSimOC' );
+inFolder = fullfile( projectRoot, 'data_wind', 'blwt' );
 if isempty( windFiles )
     windFiles = dir(inFolder);
     windFiles = {windFiles.name};

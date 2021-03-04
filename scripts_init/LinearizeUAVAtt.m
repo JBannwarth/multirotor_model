@@ -20,7 +20,7 @@ tEnd = 50;
 load_system( model )
 
 % Get wind data and aero parameters
-load( fullfile( projectRoot, 'data_wind', 'TurbSimOC', 'turbsim_35_01' ) );
+load( fullfile( projectRoot, 'data_wind', 'blwt', 'turbsim_35_01' ) );
 
 % Select submodels
 set_param( [model '/Drag model'],  'ModelName', 'DragModelAIAAv3' );

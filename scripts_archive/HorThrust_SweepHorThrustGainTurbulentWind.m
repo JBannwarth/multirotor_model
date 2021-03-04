@@ -7,7 +7,7 @@ project = simulinkproject; projectRoot = project.RootFolder;
 
 %% Configuration
 % Wind
-inFolder = fullfile( projectRoot, 'data_wind', 'TurbSimOC' );
+inFolder = fullfile( projectRoot, 'data_wind', 'blwt' );
 windFiles = dir(inFolder);
 windFiles = {windFiles.name};
 % Only keep actual files
@@ -36,7 +36,7 @@ load_system( model )
 
 % Get wind data and aero parameters
 load( fullfile( projectRoot, 'data_misc', 'AeroBodyOrientedAIAAv3' ) );
-load( fullfile( projectRoot, 'data_wind', 'TurbSimOC', 'turbsim_35_01' ) );
+load( fullfile( projectRoot, 'data_wind', 'blwt', 'turbsim_35_01' ) );
 
 % Choose fixed wind input
 set_param( [model '/Input choice'], 'Value', '4' )

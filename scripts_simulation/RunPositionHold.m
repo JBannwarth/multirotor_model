@@ -15,6 +15,7 @@ else
     Uav.M = 1.5; % UAV was a bit heavier at the time this data was taken
 end
 
+inFolder = fullfile( projectRoot, 'data_wind', 'blwt' );
 windFiles = dir( fullfile( inFolder, '*.mat' ) );
 windFiles = {windFiles.name};
 

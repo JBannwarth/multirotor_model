@@ -16,7 +16,7 @@ project = simulinkproject; projectRoot = project.RootFolder;
 
 %% Input processing
 resultFolder = fullfile( projectRoot, 'data_results', 'pos_hold' );
-windFolder = fullfile( projectRoot, 'data_wind', 'TurbSimOC' );
+windFolder = fullfile( projectRoot, 'data_wind', 'blwt' );
 
 if ~exist( 'resultFile', 'var' )
     % Select latest baseline file and latest other file
