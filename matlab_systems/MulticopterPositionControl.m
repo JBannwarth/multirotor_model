@@ -721,6 +721,8 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
         %   Written: 2021/03/05, J.X.J. Bannwarth
         
             % [0] Structure states decoding
+            % Necessary because it is not possible to have structures as
+            % discrete-state properties
             extra_states = discrete_states_to_structure( obj );
 
             % [1] Pre-process input - equivalent to poll_subscriptions()
