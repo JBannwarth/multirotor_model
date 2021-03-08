@@ -322,7 +322,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
             obj.att_sp(5)    = -1; % Landing gear down
             obj.local_pos_sp = zeros(13,1);
             obj.vel_deriv    = [ inf; inf; inf; 0; 0; 0; obj.veld_lp; obj.dt ];
-            obj.hysteresis   = [ 0; 1; 0; inf; 100000 ];
+            obj.hysteresis   = [ 0; 1; 0; 0; 100000 ];
 
             % Char arrays
             obj.user_intention_xy = 1; % Brake
@@ -336,9 +336,9 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
             if obj.simple_mode
                 varargout = { ...
                     'xiDes'        , ...
-                    'xiMeasured'   , ...
-                    'xiDotMeasured', ...
-                    'qMeasured'    , ...
+                    'xiMeas'   , ...
+                    'xiDotMeas', ...
+                    'qMeas'    , ...
                     };
             else
                 % Not implemented yet
@@ -699,7 +699,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
         function icon = getIconImpl( ~ )
         %GETICONIMPL Define icon for System block
         %   Written: 2021/03/05, J.X.J. Bannwarth
-            icon = ["MulticopterPositionControl","","v1.82"];
+            icon = ["mc_pos_control","","v1.82"];
         end
 
         function sts = getSampleTimeImpl( obj )
@@ -738,10 +738,10 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 in.vehicle_status.nav_state      = 'NAVIGATION_STATE_POSCTL';
 
                 % (1.2) vehicle_land_detected
-                in.vehicle_land_detected.alt_max        = -1;
-                in.vehicle_land_detected.ground_contact =  0;
-                in.vehicle_land_detected.landed         =  0;
-                in.vehicle_land_detected.maybe_landed   =  0;
+                in.vehicle_land_detected.alt_max        = 200;
+                in.vehicle_land_detected.ground_contact =   0;
+                in.vehicle_land_detected.landed         =   0;
+                in.vehicle_land_detected.maybe_landed   =   0;
 
                 % (1.3) vehicle_control_mode
                 in.control_mode.flag_armed                        = 1;
@@ -749,7 +749,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 in.control_mode.flag_control_altitude_enabled     = 1;
                 in.control_mode.flag_control_attitude_enabled     = 1;
                 in.control_mode.flag_control_auto_enabled         = 0;
-                in.control_mode.flag_control_climb_rate_enabled   = 0;
+                in.control_mode.flag_control_climb_rate_enabled   = 1;
                 in.control_mode.flag_control_fixed_hdg_enabled    = 1;
                 in.control_mode.flag_control_manual_enabled       = 0;
                 in.control_mode.flag_control_offboard_enabled     = 1;
@@ -784,7 +784,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 in.local_pos.dist_bottom       = -xiMeasured(3);
                 in.local_pos.dist_bottom_rate  = -xiDotMeasured(3);
                 in.local_pos.dist_bottom_valid = isfinite( xiMeasured(3) );
-                in.local_pos.hagl_max          = 0;
+                in.local_pos.hagl_max          = 999999;
                 in.local_pos.hagl_min          = 0;
                 in.local_pos.ref_alt           = obj.ref_alt_init;
                 in.local_pos.ref_lat           = obj.ref_lat_init;
@@ -905,15 +905,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
         
             % Get time
             t = getCurrentTime( obj );
-            if obj.t_prev ~= 0
-                dt = ( t - obj.t_prev ) / 1E6; % Check units
-            else
-                dt = 0.004;
-            end
             obj.t_prev = t;
-        
-            % Set dt for control blocks - is this necessary?
-            % setDt(dt);
         
             % Update velocity limits. Use the minimum of the estimator demanded and
             % vehicle limits, and allow a minimum of 0.3 m/s for repositioning
@@ -923,7 +915,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 % If the estimator stopped demanding a limit, release the limit gradually
                 if obj.vel_sp_significant
                     if obj.vel_max_xy < obj.vel_max_xy_param
-                        obj.vel_max_xy = obj.vel_max_xy + dt*obj.acc_max_estimator_xy;
+                        obj.vel_max_xy = obj.vel_max_xy + obj.dt*obj.acc_max_estimator_xy;
                     else
                         obj.vel_max_xy = obj.vel_max_xy_param;
                     end
