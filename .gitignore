@@ -279,6 +279,4 @@ TSWLatexianTemp*
 
 # folders
 data_results/*
-data_wind/*
-!data_wind/turb_5ms.mat
 data_validation/*
