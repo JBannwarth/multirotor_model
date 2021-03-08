@@ -36,7 +36,7 @@ function SwitchAirframeConfiguration( modelName, configuration )
     %% Switch blocks
     blocksToChange = { 'Mixer', 'PX4 rotor map to sim rotor map' };
     for ii = 1:length( blocksToChange )
-        set_param( [ modelName '/' blocksToChange{1} ], ...
+        set_param( [ modelName '/' blocksToChange{ii} ], ...
             'airframeConfig', num2str( frameIdx ) );
     end
     
