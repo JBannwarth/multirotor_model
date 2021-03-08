@@ -1,25 +1,61 @@
 classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.CustomIcon & ...
         matlab.system.mixin.SampleTime & matlab.system.mixin.Propagates
-    %MULTICOPTERATTITUDECONTROL PX4 Firmware attitude controller (v1.82)
-    %   Original description:
-    %   This implements the multicopter attitude and rate controller. It
-    %   takes attitude setpoints (vehicle_attitude_setpoint) or rate
-    %   setpoints (in acro mode via manual_control_setpoint topic) as
-    %   inputs and outputs actuator control messages.
-    %   The controller has two loops: a P loop for angular error and a PID
-    %   loop for angular rate error.
-    %   Publication documenting the implemented Quaternion Attitude Control:
-    %       Nonlinear Quadrocopter Attitude Control (2013)
-    %       by Dario Brescianini, Markus Hehn and Raffaello D'Andrea
-    %       Institute for Dynamic Systems and Control (IDSC), ETH Zurich
-    %       https://www.research-collection.ethz.ch/bitstream/handle/20.500.11850/154099/eth-7387-01.pdf
-    %   To reduce control latency, the module directly polls on the gyro
-    %   topic published by the IMU driver.
-    %
-    %   Based on code from PX4 Firmware (retrieved 2019/01/15, v1.82):
-    %       https://github.com/PX4/Firmware/blob/master/src/modules/mc_att_control/mc_att_control_main.cpp
-    %   Written:       J.X.J. Bannwarth, 2019/01/18
-    %   Last modified: J.X.J. Bannwarth, 2019/02/05
+%MULTICOPTERATTITUDECONTROL PX4 Firmware attitude controller (v1.82)
+%   Original description:
+%   ---------------------
+%   This implements the multicopter attitude and rate controller. It
+%   takes attitude setpoints (vehicle_attitude_setpoint) or rate
+%   setpoints (in acro mode via manual_control_setpoint topic) as
+%   inputs and outputs actuator control messages.
+%   The controller has two loops: a P loop for angular error and a PID
+%   loop for angular rate error.
+%   Publication documenting the implemented Quaternion Attitude Control:
+%       Nonlinear Quadrocopter Attitude Control (2013)
+%       by Dario Brescianini, Markus Hehn and Raffaello D'Andrea
+%       Institute for Dynamic Systems and Control (IDSC), ETH Zurich
+%       https://www.research-collection.ethz.ch/bitstream/handle/20.500.11850/154099/eth-7387-01.pdf
+%   To reduce control latency, the module directly polls on the gyro
+%   topic published by the IMU driver.
+%   ---------------------
+%
+%   Original copyright:
+%   ---------------------
+%   Copyright (c) 2013 - 2017 PX4 Development Team. All rights reserved.
+%
+%   Redistribution and use in source and binary forms, with or without
+%   modification, are permitted provided that the following conditions
+%   are met:
+%
+%   1. Redistributions of source code must retain the above copyright
+%      notice, this list of conditions and the following disclaimer.
+%   2. Redistributions in binary form must reproduce the above copyright
+%      notice, this list of conditions and the following disclaimer in
+%      the documentation and/or other materials provided with the
+%      distribution.
+%   3. Neither the name PX4 nor the names of its contributors may be
+%      used to endorse or promote products derived from this software
+%      without specific prior written permission.
+%
+%   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+%   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+%   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+%   FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+%   COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+%   INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+%   BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+%   OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+%   AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+%   LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+%   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+%   POSSIBILITY OF SUCH DAMAGE.
+%   ---------------------
+%
+%   Based on code from PX4 Firmware (retrieved 2019/01/15, v1.82):
+%       https://github.com/PX4/Firmware/blob/master/src/modules/mc_att_control/mc_att_control_main.cpp
+%
+%   See also MULTICOPTERPOSITIONCONTROL.
+%
+%   Written: 2019/01/18, J.X.J. Bannwarth
 
     %% Public, tunable properties (equivalent to those available on PX4)
     properties (Nontunable)
@@ -282,7 +318,7 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
             %GETICONIMPL Define icon for System block
             %   Written:       J.X.J. Bannwarth, 2019/01/15
             %   Last modified: J.X.J. Bannwarth, 2019/01/15
-            icon = ["MulticopterAttitudeControl","","v1.82"];
+            icon = ["mc_att_control","","v1.82"];
         end
 
         function varargout = getInputNamesImpl( obj )
@@ -294,7 +330,7 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
                     'qDes'      , ...
                     'thrustDes' , ...
                     'yawRateDes', ...
-                    'qMeasured' , ...
+                    'qMeas' , ...
                     'nuBody'    , ...
                     };
             else
@@ -313,7 +349,7 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
             %GETOUTPUTNAMESIMPL Return input port names for System block
             %   Written:       J.X.J. Bannwarth, 2019/01/15
             %   Last modified: J.X.J. Bannwarth, 2019/01/15
-            varargout{1} = 'actuatorsControl';
+            varargout{1} = 'controls';
             if obj.output_rates
                 varargout{2} = 'attRateSp';
             end
