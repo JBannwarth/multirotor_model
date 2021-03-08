@@ -59,7 +59,7 @@ function Uav = UavQuadcopter460mm( mass )
 
     %% MASS/INERTIA
     % Mass
-    Uav.M   = 1.5;% Frame [kg]
+    Uav.M   = 1;% Frame [kg]
     if mass ~= -1
         Uav.M = mass;
     end
