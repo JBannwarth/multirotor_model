@@ -7,7 +7,7 @@ clearvars; close all; clc;
 model = 'MultirotorSimPx4';
 dragModel = 'DragModelAIAAv3';
 load_system(model);
-SwitchRotorNumber( model, 4 );
+SwitchAirframeConfiguration( model, 4 );
 
 %% Initialization
 project = simulinkproject;
