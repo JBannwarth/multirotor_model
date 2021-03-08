@@ -113,9 +113,9 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
         loop_update_rate_hz    (1,1) {mustBeGreaterThanOrEqual(loop_update_rate_hz    ,   50), mustBeLessThanOrEqual(loop_update_rate_hz    ,1000)} =   50; % Loop update rate Hz [50-1000]
         simple_mode            (1,1) {mustBeGreaterThanOrEqual(simple_mode            ,    0), mustBeLessThanOrEqual(simple_mode            ,   1), mustBeInteger(simple_mode )} = 1; % Simple mode [0-1]
         start_landed           (1,1) {mustBeGreaterThanOrEqual(start_landed           ,    0), mustBeLessThanOrEqual(start_landed           ,   1), mustBeInteger(start_landed)} = 0; % Start landed [0-1]
-        ref_lat                (1,1) {mustBeGreaterThanOrEqual(ref_lat                ,  -90), mustBeLessThanOrEqual(ref_lat                ,  90)} = -36.8509; % Ref. latitude [-90-90]
-        ref_lon                (1,1) {mustBeGreaterThanOrEqual(ref_lon                , -180), mustBeLessThanOrEqual(ref_lon                , 180)} = 174.7645; % Ref. longitude [-180-180]
-        ref_alt                (1,1)                                                                                                                = 19      ; % Ref. altitude [-]
+        ref_lat_init           (1,1) {mustBeGreaterThanOrEqual(ref_lat_init           ,  -90), mustBeLessThanOrEqual(ref_lat_init           ,  90)} = -36.8509; % Ref. latitude [-90-90]
+        ref_lon_init           (1,1) {mustBeGreaterThanOrEqual(ref_lon_init           , -180), mustBeLessThanOrEqual(ref_lon_init           , 180)} = 174.7645; % Ref. longitude [-180-180]
+        ref_alt_init           (1,1)                                                                                                                = 19      ; % Ref. altitude [-]
     end
 
     %% Pre-computed constants
@@ -179,12 +179,13 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
         vel_sp_significant     % 1 when the velocity setpoint is over 50% of the obj.vel_max_xy limit
 
         % Scalars
+        ref_alt
         ref_timestamp
         yaw_takeoff                      % Home yaw angle present when vehicle was taking off (euler)
         man_yaw_offset                   % Current yaw offset in manual mode
         vel_max_xy                       % equal to vel_max except in auto mode when close to target
-        acceleration_state_dependent_xy  % acceleration limit applied in manual mode
-        acceleration_state_dependent_z   % acceleration limit applied in manual mode in z
+        acc_state_dependent_xy           % acceleration limit applied in manual mode
+        acc_state_dependent_z            % acceleration limit applied in manual mode in z
         manual_jerk_limit_xy             % jerk limit in manual mode dependent on stick input
         manual_jerk_limit_z              % jerk limit in manual mode in z
         z_derivative                     % velocity in z that agrees with position rate
@@ -282,13 +283,13 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
             obj.vel_sp_significant     = 0;
 
             % Scalars
-            obj.ref_alt                         = 0;
+            obj.ref_alt                         = obj.ref_alt_init;
             obj.ref_timestamp                   = 1;
             obj.yaw_takeoff                     = 0;
             obj.man_yaw_offset                  = 0;
             obj.vel_max_xy                      = 0;
-            obj.acceleration_state_dependent_xy = 0;
-            obj.acceleration_state_dependent_z  = 0;
+            obj.acc_state_dependent_xy = 0;
+            obj.acc_state_dependent_z  = 0;
             obj.manual_jerk_limit_xy            = 1;
             obj.manual_jerk_limit_z             = 1;
             obj.z_derivative                    = 0;
@@ -320,7 +321,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
             obj.att_sp       = zeros(12,1);
             obj.att_sp(5)    = -1; % Landing gear down
             obj.local_pos_sp = zeros(13,1);
-            obj.vel_deriv    = [ inf; 0; obj.veld_lp; obj.dt ];
+            obj.vel_deriv    = [ inf; inf; inf; 0; 0; 0; obj.veld_lp; obj.dt ];
             obj.hysteresis   = [ 0; 1; 0; inf; 100000 ];
 
             % Char arrays
@@ -544,6 +545,10 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                     dt = 'double';
                     cp = 0;
                 % Scalars
+                case 'ref_alt'
+                    sz = [1 1];
+                    dt = 'double';
+                    cp = 0;
                 case 'ref_timestamp'
                     sz = [1 1];
                     dt = 'double';
@@ -560,11 +565,11 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                     sz = [1 1];
                     dt = 'double';
                     cp = 0;
-                case 'acceleration_state_dependent_xy'
+                case 'acc_state_dependent_xy'
                     sz = [1 1];
                     dt = 'double';
                     cp = 0;
-                case 'acceleration_state_dependent_z'
+                case 'acc_state_dependent_z'
                     sz = [1 1];
                     dt = 'double';
                     cp = 0;
@@ -661,7 +666,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                     dt = 'double';
                     cp = 0;
                 case 'vel_deriv'
-                    sz = [4 1];
+                    sz = [8 1];
                     dt = 'double';
                     cp = 0;
                 case 'hysteresis'
@@ -754,7 +759,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 % (1.4) vehicle_attitude
                 att.q = qMeasured;
                 in.R = QuatToDcm( att.q );
-                eul = DcmToEuler( R );
+                eul = DcmToEuler( in.R );
                 in.yaw = eul(3);
 
                 if in.control_mode.flag_control_manual_enabled
@@ -781,9 +786,9 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 in.local_pos.dist_bottom_valid = isfinite( xiMeasured(3) );
                 in.local_pos.hagl_max          = 0;
                 in.local_pos.hagl_min          = 0;
-                in.local_pos.ref_alt           = obj.ref_alt;
-                in.local_pos.ref_lat           = obj.ref_lat;
-                in.local_pos.ref_lon           = obj.ref_lon;
+                in.local_pos.ref_alt           = obj.ref_alt_init;
+                in.local_pos.ref_lat           = obj.ref_lat_init;
+                in.local_pos.ref_lon           = obj.ref_lon_init;
                 in.local_pos.ref_timestamp     = getCurrentTime( obj );
                 in.local_pos.timestamp         = getCurrentTime( obj );
                 in.local_pos.vx                = xiDotMeasured(1);
@@ -804,7 +809,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 % If the vehicle is in manual mode we will shift the setpoints of the
                 % states which were reset. In auto mode we do not shift the setpoints
                 % since we want the vehicle to track the original state.
-                if obj.control_mode.flag_control_manual_enabled
+                if in.control_mode.flag_control_manual_enabled
                     if obj.z_reset_counter ~= in.local_pos.z_reset_counter
                         obj.pos_sp(3) = in.local_pos.z;
                     end
@@ -828,8 +833,8 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 in.pos_sp_triplet.current.alt                = obj.ref_alt-xiDes(3);
                 in.pos_sp_triplet.current.alt_valid          = isfinite(xiDes(3));
                 in.pos_sp_triplet.current.cruising_speed     = 0;
-                in.pos_sp_triplet.current.lat                = obj.ref_lat;
-                in.pos_sp_triplet.current.lon                = obj.ref_lon;
+                in.pos_sp_triplet.current.lat                = obj.ref_lat_init;
+                in.pos_sp_triplet.current.lon                = obj.ref_lon_init;
                 in.pos_sp_triplet.current.position_valid     = sum(isfinite(xiDes)) == 3;
                 in.pos_sp_triplet.current.type               = 'SETPOINT_TYPE_POSITION';
                 in.pos_sp_triplet.current.valid              = 1;
@@ -847,8 +852,8 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 in.pos_sp_triplet.current.z                  = xiDes(3);
 
                 % We are station keeping so all waypoints are the same
-                in.pos_sp_triplet.next     = in_pos_sp_triplet.current;
-                in.pos_sp_triplet.previous = in_pos_sp_triplet.current;
+                in.pos_sp_triplet.next     = in.pos_sp_triplet.current;
+                in.pos_sp_triplet.previous = in.pos_sp_triplet.current;
 
                 % To be a valid current triplet, altitude has to be finite
                 if ~isfinite( in.pos_sp_triplet.current.alt )
@@ -869,12 +874,12 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
             end
 
             % [2] Execute main code
-            task_main( obj, in );
+            extra_states = task_main( obj, in, extra_states );
 
             % [3] Post-process output
             varargout{1} = extra_states.att_sp.q_d;
             varargout{2} = extra_states.att_sp.thrust;
-            varargout{3} = extra_states.att_sp.yaw_sp_moverate;
+            varargout{3} = extra_states.att_sp.yaw_sp_move_rate;
             varargout{4} = [ extra_states.local_pos_sp.vx;
                              extra_states.local_pos_sp.vy;
                              extra_states.local_pos_sp.vz ];
@@ -884,7 +889,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
         end
 
         %% mc_pos_control_main.cpp - Main functions
-        function task_main( obj, in )
+        function extra_states = task_main( obj, in, extra_states )
         %TASK_MAIN Main task, run at every time step
         %   In the original code, this calls the inital set-up functions and
         %   then run in an infinite while loop. Here, we moved all the
@@ -989,9 +994,9 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
         
             obj.was_landed = in.vehicle_land_detected.landed;
         
-            update_ref( obj, in );
+            extra_states = update_ref( obj, in, extra_states );
         
-            update_velocity_derivative( obj, in );
+            extra_states = update_velocity_derivative( obj, in, extra_states );
         
             % Reset the horizontal and vertical position hold flags for non-manual
             % modes or if position / altitude is not controlled
@@ -1023,7 +1028,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 end
             else
                 % Make sure to disable any task when we are not testing them
-                obj.flight_tasks.switchTask( FlightTaskIndex_None );
+%                 obj.flight_tasks.switchTask( FlightTaskIndex_None );
             end
         
             if ( obj.test_flight_tasks && obj.flight_tasks.isAnyTaskActive() )
@@ -1064,7 +1069,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 if ( in.vehicle_land_detected.landed && ~in_auto_takeoff(obj, in) && ...
                         ~manual_wants_takeoff(obj, in) )
                     % Keep throttle low while still on ground.
-                    set_idle_state( obj, in );
+                    extra_states = set_idle_state( obj, in, extra_states );
                 elseif ( strcmp( in.vehicle_status.nav_state, 'NAVIGATION_STATE_MANUAL' ) || ...
                             strcmp( in.vehicle_status.nav_state, 'NAVIGATION_STATE_POSCTL' ) || ...
                             strcmp( in.vehicle_status.nav_state, 'NAVIGATION_STATE_ALTCTL' ) )
@@ -1107,7 +1112,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                         in.control_mode.flag_control_velocity_enabled || ...
                         in.control_mode.flag_control_acceleration_enabled )
         
-                    do_control( obj, in );
+                    extra_states = do_control( obj, in, extra_states );
         
                     % fill local position, velocity and thrust setpoint
                     extra_states.local_pos_sp.timestamp = getCurrentTime( obj );
@@ -1138,9 +1143,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 % Generate attitude setpoint from manual controls
                 if ( in.control_mode.flag_control_manual_enabled && ...
                         in.control_mode.flag_control_attitude_enabled )
-        
-                    generate_attitude_setpoint( obj, in );
-        
+                    generate_attitude_setpoint( obj, in, extra_states );
                 else
                     obj.reset_yaw_sp = 1;
                     extra_states.att_sp.yaw_sp_move_rate = 0;
@@ -1203,7 +1206,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 obj.land_speed = min( obj.land_speed, obj.vel_max_down );
         
                 % default limit for acceleration and manual jerk
-                obj.acceleration_state_dependent_xy = obj.acceleration_hor_max;
+                obj.acc_state_dependent_xy = obj.acceleration_hor_max;
                 obj.manual_jerk_limit_xy            = obj.jerk_hor_max;
         
                 % acceleration up must be larger than acceleration down
@@ -1218,7 +1221,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
         
                 % For z direction we use fixed jerk for now
                 % TODO: check if other jerk value is required
-                obj.acceleration_state_dependent_z = obj.acceleration_z_max_up;
+                obj.acc_state_dependent_z = obj.acceleration_z_max_up;
                 
                 % We only use jerk for braking if jerk_hor_max > jerk_hor_min; otherwise
                 % just set jerk very large
@@ -1233,7 +1236,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
             out = -1;
         end
 
-        function update_ref( obj, in )
+        function extra_states = update_ref( obj, in, extra_states )
         %UPDATE_REF Update reference for local position projection
         %   The reference point is only allowed to change when the vehicle is in
         %   standby state which is the normal state when the estimator origin is
@@ -1285,7 +1288,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
             end
         end
 
-        function update_velocity_derivative( obj, in )
+        function extra_states = update_velocity_derivative( obj, in, extra_states )
         %UPDATE_VELOCITY_DERIVATIVE Update velocity derivative
         %   Independent of the current flight mode
         %   Written:  2021/03/05, J.X.J. Bannwarth
@@ -1340,7 +1343,6 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                     weighting = min( abs(obj.vel_sp(3)) / obj.land_speed, 1.0 );
                     obj.vel(3) = obj.z_derivative * weighting + ...
                         obj.vel(3) * (1.0 - weighting);
-        
                 end
         
             end
@@ -1349,10 +1351,11 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 obj.z_derivative = in.local_pos.z_deriv;
             end
         
-            obj.vel_err_d = BlockDerivativeUpdate( extra_states.vel_deriv, -obj.vel );
+            [ extra_states.vel_deriv, obj.vel_err_d ] = BlockDerivativeUpdate( ...
+                extra_states.vel_deriv, -obj.vel );
         end
 
-        function do_control( obj, in )
+        function extra_states = do_control( obj, in, extra_states )
         %DO_CONTROL
         %   By default, run position/altitude controller. The control_* functions
         %   can disable this and run velocity controllers directly in this cycle.
@@ -1362,7 +1365,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
         
             if in.control_mode.flag_control_manual_enabled
                 % Manual control
-                control_manual( obj, in );
+                extra_states = control_manual( obj, in, extra_states );
                 obj.mode_auto = 0;
         
                 % We set triplets to 0
@@ -1377,13 +1380,13 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 obj.hold_offboard_z = 0;
             else
                 % Reset acceleration to default
-                obj.acceleration_state_dependent_xy = obj.acceleration_hor_max;
-                obj.acceleration_state_dependent_z = obj.acceleration_z_max_up;
-                control_non_manual( obj, in );
+                obj.acc_state_dependent_xy = obj.acceleration_hor_max;
+                obj.acc_state_dependent_z = obj.acceleration_z_max_up;
+                extra_states = control_non_manual( obj, in, extra_states );
             end
         end
 
-        function set_manual_acceleration_xy( obj, stick_xy, extra_states )
+        function extra_states = set_manual_acceleration_xy( obj, stick_xy, extra_states )
         %SET_MANUAL_ACCELERATION_XY Set manual horizontal acceleration
         %   In manual mode we consider four states with different acceleration handling:
         %   1. user wants to stop
@@ -1449,13 +1452,13 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                         obj.vel(2) * obj.vel(2) ) + obj.jerk_hor_min;
         
                     % We start braking with lowest accleration
-                    obj.acceleration_state_dependent_xy = obj.deceleration_hor_slow;
+                    obj.acc_state_dependent_xy = obj.deceleration_hor_slow;
                 else
                     % Set the jerk limit large since we don't know it better*/
                     obj.manual_jerk_limit_xy = 1000000;
         
                     % At brake we use max acceleration
-                    obj.acceleration_state_dependent_xy = obj.acceleration_hor_max;
+                    obj.acc_state_dependent_xy = obj.acceleration_hor_max;
                 end
         
                 % Reset slew rate
@@ -1468,7 +1471,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                     if ~strcmp(intention, 'brake')
                         extra_states.user_intention_xy = 'acceleration';
                         % We initialize with lowest acceleration
-                        obj.acceleration_state_dependent_xy = obj.deceleration_hor_slow;
+                        obj.acc_state_dependent_xy = obj.deceleration_hor_slow;
                     end
                 case 'direction_change'
                     % Only exit direction change if brake or aligned
@@ -1481,21 +1484,19 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                     stick_vel_aligned = (vel_xy_norm * stick_xy_norm) > 0;
         
                     % Update manual direction change hysteresis
-                    hysteresis_set_state_and_update( extra_states.hysteresis, ...
+                    extra_states.hysteresis = hysteresis_set_state_and_update( extra_states.hysteresis, ...
                         ~stick_vel_aligned, getCurrentTime(obj)*1E6 );
         
                     % Exit direction change if one of the condition is met
                     if strcmp(intention, 'brake')
                         extra_states.user_intention_xy = intention;
-        
-                    elseif (stick_vel_aligned)
+                    elseif stick_vel_aligned
                         extra_states.user_intention_xy = 'acceleration';
-        
                     elseif extra_states.hysteresis.state
                         % TODO: Find conditions which are always continuous
                         %       Only if stick input is large
                         if norm(stick_xy) > 0.6
-                            obj.acceleration_state_dependent_xy = obj.acceleration_hor_max;
+                            obj.acc_state_dependent_xy = obj.acceleration_hor_max;
                         end
                     end
                 case 'acceleration'
@@ -1519,17 +1520,17 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 case 'brake'
                     % Limit jerk when braking to zero
                     jerk = ( obj.acceleration_hor_max - ...
-                                obj.acceleration_state_dependent_xy ) / obj.dt;
+                                obj.acc_state_dependent_xy ) / obj.dt;
         
                     if (jerk > obj.manual_jerk_limit_xy)
-                        obj.acceleration_state_dependent_xy = obj.manual_jerk_limit_xy * ...
-                            obj.dt + obj.acceleration_state_dependent_xy;
+                        obj.acc_state_dependent_xy = obj.manual_jerk_limit_xy * ...
+                            obj.dt + obj.acc_state_dependent_xy;
                     else
-                        obj.acceleration_state_dependent_xy = obj.acceleration_hor_max;
+                        obj.acc_state_dependent_xy = obj.acceleration_hor_max;
                     end
                 case 'direction_change'
                     % Limit acceleration linearly on stick input
-                    obj.acceleration_state_dependent_xy = ( obj.acceleration_hor - ...
+                    obj.acc_state_dependent_xy = ( obj.acceleration_hor - ...
                         obj.deceleration_hor_slow ) * norm(stick_xy) + ...
                         obj.deceleration_hor_slow;
                 case 'acceleration'
@@ -1537,16 +1538,16 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                     acc_limit  = (obj.acceleration_hor - obj.deceleration_hor_slow) * ...
                         norm(stick_xy) + obj.deceleration_hor_slow;
         
-                    if obj.acceleration_state_dependent_xy > acc_limit
-                        acc_limit = obj.acceleration_state_dependent_xy;
+                    if obj.acc_state_dependent_xy > acc_limit
+                        acc_limit = obj.acc_state_dependent_xy;
                     end
         
-                    obj.acceleration_state_dependent_xy = acc_limit;
+                    obj.acc_state_dependent_xy = acc_limit;
                 case 'deceleration'
-                    obj.acceleration_state_dependent_xy = obj.deceleration_hor_slow;
+                    obj.acc_state_dependent_xy = obj.deceleration_hor_slow;
                 otherwise
                     warning( 'User intention not recognized' );
-                    obj.acceleration_state_dependent_xy = obj.acceleration_hor_max;
+                    obj.acc_state_dependent_xy = obj.acceleration_hor_max;
             end
         
             % Update previous stick input
@@ -1558,7 +1559,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
             end
         end
 
-        function max_acceleration = set_manual_acceleration_z( obj, stick_z )
+        function [ extra_states, max_acceleration ] = set_manual_acceleration_z( obj, stick_z, extra_states )
         %SET_MANUAL_ACCELERATION_Z Set manual vertical acceleration
         %   In manual altitude control apply acceleration limit based on stick input
         %   we consider two states
@@ -1586,41 +1587,41 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
             end
         
             % Update user input
-            if ~strcmp(obj.user_intention_z, 'brake') && strcmp(intention, 'brake')
+            if ~strcmp(extra_states.user_intention_z, 'brake') && strcmp(intention, 'brake')
         
                 % we start with lowest acceleration
-                obj.acceleration_state_dependent_z = obj.acceleration_z_max_down;
+                obj.acc_state_dependent_z = obj.acceleration_z_max_down;
         
                 % reset slew rate
                 obj.vel_sp_prev(3) = obj.vel(3);
-                obj.user_intention_z = 'brake';
+                extra_states.user_intention_z = 'brake';
             end
         
-            obj.user_intention_z = intention;
+            extra_states.user_intention_z = intention;
         
             % Apply acceleration depending on state
-            if strcmp(obj.user_intention_z, 'brake')
+            if strcmp(extra_states.user_intention_z, 'brake')
         
                 % Limit jerk when braking to zero
-                jerk = (obj.acceleration_z_max_up - obj.acceleration_state_dependent_z) ...
+                jerk = (obj.acceleration_z_max_up - obj.acc_state_dependent_z) ...
                     / obj.dt;
         
                 if (jerk > obj.manual_jerk_limit_z)
-                    obj.acceleration_state_dependent_z = obj.manual_jerk_limit_z * obj.dt + ...
-                        obj.acceleration_state_dependent_z;
+                    obj.acc_state_dependent_z = obj.manual_jerk_limit_z * obj.dt + ...
+                        obj.acc_state_dependent_z;
                 else
-                    obj.acceleration_state_dependent_z = obj.acceleration_z_max_up;
+                    obj.acc_state_dependent_z = obj.acceleration_z_max_up;
                 end
             end
         
-            if strcmp(obj.user_intention_z, 'acceleration')
-                obj.acceleration_state_dependent_z = ( max_acceleration - ...
+            if strcmp(extra_states.user_intention_z, 'acceleration')
+                obj.acc_state_dependent_z = ( max_acceleration - ...
                     obj.acceleration_z_max_down ) * abs(stick_z) + ...
                     obj.acceleration_z_max_down;
             end
         end
 
-        function control_manual( obj, in )
+        function extra_states = control_manual( obj, in, extra_states )
         % CONTROL_MANUAL Set position setpoint using manual control
         %    Written:  2021/03/05, J.X.J. Bannwarth
             
@@ -1681,9 +1682,10 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
         
             % Adjust acceleration based on stick input
             stick_xy = [ man_vel_sp(1); man_vel_sp(2) ];
-            set_manual_acceleration_xy( obj, stick_xy );
+            extra_states = set_manual_acceleration_xy( obj, stick_xy, ...
+                extra_states );
             stick_z = man_vel_sp(3);
-            max_acc_z = set_manual_acceleration_z( obj, stick_z );
+            [ extra_states, max_acc_z ] = set_manual_acceleration_z( obj, stick_z, extra_states );
         
             % Prepare cruise speed (m/s) vector to scale the velocity setpoint
             if obj.velocity_hor_manual < obj.vel_max_xy
@@ -1707,7 +1709,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
             % Want to get/stay in altitude hold if user has z stick in the middle
             % (accounted for deadzone already)
             alt_hold_desired = in.control_mode.flag_control_altitude_enabled && ...
-                strcmp(obj.user_intention_z, 'brake');
+                strcmp(extra_states.user_intention_z, 'brake');
         
             % Want to get/stay in position hold if user has xy stick in the middle
             % (accounted for deadzone already)
@@ -1721,7 +1723,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
             else
                 % Check if we switch to alt_hold_engaged
                 smooth_alt_transition = alt_hold_desired && ...
-                    ( (max_acc_z - obj.acceleration_state_dependent_z) < obj.flt_epsilon ) && ...
+                    ( (max_acc_z - obj.acc_state_dependent_z) < obj.flt_epsilon ) && ...
                     (obj.hold_max_z < obj.flt_epsilon || abs(obj.vel(3)) < obj.hold_max_z);
         
                 % During transition predict setpoint forward
@@ -1740,19 +1742,18 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
         
             % Check horizontal hold engaged flag
             if obj.pos_hold_engaged
-        
                 % Check if contition still 1
                 obj.pos_hold_engaged = pos_hold_desired;
         
                 % Use max acceleration
                 if obj.pos_hold_engaged
-                    obj.acceleration_state_dependent_xy = obj.acceleration_hor_max;
+                    obj.acc_state_dependent_xy = obj.acceleration_hor_max;
                 end
             else
                 % Check if we switch to pos_hold_engaged
                 vel_xy_mag = sqrt( obj.vel(1) * obj.vel(1) + obj.vel(2) * obj.vel(2) );
                 smooth_pos_transition = pos_hold_desired && ...
-                    ( abs(obj.acceleration_hor_max - obj.acceleration_state_dependent_xy) < obj.flt_epsilon ) && ...
+                    ( abs(obj.acceleration_hor_max - obj.acc_state_dependent_xy) < obj.flt_epsilon ) && ...
                     (obj.hold_max_xy < obj.flt_epsilon || vel_xy_mag < obj.hold_max_xy);
         
                 % During transition predict setpoint forward
@@ -1790,24 +1791,24 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 obj.vel_sp(2) = man_vel_sp(2);
             end
         
-            control_position( obj, in );
+            extra_states = control_position( obj, in, extra_states );
         end
 
-        function control_non_manual( obj, in )
+        function extra_states = control_non_manual( obj, in, extra_states )
         %CONTROL_NON_MANUAL Set position setpoint using non-manual control
         %    Written:  2021/03/05, J.X.J. Bannwarth
 
             % Select control source
             if in.control_mode.flag_control_offboard_enabled
                 % Offboard control
-                control_offboard( obj, in );
+                extra_states = control_offboard( obj, in, extra_states );
                 obj.mode_auto = 0;
             else
                 obj.hold_offboard_xy = 0;
                 obj.hold_offboard_z = 0;
         
                 % AUTO mode
-                control_auto( obj, in );
+                extra_states = control_auto( obj, in, extra_states );
             end
         
             % Guard against any bad velocity values
@@ -1878,11 +1879,11 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 extra_states.att_sp.timestamp = getCurrentTime( obj );
         
             else
-                control_position( obj, in );
+                extra_states = control_position( obj, in, extra_states );
             end
         end
 
-        function control_offboard( obj, in )
+        function extra_states = control_offboard( obj, in, extra_states )
         %CONTROL_OFFBOARD Set position setpoint using offboard control
         %    Written:  2021/03/05, J.X.J. Bannwarth
             if in.pos_sp_triplet.current.valid
@@ -1993,7 +1994,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
             end
         end
 
-        function control_auto( obj, in )
+        function extra_states = control_auto( obj, in, extra_states )
         %CONTROL_AUTO Set position setpoint for AUTO mode
         %   Written: 2021/03/06, J.X.J. Bannwarth
         
@@ -2630,21 +2631,21 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
             end
         end
 
-        function control_position( obj, in )
+        function extra_states = control_position( obj, in, extra_states )
         %CONTROL_POSITION
         %    Written:  2021/03/05, J.X.J. Bannwarth
-            calculate_velocity_setpoint( obj, in );
+            extra_states = calculate_velocity_setpoint( obj, in, extra_states );
         
             if ( in.control_mode.flag_control_climb_rate_enabled || ...
                     in.control_mode.flag_control_velocity_enabled || ...
                     in.control_mode.flag_control_acceleration_enabled )
-                calculate_thrust_setpoint( obj, in );
+                extra_states = calculate_thrust_setpoint( obj, in, extra_states );
             else
                 obj.reset_int_z = 1;
             end
         end
 
-        function calculate_velocity_setpoint( obj, in )
+        function extra_states = calculate_velocity_setpoint( obj, in, extra_states )
         %CALCULATE_VELOCITY_SETPOINT Run position & altitude controllers if enabled
         %   Otherwise use already computed velocity setpoints.
         %    Written:  2021/03/05, J.X.J. Bannwarth
@@ -2747,7 +2748,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
             vel_norm_xy = sqrt( obj.vel_sp(1) * obj.vel_sp(1) + obj.vel_sp(2) * obj.vel_sp(2) );
         
             % Check if the velocity demand is significant
-            obj.vel_sp_significant =  vel_norm_xy > 0.5 * obj.vel_max_xy;
+            obj.vel_sp_significant = double(vel_norm_xy > (0.5 * obj.vel_max_xy));
         
             if vel_norm_xy > obj.vel_max_xy
                 obj.vel_sp(1) = obj.vel_sp(1) * obj.vel_max_xy / vel_norm_xy;
@@ -2759,7 +2760,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
             obj.vel_sp_prev = obj.vel_sp;
         end
 
-        function calculate_thrust_setpoint( obj, in )
+        function extra_states = calculate_thrust_setpoint( obj, in, extra_states )
         %CALCULATE_THRUST_SETPOINT Calculate thrust setpoint
         %    Written:  2021/03/05, J.X.J. Bannwarth
             % reset integrals if needed
@@ -3013,10 +3014,10 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 body_y = cross( body_z, body_x );
         
                 % Fill rotation matrix
-                for i = 1:3
-                    obj.R_setpoint(i, 0) = body_x(i);
-                    obj.R_setpoint(i, 1) = body_y(i);
-                    obj.R_setpoint(i, 2) = body_z(i);
+                for ii = 1:3
+                    obj.R_setpoint(ii, 1) = body_x(ii);
+                    obj.R_setpoint(ii, 2) = body_y(ii);
+                    obj.R_setpoint(ii, 3) = body_z(ii);
                 end
         
                 % Copy quaternion setpoint to attitude setpoint topic
@@ -3053,7 +3054,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
             extra_states.att_sp.timestamp = getCurrentTime( obj );
         end
 
-        function generate_attitude_setpoint( obj, in )
+        function extra_states = generate_attitude_setpoint( obj, in, extra_states )
         %GENERATE_ATTITUDE_SETPOINT Generate attitude setpoint
         %    Written:  2021/03/05, J.X.J. Bannwarth
         
@@ -3407,8 +3408,8 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
             acc_xy = (vel_sp_xy - vel_sp_prev_xy) / obj.dt;
         
             % limit total horizontal acceleration
-            if ( norm( acc_xy ) > obj.acceleration_state_dependent_xy )
-                vel_sp_xy = obj.acceleration_state_dependent_xy * normalize(acc_xy) * obj.dt ...
+            if ( norm( acc_xy ) > obj.acc_state_dependent_xy )
+                vel_sp_xy = obj.acc_state_dependent_xy * normalize(acc_xy) * obj.dt ...
                     + vel_sp_prev_xy;
                 obj.vel_sp(1) = vel_sp_xy(1);
                 obj.vel_sp(2) = vel_sp_xy(2);
@@ -3419,9 +3420,9 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
         
             if (in.control_mode.flag_control_manual_enabled)
                 if acc_z < 0
-                    max_acc_z = -obj.acceleration_state_dependent_z;
+                    max_acc_z = -obj.acc_state_dependent_z;
                 else
-                    max_acc_z = obj.acceleration_state_dependent_z;
+                    max_acc_z = obj.acc_state_dependent_z;
                 end
         
             else
@@ -3448,7 +3449,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
             vel_sp_z = max( vel_sp_z, -obj.takeoff_vel_limit );
         end
 
-        function set_idle_state( obj, in )
+        function extra_states = set_idle_state( obj, in, extra_states )
         %SET_IDLE_STATE Set idle state
         %    Written:  2021/03/05, J.X.J. Bannwarth
             extra_states.local_pos_sp.x = obj.pos(1);
@@ -3473,7 +3474,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
         function thrust_sp = landdetection_thrust_limit( obj, in, thrust_sp )
         %LANDDETECTION_THRUST_LIMIT
         %    Written:  2021/03/05, J.X.J. Bannwarth
-            if ~in_auto_takeoff(obj) && ~manual_wants_takeoff(obj)
+            if ~in_auto_takeoff(obj, in) && ~manual_wants_takeoff(obj, in)
                 if in.vehicle_land_detected.ground_contact
                     % if still or already on ground command zero xy thrust_sp in body
                     % frame to consider uneven ground
@@ -3630,23 +3631,23 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 'z'         , obj.local_pos_sp(13)  ...
                 );
             extra_states.vel_deriv = struct( ...
-                'lp_state', obj.vel_deriv(1), ...
-                'in_prev' , obj.vel_deriv(2), ...
-                'f_cut'   , obj.vel_deriv(3), ...
-                'dt'      , obj.vel_deriv(4)  ...
+                'lp_state', obj.vel_deriv(1:3), ...
+                'in_prev' , obj.vel_deriv(4:6), ...
+                'f_cut'   , obj.vel_deriv(7), ...
+                'dt'      , obj.vel_deriv(8)  ...
                 );
             extra_states.hysteresis = struct( ...
                 'state'                    , obj.hysteresis(1), ...
                 'requested_state'          , obj.hysteresis(2), ...
                 'last_time_to_change_state', obj.hysteresis(3), ...
-                'time_from_1_us'        , obj.hysteresis(4), ...
-                'time_from_0_us'       , obj.hysteresis(5)  ...
+                'time_from_1_us'           , obj.hysteresis(4), ...
+                'time_from_0_us'           , obj.hysteresis(5)  ...
                 );
             
             % Char arrays
             intentions = { 'brake'; 'direction_change'; 'acceleration'; 'deceleration' };
             extra_states.user_intention_xy = intentions{obj.user_intention_xy};
-            extra_states.user_intention_z = intentions{obj.user_intention_z};
+            extra_states.user_intention_z  = intentions{obj.user_intention_z};
         end
     
         function structure_to_discrete_states( obj, extra_states )
@@ -3658,44 +3659,44 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
         
             % Structures
             obj.ref_pos = [ ...
-                extra_states.lat_rad;
-                extra_states.lon_rad;
-                extra_states.sin_lat;
-                extra_states.cos_lat;
-                extra_states.timestamp;
-                extra_states.init_done;
+                extra_states.ref_pos.lat_rad;
+                extra_states.ref_pos.lon_rad;
+                extra_states.ref_pos.sin_lat;
+                extra_states.ref_pos.cos_lat;
+                extra_states.ref_pos.timestamp;
+                extra_states.ref_pos.init_done;
                 ];
             obj.att_sp = [ ...
-                extra_states.q_d;
-                extra_states.landing_gear;
-                extra_states.pitch_body;
-                extra_states.q_d_valid;
-                extra_states.roll_body;
-                extra_states.thrust;
-                extra_states.timestamp;
-                extra_states.yaw_body;
-                extra_states.yaw_sp_move_rate;
+                extra_states.att_sp.q_d;
+                extra_states.att_sp.landing_gear;
+                extra_states.att_sp.pitch_body;
+                extra_states.att_sp.q_d_valid;
+                extra_states.att_sp.roll_body;
+                extra_states.att_sp.thrust;
+                extra_states.att_sp.timestamp;
+                extra_states.att_sp.yaw_body;
+                extra_states.att_sp.yaw_sp_move_rate;
                 ];
             obj.local_pos_sp = [ ...
-                extra_states.acc_x;
-                extra_states.acc_y;
-                extra_states.acc_z;
-                extra_states.thrust;
-                extra_states.timestamp;
-                extra_states.vx;
-                extra_states.vy;
-                extra_states.vz;
-                extra_states.x;
-                extra_states.y;
-                extra_states.yaw;
-                extra_states.yawspeed;
-                extra_states.z;
+                extra_states.local_pos_sp.acc_x;
+                extra_states.local_pos_sp.acc_y;
+                extra_states.local_pos_sp.acc_z;
+                extra_states.local_pos_sp.thrust;
+                extra_states.local_pos_sp.timestamp;
+                extra_states.local_pos_sp.vx;
+                extra_states.local_pos_sp.vy;
+                extra_states.local_pos_sp.vz;
+                extra_states.local_pos_sp.x;
+                extra_states.local_pos_sp.y;
+                extra_states.local_pos_sp.yaw;
+                extra_states.local_pos_sp.yawspeed;
+                extra_states.local_pos_sp.z;
                 ];
             obj.vel_deriv = [ ...
-                extra_states.lp_state;
-                extra_states.in_prev;
-                extra_states.f_cut;
-                extra_states.dt;
+                extra_states.vel_deriv.lp_state;
+                extra_states.vel_deriv.in_prev;
+                extra_states.vel_deriv.f_cut;
+                extra_states.vel_deriv.dt;
                 ];
     
             % Char arrays
@@ -4207,7 +4208,7 @@ function [ out, ref ] = map_projection_init_timestamped( ref, lat_0, lon_0, time
 end
 
 %% [4] BlockDerivative.cpp - Derivative functions
-function out = BlockDerivativeUpdate( block, in )
+function [ block, out ] = BlockDerivativeUpdate( block, in )
 %BLOCKDERIVATIVEUPDATE Update the state and get current derivative
 %
 %   This call updates the state and gets the current derivative. As the
@@ -4237,7 +4238,7 @@ function out = BlockDerivativeUpdate( block, in )
 end
 
 % [5] hysteresis.cpp - Hysteresis functions
-function hysteresis_set_state_and_update( hysteresis, new_state, now_us )
+function hysteresis = hysteresis_set_state_and_update( hysteresis, new_state, now_us )
 %HYSTERESIS_SET_STATE_AND_UPDATE Set hysteresis state and update
 %   Written: 2021/03/08, J.X.J. Bannwarth
     % Set state
