@@ -39,6 +39,9 @@ function [Uav, Motor, Aero, Initial] = InitializeParametersQuadcopter( )
 
     % Sampling time of noise
     Uav.NOISE_TS = 0.002;
+    
+    % Pitch control
+    Uav.PITCH_ONLY = false;
 
     %% INITIAL CONDITIONS
     % For quaternion:
