@@ -1,4 +1,18 @@
-%RUNPOSITIONHOLD Run simulation for position hold case
+%RUNPOSITIONHOLD Run simulation for position hold case.
+%
+%   Inputs (created in workspace):
+%       - uavType: 'quad_x' (default) or 'octa_x', type of UAV to simulate.
+%       - canted : false (default) or true, whether the rotors are canted.
+%
+%   Simulate the response of a UAV subjected to a wind profile similar to
+%   that recorded in the boundary layer wind tunnel. Simulates the response
+%   of the UAV to all profiles present in the 'data_wind/blwt' folder.
+%
+%   Using workspace variables as inputs is not elegant, but Simulink models
+%   require variables to be present in the base workspace or in the model
+%   workspace. Both of those solutions require code that is not elegant
+%   either.
+%
 %   Written: 2017, J.X.J. Bannwarth
 
 %% Set-up
@@ -32,10 +46,9 @@ for ii = 1:length( windFiles )
     load( fullfile( inFolder, windFiles{ii} ), 'windInput' )
     windInputs{ii,1} = windInput;
 end
-clearvars windInput;
 
 % Find end time
-tEnd = floor( windInputs{1}.Time(end) ); % End on a round number
+tEnd = 100;% floor( windInputs{1}.Time(end) ); % End on a round number
 
 % Insert zero wind speed at the beginning
 windInputs(2:end+1) = windInputs;
@@ -59,17 +72,13 @@ load_system(model);
 % Select submodules
 set_param( [model '/Drag model'],  'ModelName', 'DragModelAIAAv3' );
 if strcmp( uavType, 'quat_x' )
-    set_param( [model '/Motor model'], 'ModelName', 'MotorModelZJChen' );
-else
     set_param( [model '/Motor model'], 'ModelName', 'MotorModelAIAAv3' );
+else
+    set_param( [model '/Motor model'], 'ModelName', 'MotorModelZJChen' );
 end
 
 % Set mask parameters
 SwitchAirframeConfiguration( model, uavType );
-
-load( 'DefaultPx4Params.mat' )
-Params = flog.params; clearvars( 'flog' );
-LoadPx4Parameters( model, Params )
 
 UseWindProfile( model, true );
 UseEstimators( model, true );
@@ -81,41 +90,25 @@ if strcmp( uavType, 'quad_x' )
 elseif strcmp( uavType, 'octa_x' )
     [Uav, Motor, Aero, Initial] = InitializeParametersOctocopter( canted );
 end
-Simulation = InitializeModel( model, Initial, tEnd, true );
+Simulation = InitializeModel( model, Initial, tEnd );
 
-%% 5) Trim the system
-% Find equilibrium point to start-off the simulation
+%% 5) Trim the system - not for this system
+% Usually you would trim the simulation at this point, but the discrete
+% states of the PX4 controllers make it hard to do so.
+% Instead, it is much easier to simply simulate for a longer period and
+% cut-off the part where the controller is recovering from unbalanced
+% initial conditions
 
-% Deactivate initial states as we want to find them
+% Deactivate initial states
 set_param( model, 'LoadInitialState', 'off' );
 set_param( model, 'LoadExternalInput', 'off' );
 
-% Select inport
-UseWindProfile( model, false );
-set_param( [model '/Input choice'], 'Value', '2' );
-set_param( [model '/Fixed wind input'], 'Value', '[UIn 0 0]' );
-
-UIn = UMean(2,1);
-param.Name = 'UIn';
-param.Value = UMean(:,1);
-ops = findop( model, 50, param );
-op = ops(1);
-
-set_param( model, 'LoadInitialState', 'on' );
-set_param( model, 'InitialState', 'getstatestruct(op)' );
-set_param( [model '/Input choice'], 'Value', '1' );
-
 %% 7) Run simulation
-UseWindProfile( model, true );
-
 % Set-up the simulation inputs
 for ii = 1:length( windInputs )
     simIn(ii) = Simulink.SimulationInput( model );
     % Set the wind profile to use
     simIn(ii) = simIn(ii).setVariable( 'windInput', windInputs{ii} );
-    
-    % Set operating point
-    simIn(ii) = simIn(ii).setVariable( 'op', ops(ii) );
     
     % Also add simulation parameters to the input for logging purposes
     simIn(ii) = simIn(ii).setVariable( 'uavType', uavType );
