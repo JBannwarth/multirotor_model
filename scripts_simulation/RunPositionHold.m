@@ -71,7 +71,7 @@ load_system(model);
 
 % Select submodules
 set_param( [model '/Drag model'],  'ModelName', 'DragModelAIAAv3' );
-if strcmp( uavType, 'quat_x' )
+if strcmp( uavType, 'quad_x' )
     set_param( [model '/Motor model'], 'ModelName', 'MotorModelAIAAv3' );
 else
     set_param( [model '/Motor model'], 'ModelName', 'MotorModelZJChen' );
