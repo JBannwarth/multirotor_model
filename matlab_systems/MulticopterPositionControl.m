@@ -311,7 +311,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
             obj.vel_err_d           = zeros(3,1);
             obj.curr_pos_sp         = zeros(3,1);
             obj.prev_pos_sp         = zeros(3,1);
-            obj.stick_input_xy_prev = zeros(3,1);
+            obj.stick_input_xy_prev = zeros(2,1);
 
             % Matrices
             obj.R_setpoint = zeros(3,3);
@@ -644,7 +644,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                     dt = 'double';
                     cp = 0;
                 case 'stick_input_xy_prev'
-                    sz = [3 1];
+                    sz = [2 1];
                     dt = 'double';
                     cp = 0;
                 % Matrix
@@ -761,10 +761,10 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 % (1.4) vehicle_attitude
                 att.q = qMeasured;
                 in.R = QuatToDcm( att.q );
-                eul = DcmToEuler( in.R );
+                eul = DcmToEuler( QuatToDcm( att.q ) );
                 in.yaw = eul(3);
 
-                if in.control_mode.flag_control_manual_enabled
+                if false % in.control_mode.flag_control_manual_enabled
                     if obj.heading_reset_counter ~= obj.att.quat_reset_counter
                         obj.heading_reset_counter = obj.att.quat_reset_counter;
         
@@ -811,7 +811,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 % If the vehicle is in manual mode we will shift the setpoints of the
                 % states which were reset. In auto mode we do not shift the setpoints
                 % since we want the vehicle to track the original state.
-                if in.control_mode.flag_control_manual_enabled
+                if false % in.control_mode.flag_control_manual_enabled
                     if obj.z_reset_counter ~= in.local_pos.z_reset_counter
                         obj.pos_sp(3) = in.local_pos.z;
                     end
@@ -821,56 +821,57 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                         obj.pos_sp(2) = in.local_pos.y;
                     end
                 end
-            
-                % update the reset counters in any case
-                obj.z_reset_counter = in.local_pos.z_reset_counter;
-                obj.xy_reset_counter = in.local_pos.xy_reset_counter;
 
                 % (1.7) position_setpoint_triplet
-                in.pos_sp_triplet.current.a_x                = 0;
-                in.pos_sp_triplet.current.a_y                = 0;
-                in.pos_sp_triplet.current.a_z                = 0;
-                in.pos_sp_triplet.current.acceleration_valid = 1;
-                in.pos_sp_triplet.current.acceptance_radius  = 0;
-                in.pos_sp_triplet.current.alt                = obj.ref_alt-xiDes(3);
-                in.pos_sp_triplet.current.alt_valid          = isfinite(xiDes(3));
-                in.pos_sp_triplet.current.cruising_speed     = 0;
-                in.pos_sp_triplet.current.lat                = obj.ref_lat_init;
-                in.pos_sp_triplet.current.lon                = obj.ref_lon_init;
-                in.pos_sp_triplet.current.position_valid     = sum(isfinite(xiDes)) == 3;
-                in.pos_sp_triplet.current.type               = 'SETPOINT_TYPE_POSITION';
-                in.pos_sp_triplet.current.valid              = 1;
-                in.pos_sp_triplet.current.velocity_frame     = 'VELOCITY_FRAME_LOCAL_NED';
-                in.pos_sp_triplet.current.velocity_valid     = 1;
-                in.pos_sp_triplet.current.vx                 = 0;
-                in.pos_sp_triplet.current.vy                 = 0;
-                in.pos_sp_triplet.current.vz                 = 0;
-                in.pos_sp_triplet.current.x                  = xiDes(1);
-                in.pos_sp_triplet.current.y                  = xiDes(2);
-                in.pos_sp_triplet.current.yaw                = 0;
-                in.pos_sp_triplet.current.yaw_valid          = 1;
-                in.pos_sp_triplet.current.yawspeed           = 0;
-                in.pos_sp_triplet.current.yawspeed_valid     = 0;
-                in.pos_sp_triplet.current.z                  = xiDes(3);
+                current_triplet.a_x                = 0;
+                current_triplet.a_y                = 0;
+                current_triplet.a_z                = 0;
+                current_triplet.acceleration_valid = 1;
+                current_triplet.acceptance_radius  = 0;
+                current_triplet.alt                = obj.ref_alt-xiDes(3);
+                current_triplet.alt_valid          = isfinite(xiDes(3));
+                current_triplet.cruising_speed     = 0;
+                current_triplet.lat                = obj.ref_lat_init;
+                current_triplet.lon                = obj.ref_lon_init;
+                current_triplet.position_valid     = sum(isfinite(xiDes)) == 3;
+                current_triplet.type               = 'SETPOINT_TYPE_POSITION';
+                current_triplet.valid              = 1;
+                current_triplet.velocity_frame     = 'VELOCITY_FRAME_LOCAL_NED';
+                current_triplet.velocity_valid     = 1;
+                current_triplet.vx                 = 0;
+                current_triplet.vy                 = 0;
+                current_triplet.vz                 = 0;
+                current_triplet.x                  = xiDes(1);
+                current_triplet.y                  = xiDes(2);
+                current_triplet.yaw                = 0;
+                current_triplet.yaw_valid          = 1;
+                current_triplet.yawspeed           = 0;
+                current_triplet.yawspeed_valid     = 0;
+                current_triplet.z                  = xiDes(3);
 
                 % We are station keeping so all waypoints are the same
-                in.pos_sp_triplet.next     = in.pos_sp_triplet.current;
-                in.pos_sp_triplet.previous = in.pos_sp_triplet.current;
+                in.pos_sp_triplet.current  = current_triplet;
+                in.pos_sp_triplet.next     = current_triplet;
+                in.pos_sp_triplet.previous = current_triplet;
 
                 % To be a valid current triplet, altitude has to be finite
-                if ~isfinite( in.pos_sp_triplet.current.alt )
+                if ~isfinite( current_triplet.alt )
                     in.pos_sp_triplet.current.valid = 0;
                 end
 
                 % To be a valid previous triplet, lat/lon/alt has to be finite
-                if ( ~isfinite( in.pos_sp_triplet.previous.lat ) || ...
-                    ~isfinite( in.pos_sp_triplet.previous.lon ) || ...
-                    ~isfinite( in.pos_sp_triplet.previous.alt ) )
+                if ( ~isfinite( current_triplet.lat ) || ...
+                    ~isfinite( current_triplet.lon ) || ...
+                    ~isfinite( current_triplet.alt ) )
                     in.pos_sp_triplet.previous.valid = 0;
                 end
                 
                 % (1.8) home_position
                 in.home_pos.z = 0;
+                
+                % Update the reset counters in any case
+                obj.z_reset_counter = in.local_pos.z_reset_counter;
+                obj.xy_reset_counter = in.local_pos.xy_reset_counter;
             else
                 error( 'Full mode not implemented yet' )
             end
@@ -943,7 +944,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 obj.lnd_reached_ground = 0;
         
                 % Also reset previous setpoints
-                obj.yaw_takeoff = obj.yaw;
+                obj.yaw_takeoff = in.yaw;
                 obj.vel_sp_prev = zeros(3,1);
                 obj.vel_prev    = zeros(3,1);
         
@@ -1403,7 +1404,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
             end
         
             % check if stick direction and current velocity are within 60angle
-            is_aligned = (stick_xy_norm * stick_xy_prev_norm) > 0.5;
+            is_aligned = dot(stick_xy_norm, stick_xy_prev_norm) > 0.5;
         
             % check if zero input stick
             is_prev_zero = abs(norm(obj.stick_input_xy_prev)) <= obj.flt_epsilon;
@@ -1473,13 +1474,15 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
         
                     if norm(vel_xy) > 0
                         vel_xy_norm = normalize(vel_xy);
+                    else
+                        vel_xy_norm = vel_xy;
                     end
         
-                    stick_vel_aligned = (vel_xy_norm * stick_xy_norm) > 0;
+                    stick_vel_aligned = dot(vel_xy_norm, stick_xy_norm) > 0;
         
                     % Update manual direction change hysteresis
                     extra_states.hysteresis = hysteresis_set_state_and_update( extra_states.hysteresis, ...
-                        ~stick_vel_aligned, getCurrentTime(obj)*1E6 );
+                        double(~stick_vel_aligned), getCurrentTime(obj)*1E6 );
         
                     % Exit direction change if one of the condition is met
                     if strcmp(intention, 'brake')
@@ -1540,7 +1543,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 case 'deceleration'
                     obj.acc_state_dependent_xy = obj.deceleration_hor_slow;
                 otherwise
-                    warning( 'User intention not recognized' );
+                    % warning( 'User intention not recognized' );
                     obj.acc_state_dependent_xy = obj.acceleration_hor_max;
             end
         
@@ -1638,7 +1641,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
             if in.control_mode.flag_control_altitude_enabled
                 % Set vertical velocity setpoint with throttle stick, remapping of
                 % manual.z [0,1] to up and down command [-1,1]
-                man_vel_sp(3) = -expo_deadzone( (obj.manual.z - 0.5) * 2, ...
+                man_vel_sp(3) = -expo_deadzone( (in.manual.z - 0.5) * 2, ...
                                                 obj.z_vel_man_expo, obj.hold_dz );
         
                 % Reset alt setpoint to current altitude if needed
@@ -1647,9 +1650,9 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
         
             if in.control_mode.flag_control_position_enabled
                 % Set horizontal velocity setpoint with roll/pitch stick
-                man_vel_sp(1) = expo_deadzone( obj.manual.x, ...
+                man_vel_sp(1) = expo_deadzone( in.manual.x, ...
                     obj.xy_vel_man_expo, obj.hold_dz );
-                man_vel_sp(2) = expo_deadzone( obj.manual.y, ...
+                man_vel_sp(2) = expo_deadzone( in.manual.y, ...
                     obj.xy_vel_man_expo, obj.hold_dz );
         
                 man_vel_hor_length = norm( man_vel_sp(1:2) );
@@ -1702,13 +1705,13 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
         
             % Want to get/stay in altitude hold if user has z stick in the middle
             % (accounted for deadzone already)
-            alt_hold_desired = in.control_mode.flag_control_altitude_enabled && ...
-                strcmp(extra_states.user_intention_z, 'brake');
+            alt_hold_desired = double( in.control_mode.flag_control_altitude_enabled && ...
+                strcmp(extra_states.user_intention_z, 'brake') );
         
             % Want to get/stay in position hold if user has xy stick in the middle
             % (accounted for deadzone already)
-            pos_hold_desired = in.control_mode.flag_control_position_enabled && ...
-                strcmp(extra_states.user_intention_xy, 'brake');
+            pos_hold_desired = double( in.control_mode.flag_control_position_enabled && ...
+                strcmp(extra_states.user_intention_xy, 'brake') );
         
             % Check vertical hold engaged flag
             if (obj.alt_hold_engaged)
@@ -1716,9 +1719,9 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
         
             else
                 % Check if we switch to alt_hold_engaged
-                smooth_alt_transition = alt_hold_desired && ...
+                smooth_alt_transition = double( alt_hold_desired && ...
                     ( (max_acc_z - obj.acc_state_dependent_z) < obj.flt_epsilon ) && ...
-                    (obj.hold_max_z < obj.flt_epsilon || abs(obj.vel(3)) < obj.hold_max_z);
+                    (obj.hold_max_z < obj.flt_epsilon || abs(obj.vel(3)) < obj.hold_max_z) );
         
                 % During transition predict setpoint forward
                 if smooth_alt_transition
@@ -1867,7 +1870,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
         
                 extra_states.att_sp.roll_body = 0;
                 extra_states.att_sp.pitch_body = 0;
-                extra_states.att_sp.yaw_body = obj.yaw;
+                extra_states.att_sp.yaw_body = in.yaw;
                 extra_states.att_sp.thrust = 0;
         
                 extra_states.att_sp.timestamp = getCurrentTime( obj );
@@ -1914,12 +1917,12 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                             obj.vel_sp(2) = in.pos_sp_triplet.current.vy;
                         elseif strcmp( in.pos_sp_triplet.current.velocity_frame, 'VELOCITY_FRAME_BODY_NED' )
                             % Transform velocity command from body frame to NED frame
-                            obj.vel_sp(1) = cos(obj.yaw) * in.pos_sp_triplet.current.vx ...
-                                - sin(obj.yaw) * in.pos_sp_triplet.current.vy;
-                            obj.vel_sp(2) = sin(obj.yaw) * in.pos_sp_triplet.current.vx ...
-                            + cos(obj.yaw) * in.pos_sp_triplet.current.vy;
+                            obj.vel_sp(1) = cos(in.yaw) * in.pos_sp_triplet.current.vx ...
+                                - sin(in.yaw) * in.pos_sp_triplet.current.vy;
+                            obj.vel_sp(2) = sin(in.yaw) * in.pos_sp_triplet.current.vx ...
+                            + cos(in.yaw) * in.pos_sp_triplet.current.vy;
                         else
-                            warning( 'Unknown velocity offboard coordinate frame' );
+                            % warning( 'Unknown velocity offboard coordinate frame' );
                         end
         
                         obj.run_pos_control = 0;
@@ -1962,7 +1965,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 elseif in.pos_sp_triplet.current.yawspeed_valid
                     yaw_target = WrapPi( extra_states.att_sp.yaw_body ...
                         + in.pos_sp_triplet.current.yawspeed * obj.dt );
-                    yaw_offs = WrapPi( yaw_target - obj.yaw );
+                    yaw_offs = WrapPi( yaw_target - in.yaw );
         
                     if obj.man_yaw_max < obj.global_yaw_max
                         yaw_rate_max = obj.man_yaw_max;
@@ -2025,10 +2028,10 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 if ( isfinite(in.pos_sp_triplet.current.lat) && ...
                         isfinite(in.pos_sp_triplet.current.lon) )
                     % Project setpoint to local frame
-                    map_projection_project( extra_states.ref_pos, ...
+                    [ ~, curr_pos_sp(1), curr_pos_sp(2) ] = ...
+                        map_projection_project( extra_states.ref_pos, ...
                                     in.pos_sp_triplet.current.lat, ...
-                                    in.pos_sp_triplet.current.lon, ...
-                                    curr_pos_sp(1), curr_pos_sp(2) );
+                                    in.pos_sp_triplet.current.lon );
         
                     obj.triplet_lat_lon_finite = 1;
         
@@ -2132,7 +2135,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                     extra_states.att_sp.yaw_body = in.pos_sp_triplet.current.yaw;
                 end
         
-                yaw_diff = WrapPi(extra_states.att_sp.yaw_body - obj.yaw);
+                yaw_diff = WrapPi(extra_states.att_sp.yaw_body - in.yaw);
         
                 % Only follow previous-current-line for specific triplet type
                 if ( strcmp(in.pos_sp_triplet.current.type, 'SETPOINT_TYPE_POSITION') || ...
@@ -2286,11 +2289,11 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                                             (obj.pos(2) - obj.prev_pos_sp(2)) ];
         
                         % Current velocity along track
-                        vel_sp_along_track_prev = [obj.vel_sp(1); obj.vel_sp(2)] ...
-                            * unit_prev_to_current;
+                        vel_sp_along_track_prev = dot( [obj.vel_sp(1); obj.vel_sp(2)], ...
+                            unit_prev_to_current );
         
                         % Distance to target when brake should occur
-                        target_threshold_xy = 1.5 * get_cruising_speed_xy(obj);
+                        target_threshold_xy = 1.5 * get_cruising_speed_xy( obj, in );
         
                         close_to_current = norm(vec_pos_to_current) < target_threshold_xy;
                         close_to_prev = ( norm(vec_prev_to_pos) < target_threshold_xy ) && ...
@@ -2308,7 +2311,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                         previous_in_front = dot(vec_prev_to_pos, unit_prev_to_current) < 0;
         
                         % Default velocity along line prev-current
-                        vel_sp_along_track = get_cruising_speed_xy( obj );
+                        vel_sp_along_track = get_cruising_speed_xy( obj, in );
         
                         % Compute velocity setpoint along track
                         % Only go directly to previous setpoint if more than 5m away and
@@ -2318,15 +2321,15 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                             % Just use the default velocity along track
                             vel_sp_along_track = norm(vec_prev_to_pos) * obj.pos_p(1);
         
-                            if (vel_sp_along_track > get_cruising_speed_xy(obj))
-                                vel_sp_along_track = get_cruising_speed_xy(obj);
+                            if (vel_sp_along_track > get_cruising_speed_xy(obj, in))
+                                vel_sp_along_track = get_cruising_speed_xy(obj, in);
                             end
         
                         elseif current_behind
                             % Go directly to current setpoint
                             vel_sp_along_track = norm(vec_pos_to_current) * obj.pos_p(1);
-                            if ~( vel_sp_along_track < get_cruising_speed_xy(obj) )
-                                vel_sp_along_track = get_cruising_speed_xy( obj );
+                            if ~( vel_sp_along_track < get_cruising_speed_xy(obj, in) )
+                                vel_sp_along_track = get_cruising_speed_xy( obj, in );
                             end
         
                         elseif (close_to_prev)
@@ -2336,7 +2339,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                             % septoint and use this velocity as final velocity when
                             % transition occurs from acceleration to deceleration.
                             % This ensures smooth transition
-                            final_cruise_speed = get_cruising_speed_xy( obj );
+                            final_cruise_speed = get_cruising_speed_xy( obj, in );
         
                             if ~is_2_target_threshold
                                 % Set target threshold to half dist pre-current
@@ -2359,7 +2362,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                                         'SETPOINT_TYPE_LOITER') )
                                     % Get velocity close to current that depends on
                                     % angle between prev-current and current-next line
-                                    vel_close = get_vel_close( obj, ...
+                                    vel_close = get_vel_close( obj, in, ...
                                                                 unit_prev_to_current, ...
                                                                 unit_current_to_next );
                                     acceptance_radius = obj.nav_rad;
@@ -2371,7 +2374,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                                     final_cruise_speed = vel_close;
         
                                 else
-                                    slope = (get_cruising_speed_xy(obj) - vel_close) / ...
+                                    slope = (get_cruising_speed_xy(obj, in) - vel_close) / ...
                                         (target_threshold_tmp - acceptance_radius);
                                     final_cruise_speed = vel_close + slope * ...
                                         (target_threshold_xy - acceptance_radius);
@@ -2426,7 +2429,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
         
                                 % Get velocity close to current that depends on angle
                                 % between prev-current and current-next line
-                                vel_close = get_vel_close( obj, unit_prev_to_current, ...
+                                vel_close = get_vel_close( obj, in, unit_prev_to_current, ...
                                                             unit_current_to_next );
         
                                 % Compute velocity along line which depends on distance
@@ -2437,7 +2440,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                                     if (target_threshold_xy - obj.nav_rad) < obj.sigma_norm
                                         vel_sp_along_track = vel_close;
                                     else
-                                        slope = ( get_cruising_speed_xy(obj) - vel_close ) / ...
+                                        slope = ( get_cruising_speed_xy(obj, in) - vel_close ) / ...
                                             ( target_threshold_xy - obj.nav_rad ) ;
                                         vel_sp_along_track = vel_close + slope * ...
                                             ( norm(vec_closest_to_current) - obj.nav_rad );
@@ -2468,7 +2471,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                                 end
                             else
                                 % We want to stop at current setpoint
-                                slope = get_cruising_speed_xy(obj) / target_threshold_xy;
+                                slope = get_cruising_speed_xy(obj, in) / target_threshold_xy;
                                 vel_sp_along_track =  slope * norm(vec_closest_to_current);
         
                                 % Since we want to slow down take over previous velocity
@@ -2497,15 +2500,15 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                         end
         
                         % Orthogonal velocity setpoint is smaller than cruise speed
-                        if ( vel_sp_orthogonal < get_cruising_speed_xy(obj) ) && ...
+                        if ( vel_sp_orthogonal < get_cruising_speed_xy(obj, in) ) && ...
                             ~current_behind
         
                             % We need to limit vel_sp_along_track such that cruise speed
                             % is never exceeded but still can keep velocity orthogonal
                             % to track
-                            if cruise_sp_mag > get_cruising_speed_xy(obj)
+                            if cruise_sp_mag > get_cruising_speed_xy(obj, in)
                                 vel_sp_along_track = sqrt( ...
-                                    get_cruising_speed_xy(obj) * get_cruising_speed_xy(obj) ...
+                                    get_cruising_speed_xy(obj, in) * get_cruising_speed_xy(obj, in) ...
                                     - vel_sp_orthogonal * vel_sp_orthogonal );
                             end
         
@@ -2537,8 +2540,8 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                             % Make sure that we never exceed maximum cruise speed
                             cruise_sp = norm(vec_pos_to_closest) * obj.pos_p(1);
         
-                            if cruise_sp > get_cruising_speed_xy( obj )
-                                cruise_sp = get_cruising_speed_xy( obj );
+                            if cruise_sp > get_cruising_speed_xy( obj, in )
+                                cruise_sp = get_cruising_speed_xy( obj, in );
                             end
         
                             % Sanity check: don't divide by zero
@@ -2558,8 +2561,8 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                     vel_xy_mag = sqrt(obj.vel(1) * obj.vel(1) + obj.vel(2) * obj.vel(2));
         
                     if vel_xy_mag > obj.sigma_norm
-                        obj.vel_sp(1) = obj.vel(1) / vel_xy_mag * get_cruising_speed_xy(obj);
-                        obj.vel_sp(2) = obj.vel(2) / vel_xy_mag * get_cruising_speed_xy(obj);
+                        obj.vel_sp(1) = obj.vel(1) / vel_xy_mag * get_cruising_speed_xy(obj, in);
+                        obj.vel_sp(2) = obj.vel(2) / vel_xy_mag * get_cruising_speed_xy(obj, in);
                     else
                         % TODO: We should go in the direction we are heading if current
                         %       velocity is zero
@@ -2573,13 +2576,13 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                     obj.pos_sp = obj.curr_pos_sp;
         
                     % Set max velocity to cruise
-                    obj.vel_max_xy = get_cruising_speed_xy( obj );
+                    obj.vel_max_xy = get_cruising_speed_xy( obj, in );
                 end
         
                 % sanity check
                 if ( ~(isfinite(obj.pos_sp(1)) && isfinite(obj.pos_sp(2)) && ...
                         isfinite(obj.pos_sp(3))) )
-                    warning( 'Auto: Position setpoint not finite' );
+                    % warning( 'Auto: Position setpoint not finite' );
                     obj.pos_sp = obj.curr_pos_sp;
                 end
         
@@ -2653,7 +2656,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 else
                     obj.vel_sp(1) = 0;
                     obj.vel_sp(2) = 0;
-                    warning( 'Caught invalid pos_sp in x and y' );
+                    % warning( 'Caught invalid pos_sp in x and y' );
                 end
             end
         
@@ -2667,7 +2670,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                     obj.vel_sp(3) = (obj.pos_sp(3) - obj.pos(3)) * obj.pos_p(3);
                 else
                     obj.vel_sp(3) = 0;
-                    warning( 'Caught invalid pos_sp in z' );
+                    % warning( 'Caught invalid pos_sp in z' );
                 end
             end
         
@@ -2707,7 +2710,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
             if ( isfinite(in.local_pos.hagl_min) && ...               % We need height limiting
                     in.control_mode.flag_control_manual_enabled   && ... % Vehicle is under manual control
                     in.control_mode.flag_control_altitude_enabled && ... % Altitude controller is running
-                ~manual_wants_landing( obj ) )                        % Operator is not trying to land
+                ~manual_wants_landing( obj, in ) )                        % Operator is not trying to land
                 if in.local_pos.dist_bottom < in.local_pos.hagl_min
                     % If distance to ground is less than limit, increment setpoint
                     % upwards at up to the landing descent rate
@@ -2958,7 +2961,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
             if ( ~isfinite(thrust_sp(1)) || ...
                     ~isfinite(thrust_sp(2)) || ...
                     ~isfinite(thrust_sp(3)) )
-                warning( 'Thrust setpoint not finite' );
+                % warning( 'Thrust setpoint not finite' );
             end
         
             extra_states.att_sp.thrust = max( thrust_body_z, thr_min );
@@ -3060,9 +3063,9 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
             % Reset yaw setpoint to current position if needed
             if obj.reset_yaw_sp
                 obj.reset_yaw_sp = 0;
-                extra_states.att_sp.yaw_body = obj.yaw;
+                extra_states.att_sp.yaw_body = in.yaw;
             elseif ( ~in.vehicle_land_detected.landed && ...
-                    ~(~in.control_mode.flag_control_altitude_enabled && obj.manual.z < 0.1) )
+                    ~(~in.control_mode.flag_control_altitude_enabled && in.manual.z < 0.1) )
                 % Do not move yaw while sitting on the ground
                 % We want to know the real constraint, and global overrides manual
                 if obj.man_yaw_max < obj.global_yaw_max
@@ -3072,11 +3075,11 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 end
                 yaw_offset_max = yaw_rate_max / obj.mc_att_yaw_p;
         
-                extra_states.att_sp.yaw_sp_move_rate = obj.manual.r * yaw_rate_max;
+                extra_states.att_sp.yaw_sp_move_rate = in.manual.r * yaw_rate_max;
         
                 yaw_target = WrapPi( extra_states.att_sp.yaw_body ...
                     + extra_states.att_sp.yaw_sp_move_rate * obj.dt );
-                yaw_offs = WrapPi( yaw_target - obj.yaw );
+                yaw_offs = WrapPi( yaw_target - in.yaw );
         
                 % If the yaw offset became too big for the system to track stop
                 % shifting it, only allow if it would make the offset smaller again.
@@ -3089,7 +3092,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
         
             % Control throttle directly if no climb rate controller is active
             if ~in.control_mode.flag_control_climb_rate_enabled
-                thr_val = throttle_curve( obj.manual.z, obj.thr_hover );
+                thr_val = MulticopterPositionControl.throttle_curve( in.manual.z, obj.thr_hover );
                 extra_states.att_sp.thrust = min( thr_val, obj.manual_thr_max );
         
                 % Enforce minimum throttle if not landed
@@ -3127,8 +3130,8 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 % towards the direction that the stick points to, and changes of the
                 % stick input are linear.
                 
-                x = obj.manual.x * obj.man_tilt_max;
-                y = obj.manual.y * obj.man_tilt_max;
+                x = in.manual.x * obj.man_tilt_max;
+                y = in.manual.y * obj.man_tilt_max;
         
                 % we want to fly towards the direction of (x, y), so we use a
                 % perpendicular axis angle vector in the XY-plane
@@ -3175,7 +3178,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                     %   the same as when not yawing
         
                     % Calculate our current yaw error
-                    yaw_error = WrapPi( extra_states.att_sp.yaw_body - obj.yaw );
+                    yaw_error = WrapPi( extra_states.att_sp.yaw_body - in.yaw );
         
                     % compute the vector obtained by rotating a z unit vector by the rotation
                     % given by the roll and pitch commands of the user
@@ -3208,11 +3211,11 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
             % the user switched from gear down to gear up.
             % If the user had the switch in the gear up position and took off ignore it
             % until he toggles the switch to avoid retracting the gear immediately on takeoff.
-            if ( strcmp(obj.manual.gear_switch, 'SWITCH_POS_ON') && ...
+            if ( strcmp(in.manual.gear_switch, 'SWITCH_POS_ON') && ...
                     obj.gear_state_initialized && ~in.vehicle_land_detected.landed )
                 extra_states.att_sp.landing_gear = vehicle_attitude_setpoint_s_LANDING_GEAR_UP;
         
-            elseif strcmp(obj.manual.gear_switch, 'SWITCH_POS_OFF')
+            elseif strcmp(in.manual.gear_switch, 'SWITCH_POS_OFF')
                 extra_states.att_sp.landing_gear = vehicle_attitude_setpoint_s_LANDING_GEAR_DOWN;
                 % Switching the gear off does put it into a safe defined state
                 obj.gear_state_initialized = 1;
@@ -3263,7 +3266,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
             end
         end
 
-        function vel_close = get_vel_close( obj, unit_prev_to_current, unit_current_to_next )
+        function vel_close = get_vel_close( obj, in, unit_prev_to_current, unit_current_to_next )
         %GET_VEL_CLOSE Get close velocity
         %    Written:  2021/03/06, J.X.J. Bannwarth
         
@@ -3271,8 +3274,8 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
             min_cruise_speed = 1;
         
             % Make sure that cruise speed is larger than minimum*/
-            if ( (get_cruising_speed_xy(obj) - min_cruise_speed) < obj.sigma_norm )
-                vel_close = get_cruising_speed_xy(obj);
+            if ( (get_cruising_speed_xy(obj, in) - min_cruise_speed) < obj.sigma_norm )
+                vel_close = get_cruising_speed_xy(obj, in);
                 return
             end
         
@@ -3285,15 +3288,15 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
                 middle_cruise_speed = min_cruise_speed + obj.sigma_norm;
             end
         
-            if ( (get_cruising_speed_xy(obj) - middle_cruise_speed) < obj.sigma_norm )
-                middle_cruise_speed = (get_cruising_speed_xy(obj) + min_cruise_speed) * 0.5;
+            if ( (get_cruising_speed_xy(obj, in) - middle_cruise_speed) < obj.sigma_norm )
+                middle_cruise_speed = (get_cruising_speed_xy(obj, in) + min_cruise_speed) * 0.5;
             end
         
             % If middle cruise speed is exactly in the middle, then compute vel_close
             % linearly
             use_linear_approach = 0;
         
-            if ( ( (get_cruising_speed_xy(obj) + min_cruise_speed) * 0.5 - ...
+            if ( ( (get_cruising_speed_xy(obj, in) + min_cruise_speed) * 0.5 - ...
                 middle_cruise_speed ) < obj.sigma_norm )
                 use_linear_approach = 1;
             end
@@ -3303,14 +3306,15 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
             % 0 = PI, 2 = PI*0
             angle = 2.0;
             if ( norm(unit_current_to_next) > obj.sigma_norm )
-                angle = unit_current_to_next * (unit_prev_to_current * -1) + 1;
+                angle = dot( unit_current_to_next, ...
+                    (unit_prev_to_current * -1) ) + 1;
             end
         
             % Compute velocity target close to waypoint
             if use_linear_approach
                 % Velocity close to target adjusted to angle, vel_close =  m*x+q
-                slope = -( get_cruising_speed_xy(obj) - min_cruise_speed ) / 2.0;
-                vel_close = slope * angle + get_cruising_speed_xy(obj);
+                slope = -( get_cruising_speed_xy(obj, in) - min_cruise_speed ) / 2.0;
+                vel_close = slope * angle + get_cruising_speed_xy(obj, in);
             else
                 % Velocity close to target adjusted to angle
                 % vel_close = a *b ^x + c; where at angle = 0 -> vel_close = vel_cruise;
@@ -3320,20 +3324,20 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
         
                 % From maximum cruise speed, minimum cruise speed and middle cruise
                 % speed compute constants a, b and c
-                a = -( (middle_cruise_speed -  get_cruising_speed_xy(obj)) * ...
-                        (middle_cruise_speed -  get_cruising_speed_xy(obj)) ) / ...
-                        ( 2.0 * middle_cruise_speed - get_cruising_speed_xy(obj) - ...
+                a = -( (middle_cruise_speed -  get_cruising_speed_xy(obj, in)) * ...
+                        (middle_cruise_speed -  get_cruising_speed_xy(obj, in)) ) / ...
+                        ( 2.0 * middle_cruise_speed - get_cruising_speed_xy(obj, in) - ...
                         min_cruise_speed );
-                c =  get_cruising_speed_xy(obj) - a;
+                c =  get_cruising_speed_xy(obj, in) - a;
                 b = (middle_cruise_speed - c) / a;
                 vel_close = a * b^angle + c;
             end
         
             % vel_close needs to be in between max and min
-            vel_close = constrain( vel_close, min_cruise_speed, get_cruising_speed_xy(obj) );
+            vel_close = constrain( vel_close, min_cruise_speed, get_cruising_speed_xy(obj, in) );
         end
 
-        function out = get_cruising_speed_xy( obj )
+        function out = get_cruising_speed_xy( obj, in )
         %GET_CRUISING_SPEED_XY Get horizontal cruising speed
         %   In mission the user can choose cruising speed different to default
         %    Written:  2021/03/05, J.X.J. Bannwarth
@@ -3435,7 +3439,7 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
         function vel_sp_z = set_takeoff_velocity( obj, vel_sp_z )
         %SET_TAKEOFF_VELOCITY
         %    Written:  2021/03/05, J.X.J. Bannwarth
-            obj.in_smooth_takeoff = obj.takeoff_vel_limit < -vel_sp_z;
+            obj.in_smooth_takeoff = double( obj.takeoff_vel_limit < -vel_sp_z );
             % Ramp vertical velocity limit up to takeoff speed
             obj.takeoff_vel_limit = obj.takeoff_vel_limit - ...
                 vel_sp_z * obj.dt / obj.takeoff_ramp_time;
@@ -3695,10 +3699,16 @@ classdef MulticopterPositionControl < matlab.System & matlab.system.mixin.Custom
     
             % Char arrays
             intentions = { 'brake'; 'direction_change'; 'acceleration'; 'deceleration' };
-            obj.user_intention_xy = find( strcmp( extra_states.user_intention_xy, ...
-                intentions ) );
-            obj.user_intention_z  = find( strcmp( extra_states.user_intention_z, ...
-                intentions ) );
+            obj.user_intention_xy = 1;
+            obj.user_intention_z = 1;
+            for ii = 1:length(intentions)
+                if strcmp( extra_states.user_intention_xy, intentions{ii} )
+                    obj.user_intention_xy = ii;
+                end
+                if strcmp( extra_states.user_intention_z, intentions{ii} )
+                    obj.user_intention_z = ii;
+                end
+            end
         end
     end
     
@@ -4126,6 +4136,8 @@ function [ out, lat, lon ] = map_projection_reproject( ref, x, y )
     
     if ~map_projection_initialized( ref )
         out = -1;
+        lat = 0;
+        lon = 0;
         return
     end
 
@@ -4160,6 +4172,8 @@ function [ out, x, y ] = map_projection_project( ref, lat, lon )
     
     if ~map_projection_initialized( ref )
         out = -1;
+        x = 0;
+        y = 0;
         return
     end
     
@@ -4199,6 +4213,12 @@ function [ out, ref ] = map_projection_init_timestamped( ref, lat_0, lon_0, time
     ref.timestamp = timestamp;
     ref.init_done = 1;
     out = 0;
+end
+
+function init = map_projection_initialized( ref )
+%MAP_PROJECTION_INITIALIZED
+%   Written: 2021/03/23, J.X.J. Bannwarth
+    init = ref.init_done;
 end
 
 %% [4] BlockDerivative.cpp - Derivative functions
