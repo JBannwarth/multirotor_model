@@ -17,9 +17,9 @@ function Motor = MotorTMotorMn1806( nRotors )
 
     %% MOTOR ELECTRICAL PROPERTIES
     % T-Motor MN1806-14, 2300KV
-    Motor.R   = 0.117;      % Motor resistance [Ohm]
-    Motor.K_T = 1.928e-08;  % Effective motor torque constant [Nm/A]
-    Motor.K   = 1.5280e-06; % Rotor thrust coefficient
+    Motor.R   = 0.117;        % Motor resistance [ohm]
+    Motor.C_TAU = 1.0410e-08; % Motor aerodynamic torque coefficient [Nms^2/rad^2]
+    Motor.K   = 1.5280e-06;   % Rotor thrust coefficient
 
     Motor.V_0 = 12.4;
     Motor.I_0 = 0.6;

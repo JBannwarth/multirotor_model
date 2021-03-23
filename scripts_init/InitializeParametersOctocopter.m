@@ -32,7 +32,7 @@ function [Uav, Motor, Aero, Initial] = InitializeParametersOctocopter( canted )
     Aero.Cz2.coefs(2) = Motor.K / (0.5 .* Uav.RHO_AIR .* Uav.D_PROP^2 .* Uav.A_PROP);
     
     % Single motor thrust required for hover [N]
-    Uav.THRUST_HOVER = abs(Uav.G(3)) / 8;
+    Uav.THRUST_HOVER = ( abs(Uav.G(3)) / 8 ) / cos(Uav.ZETA);
 
     % Motor speed at hover thrust [rad/s]
     if strcmp( Aero.Type, 'Body oriented' )
@@ -45,14 +45,11 @@ function [Uav, Motor, Aero, Initial] = InitializeParametersOctocopter( canted )
 
     % Estimated throttle required to maintain hover
     Vi = ( Motor.V_0 - ...
-        Motor.K_T*Uav.OMEGA_HOVER^2*(Motor.R * Motor.K_V * Motor.V_0) ) / ...
+        Motor.C_TAU*Uav.OMEGA_HOVER^2*(Motor.R * Motor.K_V * Motor.V_0) ) / ...
         Motor.I_0*Motor.R + Motor.I_0*Motor.R + ...
         Uav.OMEGA_HOVER*( Motor.V_0 - Motor.I_0*Motor.R ) / ( Motor.K_V * Motor.V_0 );
 
     Uav.THROTTLE_HOVER = (Vi - 2.3508) / 6.9817;
-    
-    % Account for cant angle
-    Uav.THROTTLE_HOVER = Uav.THROTTLE_HOVER / cos(Uav.ZETA);
 
     % Sampling time of noise
     Uav.NOISE_TS = 0.002;
