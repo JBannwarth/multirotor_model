@@ -19,7 +19,7 @@
 clearvars -except uavType canted;
 
 if ~exist( 'uavType', 'var' )
-    uavType = 'quad_x';
+    uavType = 'octa_x';
 end
 
 if ~exist( 'canted', 'var' )
