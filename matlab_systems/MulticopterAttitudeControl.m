@@ -187,7 +187,7 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
             obj.rates_prev                   = zeros(3,1);
             obj.rates_prev_filtered          = zeros(3,1);
             obj.rates_sp                     = zeros(3,1);
-            obj.thrust_sp                    = 0;
+            obj.thrust_sp                    = -obj.throttle_hover;
             obj.man_yaw_sp                   = 0;
             obj.gear_state_initialized       = 0;
             obj.lp_filters_d_delay_element_1 = zeros(3,1);
@@ -199,9 +199,9 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
         function num = getNumOutputsImpl( obj )
             %GETNUMOUTPUTSIMPL Return number of outputs
             %   Written:       J.X.J. Bannwarth, 2019/01/15
-            %   Last modified: J.X.J. Bannwarth, 2019/01/15
+            %   Last modified: J.X.J. Bannwarth, 2021/03/23
             if obj.output_rates
-                num = 2;
+                num = 3;
             else
                 num = 1;
             end
@@ -221,40 +221,44 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
         function varargout = getOutputSizeImpl( obj )
             %GETOUTPUTSIZEIMPL Return output size(s)
             %   Written:       J.X.J. Bannwarth, 2019/01/15
-            %   Last modified: J.X.J. Bannwarth, 2019/01/15
+            %   Last modified: J.X.J. Bannwarth, 2021/03/23
             varargout{1} = [8 1];
             if obj.output_rates
                 varargout{2} = [3 1];
+                varargout{3} = [3 1];
             end
         end
         
         function varargout = getOutputDataTypeImpl( obj )
             %GETOUTPUTDATATYPEIMPL Return output data type(s)
             %   Written:       J.X.J. Bannwarth, 2019/01/15
-            %   Last modified: J.X.J. Bannwarth, 2019/01/15
+            %   Last modified: J.X.J. Bannwarth, 2021/03/23
             varargout{1} = 'double';
             if obj.output_rates
                 varargout{2} = 'double';
+                varargout{3} = 'double';
             end
         end
         
         function varargout = isOutputComplexImpl( obj )
             %ISOUTPUTCOMPLEXIMPL Return whether output is complex
             %   Written:       J.X.J. Bannwarth, 2019/01/15
-            %   Last modified: J.X.J. Bannwarth, 2019/01/15
+            %   Last modified: J.X.J. Bannwarth, 2021/03/23
             varargout{1} = false;
             if obj.output_rates
                 varargout{2} = false;
+                varargout{3} = false;
             end
         end
         
         function varargout = isOutputFixedSizeImpl( obj )
             %ISOUTPUTFIXEDSIZEIMPL Return whether output is fixed size
             %   Written:       J.X.J. Bannwarth, 2019/01/15
-            %   Last modified: J.X.J. Bannwarth, 2019/01/15
+            %   Last modified: J.X.J. Bannwarth, 2021/03/23
             varargout{1} = true;
             if obj.output_rates
                 varargout{2} = true;
+                varargout{3} = true;
             end
         end
 
@@ -348,10 +352,11 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
         function varargout = getOutputNamesImpl( obj )
             %GETOUTPUTNAMESIMPL Return input port names for System block
             %   Written:       J.X.J. Bannwarth, 2019/01/15
-            %   Last modified: J.X.J. Bannwarth, 2019/01/15
+            %   Last modified: J.X.J. Bannwarth, 2021/03/23
             varargout{1} = 'controls';
             if obj.output_rates
                 varargout{2} = 'attRateSp';
+                varargout{3} = 'attRateFilt';
             end
         end
         
@@ -368,7 +373,7 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
         function varargout = stepImpl( obj, varargin )
             %STEPIMPL Main function executed at each time step
             %   Written:       J.X.J. Bannwarth, 2019/01/15
-            %   Last modified: J.X.J. Bannwarth, 2019/01/15
+            %   Last modified: J.X.J. Bannwarth, 2021/03/23
             % Initialize output
             actuators_control = zeros(8,1);
             att_control       = zeros(3,1);
@@ -381,10 +386,20 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
                 % receiving attitude, thrust, and yaw rate commands from a
                 % position controller. In addition, we assume no saturation
                 % occurs
-                v_control_mode_flags_in  = [ 1; 1; 1; 1; 0; 1; 1; 0; 0; 0 ];
+                v_control_mode_flags_in  = [ 1; % Armed
+                                             1; % Altitude
+                                             1; % Attitude
+                                             0; % Auto
+                                             0; % Manual
+                                             1; % Position
+                                             1; % Rates
+                                             0; % Rattitude
+                                             0; % Termination
+                                             1  % Velocity
+                                           ];
                 vehicle_land_detected_in = zeros(2,1);
                 saturation_status_in     = zeros(12,1);
-                manual_control_sp_in     = zeros(4,1);
+                manual_control_sp_in     = [ 0; 0; 0; obj.throttle_hover ];
                 v_rates_sp_in            = zeros(6,1);
                 v_att_in                 = [ varargin{4}; 0; 0 ];
                 v_att_sp_in              = [ varargin{1}; 0; 0; varargin{2}; varargin{3} ];
@@ -568,6 +583,7 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
             varargout{1} = actuators_control;
             if obj.output_rates
                 varargout{2} = obj.rates_sp;
+                varargout{3} = obj.rates_prev_filtered;
             end
         end
 
@@ -579,7 +595,7 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
             %   Written:       J.X.J. Bannwarth, 2019/01/15
             %   Last modified: J.X.J. Bannwarth, 2019/01/15
             
-            eul = MulticopterAttitudeControl.QuatToEuler( v_att.q ); % 
+            eul = MulticopterAttitudeControl.QuatToEuler( v_att.q );
             yaw = eul(3);
             attitude_setpoint = struct( 'yaw_sp_move_rate', 0         , ...
                                         'roll_body'       , 0         , ...
@@ -619,7 +635,7 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
             end
             
             q_sp_rpy = MulticopterAttitudeControl.AxisAngleToQuat( [ v(1); v(2); 0 ] );
-            euler_sp = MulticopterAttitudeControl.QuatToEuler( q_sp_rpy ); %
+            euler_sp = MulticopterAttitudeControl.QuatToEuler( q_sp_rpy );
             attitude_setpoint.roll_body  = euler_sp(1);
             attitude_setpoint.pitch_body = euler_sp(2);
             % The axis angle can change the yaw as well (noticeable at higher tilt angles).
@@ -685,7 +701,7 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
             %   Input: 'vehicle_attitude_setpoint' (depending on mode)
             %   Output: obj.rates_sp, obj.thrust_sp
             %   Written:       J.X.J. Bannwarth, 2019/01/15
-            %   Last modified: J.X.J. Bannwarth, 2019/01/29
+            %   Last modified: J.X.J. Bannwarth, 2021/03/23
             
             % Physical thrust axis is the negative of body z axis
             obj.thrust_sp = -v_att_sp.thrust_body(3);
@@ -759,7 +775,9 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
             % This yields a vector representing the commanded rotation around the
             % world z-axis expressed in the body frame such that it can be added to
             % the rates setpoint.
-            obj.rates_sp = obj.rates_sp + MulticopterAttitudeControl.QuatToDcmZ( MulticopterAttitudeControl.InvertQuat(q) ) .* v_att_sp.yaw_sp_move_rate;
+            yaw_feedforward_rate = MulticopterAttitudeControl.QuatToDcmZ( MulticopterAttitudeControl.InvertQuat(q) );
+            yaw_feedforward_rate = yaw_feedforward_rate .* v_att_sp.yaw_sp_move_rate; % * yaw_ff.get
+            obj.rates_sp = obj.rates_sp + yaw_feedforward_rate;
             
             % limit rates
             for i = 1:3
@@ -819,7 +837,7 @@ classdef MulticopterAttitudeControl < matlab.System & matlab.system.mixin.Custom
             obj.rates_prev = rates;
             obj.rates_prev_filtered = rates_filtered;
             
-            % update integral only if we are not landed */
+            % Update integral only if we are not landed
             if (~vehicle_land_detected.maybe_landed && ~vehicle_land_detected.landed)
                 for i = 1:3
                     % Check for positive control saturation
