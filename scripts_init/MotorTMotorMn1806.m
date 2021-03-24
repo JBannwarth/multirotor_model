@@ -6,7 +6,7 @@ function Motor = MotorTMotorMn1806( nRotors )
 %   Model: T-Motor MN1806-14, 2300KV.
 %
 %   Parameters computed by Z.J. Chen for static drag test.
-%   Needs to be used with 'MotorModelJeremy.slx'.
+%   Needs to be used with 'MotorModelZJChen.slx'.
 %
 %   See also MOTORRCTIMERMT2610.
 %
@@ -17,13 +17,19 @@ function Motor = MotorTMotorMn1806( nRotors )
 
     %% MOTOR ELECTRICAL PROPERTIES
     % T-Motor MN1806-14, 2300KV
-    Motor.R   = 0.117;        % Motor resistance [ohm]
-    Motor.C_TAU = 1.0410e-08; % Motor aerodynamic torque coefficient [Nms^2/rad^2]
-    Motor.K   = 1.5280e-06;   % Rotor thrust coefficient
-
-    Motor.V_0 = 12.4;
-    Motor.I_0 = 0.6;
-    Motor.K_V = 240.8554;
+    % Datasheet properties
+    Motor.R   = 0.117;        % Resistance [ohm]
+    Motor.V_0 = 12.4;         % Nominal voltage [V]
+    Motor.I_0 = 0.6;          % Idle current [A]
+    Motor.K_V = 2*pi*2300/60; % Speed constant [rad/sV]
+    
+    % Measured values
+    Motor.C_TAU = 1.0410e-08; % Aerodynamic torque coefficient [Nms^2/rad^2]
+    Motor.K     = 1.5280e-06; % Thrust coefficient
+    
+    % Calculated values
+    Motor.K_E = (Motor.V_0-Motor.I_0*Motor.R) / (Motor.K_V*Motor.V_0); % Back EMF constant [Nms/rad]
+    Motor.K_T = Motor.K_E; % Motor torque constant [Nm/A]
 
     %% MOTOR MECHANICAL PROPERTIES
     % Rotor drag coefficient (no value, but necessary)
