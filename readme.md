@@ -1,87 +1,59 @@
 # Multirotor Simulation Model
 Created:      J.X.J. Bannwarth, 2016/06/30
-Last updated: J.X.J. Bannwarth, 2019/01/08
-
-## To-Do
-
-- [ ] Rewrite the requirements
-- [x] Add section on colour coding (2017/01/18)
-- [x] Add intro
-- [x] Add section about data
+Last updated: J.X.J. Bannwarth, 2021/03/25
 
 ## Introduction
 
-This repository contains a number of mulitotor models that I developed as part of my PhD.
+This repository contains a number of multirotor models that I developed as part of my PhD.
 
 The main simulation model is `MultirotorSimPx4`, in the `models` folder. It implements a multirotor dynamic model as well as a copy of the PX4 flight controller.
 
 In order to make the model better encapsulated, the drag and thrust models are loaded from separate simulink files, also stored in the `models` folder.
 Likewise, the quaternion blocks and PX4-related blocks are loaded from Simulink libraries stored in the `libraries` folder.
-Simulink does have inbuilt quaternion blocks in the Aerospace toolbox, however it is not available on the default MATLAB installation at the University of Auckland, which is why a custom library was written.
+Simulink does have inbuilt quaternion blocks in the Aerospace toolbox. However, that toolbox was not available on the default MATLAB installation at the University of Auckland at the time of this model's creation. Hence, the creation of this custom library was written.
 
 Before using any of the models, make sure to open the Simulink Project file, `MultirotorModel.prj`. It will add all the necessary folders to the path.
 
-In order to keep the size of the repository small, big data files are stored in a different location, as mentioned in the Data section of this README.
-
 ## How to Run
 
-To run a position hold simulation, run the following command to first open the `RunPositionHoldAIAAv3` script and examine its contents.
+To run a position hold simulation, run the following command to first open the `RunPositionHold` script and examine its contents.
 
 ```matlab
-open RunPositionHoldAIAAv3.m
+open RunPositionHold.m
 ```
 
-This file runs a batch simulation, so if you just want to peform one run, put a breakpoint after the following command on line 95:
+This file runs a batch simulation, so if you just want to perform one run, put a breakpoint before Section 7 on line 106.
+
+The simulation parameters can be changed by creating the following variables before running the simulation model:
+
+- `uavType`: either `'octa_x'` (default) or `'quad_x'`. Determines whether octocopter or quadcopter parameters are loaded.
+- `canted`: either `true` (default) or `false`. Determines wether the octocopter's rotors are canted or not. Has no effect if `uavType` is set to `quad_x`.
+
+## Code structure
+
+### Initialisation
+
+For a full example of initialisation, take a look at `RunPositionHold` in the `scripts_simulation` folder. The UAV parameters are loaded by running either of the following two blocks of code:
 
 ```matlab
-output = sim( model, 'SimulationMode', 'normal' );
+%% For quadcopter
+model = 'MultirotorSimPx4';
+load_system(model);
+[Uav, Motor, Aero, Initial] = InitializeParametersQuadcopter( );
+Simulation = InitializeModel( model, Initial, tEnd );
 ```
 
-## Data
+```matlab
+%% For canted rotor octocopter
+model = 'MultirotorSimPx4';
+load_system(model);
+[Uav, Motor, Aero, Initial] = InitializeParametersOctocopter( true );
+Simulation = InitializeModel( model, Initial, tEnd );
+```
 
-### AIAA Journal Paper Data
+`InitializeParametersQuadcopter()` and `InitializeParametersOctocopter()` load the parameters, while `InitializeModel()` sets up simulation parameters such as sampling time. Take a look at these functions to better understand how they work.
 
-> Jérémie X. J. Bannwarth, Z. Jeremy Chen, Karl A. Stol, Bruce A. MacDonald, and Peter J. Richards (2018). [Aerodynamic Force Modeling of Multirotor Unmanned Aerial Vehicles](https://doi.org/10.2514/1.J057165) AIAA Journal 0 0:0, 1-10.
-
-The data used for above paper is available in the `UAV Wind Project` Google Drive (request access from me), under the following there folders:
-
-- Data to put inside the `data_validation` subfolder
-    - Step data to put in the root of `data_validation`: `2018-12-14 All Validation Data for Github`
-    - Hover data to put in `data_validation\HoverExpLogsOCAIAAv3`: `2018-02-23 Hover Experiment Logs (OC) - Cropped`
-- Data to put inside the `data_wind` subfolder:
-    - Wind profiles to put in `data_wind\TurbSimOC`: `2018-06-07 TurbSim Wind Profiles for AIAA Paper`
-
-If you do not have access to the aforementioned Google Drive, the data is also stored on the University's research drive: `R:\MECH\Wind Disturbance Rejection UAV Project\Experiments`. 
-
-## List of Requirements
-
-Model must:
-
-- Be well encapsulated - each component should be easily replaceable
-- Be arbitrarily scalable - it should be easy to change from quadrotor to hexarotor to octorotor configuration (or any other feasible configuration)
-- Use quaternions to cover any possible use case
-- Include conversion blocks to run with quaternion or Euler controllers
-- Run efficiently (ideally perform a ~60s simulation in 2-3 real time s)
-- Be able to run in batch simulations
-- Include comprehensive data logging and plotting
-- Include ways to plot against experimental data
-
-Code must:
-- Be written using consistent naming conventions
-	- Use underscore style for variables `variable_name`
-	- Spell out greek letters `xi`, `omega`, etc.
-	- Use `_vec` and `_mat` to denote vectors and matrices
-	- Add contact address, name of creator, and date of modification to all files
-	- Add paper reference/doi/url to file description for algorithms/models
-- Simulink model must be clean and easy to understand
-	- Name all lines with appropriate variable names
-	- Name all block input/output appropriately
-	- Use colour coding to match blocks of similar function
-	- Add comment blocks to explain what is happening
-- Be well organised in folders
-- Be backed up on GitHub and kept up to date
-
-## Color Coding
+## Simulink Color Coding
 
 | Color       | Meaning                            |
 | ----------- | ---------------------------------- |
