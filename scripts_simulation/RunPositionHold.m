@@ -48,7 +48,7 @@ for ii = 1:length( windFiles )
 end
 
 % Find end time
-tEnd = 100;% floor( windInputs{1}.Time(end) ); % End on a round number
+tEnd = floor( windInputs{1}.Time(end) ); % End on a round number
 
 % Insert zero wind speed at the beginning
 windInputs(2:end+1) = windInputs;
