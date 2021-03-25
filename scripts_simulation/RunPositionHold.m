@@ -23,7 +23,7 @@ if ~exist( 'uavType', 'var' )
 end
 
 if ~exist( 'canted', 'var' )
-    canted = false;
+    canted = true;
 end
 
 %% 1) Prepare I/O
