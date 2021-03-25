@@ -17,9 +17,9 @@ function [Uav, Motor, Aero, Initial] = InitializeParametersOctocopter( canted )
     %% GLOBAL
     % Call the appropriate components
     if canted
-        Uav = UavOctocopter500mm( 0 );
+        Uav = UavOctocopter500mm( 31 );
     else
-        Uav = UavOctocopter500mm( deg2rad(31) );
+        Uav = UavOctocopter500mm( 0 );
     end
     Motor = MotorTMotorMn1806( Uav.N_ROTORS );
 

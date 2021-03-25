@@ -28,7 +28,7 @@ function Uav = UavOctocopter500mm( cantAngle, mass )
     
     % Angles
     Uav.GAMMA = deg2rad(22.5:45:337.5)'; % Arm angles [rad]
-    Uav.ZETA  = cantAngle;               % Cant angle [rad]
+    Uav.ZETA  = deg2rad(cantAngle);      % Cant angle [rad]
     
     % Rotor parameters
     Uav.N_ROTORS = length(Uav.GAMMA); % Number of rotors [-]
@@ -77,7 +77,7 @@ function Uav = UavOctocopter500mm( cantAngle, mass )
 
     %% MASS/INERTIA
     % Mass
-    Uav.M   = 1.9; % Frame [kg]
+    Uav.M   = 2; % Frame [kg]
     if mass ~= -1
         Uav.M = mass;
     end
