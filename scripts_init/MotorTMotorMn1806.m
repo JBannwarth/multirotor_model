@@ -25,7 +25,7 @@ function Motor = MotorTMotorMn1806( nRotors )
     
     % Measured values
     Motor.C_TAU = 1.0410e-08; % Aerodynamic torque coefficient [Nms^2/rad^2]
-    Motor.K     = 1.5280e-06; % Thrust coefficient [Ns/rad]
+    Motor.K     = 1.2138e-06; % Thrust coefficient [Ns/rad]
     
     % Calculated values
     Motor.K_E = (Motor.V_0-Motor.I_0*Motor.R) / (Motor.K_V*Motor.V_0); % Back EMF constant [Nms/rad]
