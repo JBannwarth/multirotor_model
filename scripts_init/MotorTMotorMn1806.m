@@ -19,22 +19,19 @@ function Motor = MotorTMotorMn1806( nRotors )
     % T-Motor MN1806-14, 2300KV
     % Datasheet properties
     Motor.R   = 0.117;        % Resistance [ohm]
-    Motor.V_0 = 12.4;         % Nominal voltage [V]
+    Motor.V_0 = 11.1;         % Nominal voltage [V]
     Motor.I_0 = 0.6;          % Idle current [A]
     Motor.K_V = 2*pi*2300/60; % Speed constant [rad/sV]
     
     % Measured values
     Motor.C_TAU = 1.0410e-08; % Aerodynamic torque coefficient [Nms^2/rad^2]
-    Motor.K     = 1.5280e-06; % Thrust coefficient
+    Motor.K     = 1.5280e-06; % Thrust coefficient [Ns/rad]
     
     % Calculated values
     Motor.K_E = (Motor.V_0-Motor.I_0*Motor.R) / (Motor.K_V*Motor.V_0); % Back EMF constant [Nms/rad]
     Motor.K_T = Motor.K_E; % Motor torque constant [Nm/A]
 
     %% MOTOR MECHANICAL PROPERTIES
-    % Rotor drag coefficient (no value, but necessary)
-    Motor.B = 4.4335282346e-7 .* ones(1, nRotors);
-
     for i = 1:nRotors
         Motor.I_R(:,:,i) = diag( [0, 0, 3.2903e-06] );
     end
