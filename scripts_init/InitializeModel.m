@@ -1,8 +1,7 @@
-function Simulation = InitializeModel( modelName, Initial, tEnd, loadBuses )
+function Simulation = InitializeModel( modelName, Initial, tEnd )
 %INITIALIZEMODEL Initialize simulation model.
 %   [__] = INITIALIZEMODEL( MODELNAME, INITIAL ) sets model's initial cond.
 %   [__] = INITIALIZEMODEL( MODELNAME, INITIAL, TEND ) sets sim. end time.
-%   [__] = INITIALIZEMODEL( MODELNAME, INITIAL, TEND, LOADBUSES ) loads PX4 Simulink buses.
 %
 %   See also INITIALIZEPARAMETERSOCTOCOPTER, INITIALIZEPARAMETERSQUADCOPTER.
 %
@@ -12,7 +11,6 @@ function Simulation = InitializeModel( modelName, Initial, tEnd, loadBuses )
         modelName (1,:) char
         Initial         struct          % Structure of initial conditions
         tEnd      (1,1) double  = 20    % [s]
-        loadBuses (1,1) logical = false
     end
 
     %% Simulation parameters
@@ -28,12 +26,5 @@ function Simulation = InitializeModel( modelName, Initial, tEnd, loadBuses )
     hEstimator = getSimulinkBlockHandle( estimatorPath );
     if hEstimator ~= -1
         set_param( estimatorPath, 'INIT_Q', mat2str( Initial.Q' ) )
-    end
-
-    %% Load buses for controllers
-    % Ideally should rewrite controller to remove the need for this - would
-    % clear up workspace a lot)
-    if loadBuses
-        BusPosition;
     end
 end
