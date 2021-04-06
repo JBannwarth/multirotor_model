@@ -78,7 +78,14 @@ classdef MultirotorMixer < matlab.System & matlab.system.mixin.CustomIcon & ...
             'octa_x'   , [ 8 10000 10000 10000 0 ], ...
             'octa_plus', [ 8 10000 10000 10000 0 ]  ...
             );
-        hor_thrust_mixing = [ 0.414213, -0.414213, -1.000000, -0.414213, 0.414213, 1.000000, -1.000000, 1.000000 ];
+        hor_thrust_mixing = [+1.378734, -3.328559;
+                             -1.378734, +3.328559;
+                             -3.328559, +1.378734;
+                             -1.378734, -3.328559;
+                             +1.378734, +3.328559;
+                             +3.328559, -1.378734;
+                             -3.328559, -1.378734;
+                             +3.328559, +1.378734];
     end
     
     methods
@@ -193,7 +200,8 @@ classdef MultirotorMixer < matlab.System & matlab.system.mixin.CustomIcon & ...
             obj.rotor_count = size( rotorMixingMatrix, 1 );
             
             obj.rotors = repmat( struct( 'roll_scale', 0, ...
-                'pitch_scale', 0, 'yaw_scale', 0, 'thrust_scale', 0, 'hor_thrust_scale', 0 ), ...
+                'pitch_scale', 0, 'yaw_scale', 0, 'thrust_scale', 0, ...
+                'hor_thrust_scale_x', 0, 'hor_thrust_scale_y', 0 ), ...
                 obj.rotor_count, 1 );
             for i = 1:obj.rotor_count
                 obj.rotors(i).roll_scale   = rotorMixingMatrix(i,1);
@@ -201,7 +209,11 @@ classdef MultirotorMixer < matlab.System & matlab.system.mixin.CustomIcon & ...
                 obj.rotors(i).yaw_scale    = rotorMixingMatrix(i,3);
                 obj.rotors(i).thrust_scale = rotorMixingMatrix(i,4);
                 if obj.useHorThrust && obj.rotor_count == 8
-                    obj.rotors(i).hor_thrust_scale = MultirotorMixer.hor_thrust_mixing(i);
+                    obj.rotors(i).hor_thrust_scale_x = MultirotorMixer.hor_thrust_mixing(i,1);
+                    obj.rotors(i).hor_thrust_scale_y = MultirotorMixer.hor_thrust_mixing(i,2);
+                else
+                    obj.rotors(i).hor_thrust_scale_x = 0;
+                    obj.rotors(i).hor_thrust_scale_y = 0;
                 end
             end
             
@@ -224,11 +236,11 @@ classdef MultirotorMixer < matlab.System & matlab.system.mixin.CustomIcon & ...
             if obj.useHorThrust
                 hor_thrust = varargin{2};
             else
-                hor_thrust = nan;
+                hor_thrust = zeros(2,1);
             end
             delta_out_max = 2 * 1000 * obj.dt / ( obj.max_pwm(1) - obj.min_pwm(1) ) / obj.mot_t_max;
             outputs = zeros( obj.getOutputSizeImpl );
-            [ outputs, saturation_status ] = mix( obj, outputs, actuator_control, delta_out_max );
+            [ outputs, saturation_status ] = mix( obj, outputs, actuator_control, delta_out_max, hor_thrust );
             
             varargout{1} = outputs;
             if obj.outputSatStatus
@@ -349,7 +361,7 @@ classdef MultirotorMixer < matlab.System & matlab.system.mixin.CustomIcon & ...
             end
         end
 
-        function [ outputs, saturation_status ] = mix_airmode_rp( obj, outputs, roll, pitch, yaw, thrust, saturation_status )
+        function [ outputs, saturation_status ] = mix_airmode_rp( obj, outputs, roll, pitch, yaw, thrust, hor_thrust_x, hor_thrust_y, saturation_status )
             % Mix roll, pitch, yaw, thrust and set the outputs vector.
             % Desaturation behavior: airmode for roll/pitch:
             % thrust is increased/decreased as much as required to meet the
@@ -364,7 +376,9 @@ classdef MultirotorMixer < matlab.System & matlab.system.mixin.CustomIcon & ...
             for i = 1:obj.rotor_count
                 outputs(i,1) = roll * obj.rotors(i).roll_scale + ...
                     pitch * obj.rotors(i).pitch_scale + ...
-                    thrust * obj.rotors(i).thrust_scale;
+                    thrust * obj.rotors(i).thrust_scale + ...
+                    hor_thrust_x * obj.rotors(i).hor_thrust_scale_x + ...
+                    hor_thrust_y * obj.rotors(i).hor_thrust_scale_y;
                 
                 % Thrust will be used to unsaturate if needed
                 tmp_array(i) = obj.rotors(i).thrust_scale;
@@ -376,7 +390,7 @@ classdef MultirotorMixer < matlab.System & matlab.system.mixin.CustomIcon & ...
             [ outputs, saturation_status ] = mix_yaw( obj, outputs, yaw, saturation_status );
         end
         
-        function [ outputs, saturation_status ] = mix_airmode_rpy( obj, outputs, roll, pitch, yaw, thrust, saturation_status )
+        function [ outputs, saturation_status ] = mix_airmode_rpy( obj, outputs, roll, pitch, yaw, thrust, hor_thrust_x, hor_thrust_y, saturation_status )
             % Mix roll, pitch, yaw, thrust and set the outputs vector.
             % Desaturation behavior: full airmode for roll/pitch/yaw:
             % thrust is increased/decreased as much as required to meet
@@ -391,7 +405,9 @@ classdef MultirotorMixer < matlab.System & matlab.system.mixin.CustomIcon & ...
                 outputs(i,1) = roll * obj.rotors(i).roll_scale + ...
                     pitch * obj.rotors(i).pitch_scale + ...
                     yaw * obj.rotors(i).yaw_scale + ...
-                    thrust * obj.rotors(i).thrust_scale;
+                    thrust * obj.rotors(i).thrust_scale + ...
+                    hor_thrust_x * obj.rotors(i).hor_thrust_scale_x + ...
+                    hor_thrust_y * obj.rotors(i).hor_thrust_scale_y;
                 
                 % Thrust will be used to unsaturate if needed
                 tmp_array(i) = obj.rotors(i).thrust_scale;
@@ -400,7 +416,7 @@ classdef MultirotorMixer < matlab.System & matlab.system.mixin.CustomIcon & ...
             [ outputs, saturation_status ] = minimize_saturation( obj, tmp_array, outputs, saturation_status );
         end
         
-        function [ outputs, saturation_status ] = mix_airmode_disabled( obj, outputs, roll, pitch, yaw, thrust, saturation_status )
+        function [ outputs, saturation_status ] = mix_airmode_disabled( obj, outputs, roll, pitch, yaw, thrust, hor_thrust_x, hor_thrust_y, saturation_status )
             % Mix roll, pitch, yaw, thrust and set the outputs vector.
             % Desaturation behavior: no airmode, thrust is NEVER increased
             % to meet the demanded roll/pitch/yaw. Instead roll/pitch/yaw
@@ -415,7 +431,9 @@ classdef MultirotorMixer < matlab.System & matlab.system.mixin.CustomIcon & ...
             for i = 1:obj.rotor_count
                 outputs(i,1) = roll * obj.rotors(i).roll_scale + ...
                     pitch * obj.rotors(i).pitch_scale + ...
-                    thrust * obj.rotors(i).thrust_scale;
+                    thrust * obj.rotors(i).thrust_scale + ...
+                    hor_thrust_x * obj.rotors(i).hor_thrust_scale_x + ...
+                    hor_thrust_y * obj.rotors(i).hor_thrust_scale_y;
                 
                 % Thrust will be used to unsaturate if needed
                 tmp_array(i) = obj.rotors(i).thrust_scale;
@@ -470,13 +488,15 @@ classdef MultirotorMixer < matlab.System & matlab.system.mixin.CustomIcon & ...
             [ outputs, saturation_status ] = minimize_saturation( obj, tmp_array, outputs, saturation_status, 0, 1, 1 );
         end
                 
-        function [ outputs, saturation_status ] = mix( obj, outputs, actuator_control, delta_out_max )
+        function [ outputs, saturation_status ] = mix( obj, outputs, actuator_control, delta_out_max, hor_thrust )
             % Perform the mixing function
             roll    = MultirotorMixer.constrain( actuator_control(1) * obj.roll_scale , -1.0, 1.0);
             pitch   = MultirotorMixer.constrain( actuator_control(2) * obj.pitch_scale, -1.0, 1.0);
             yaw     = MultirotorMixer.constrain( actuator_control(3) * obj.yaw_scale  , -1.0, 1.0);
             thrust  = MultirotorMixer.constrain( actuator_control(4), 0.0, 1.0);
-            
+            hor_thrust_x = MultirotorMixer.constrain( hor_thrust(1), -1.0, 1.0);
+            hor_thrust_y = MultirotorMixer.constrain( hor_thrust(2), -1.0, 1.0);
+
             saturation_status = struct( 'value', 0, 'flags', struct( ...
                 'valid'      , 0, ... %  0 - true when the saturation status is used
                 'motor_pos'  , 0, ... %  1 - true when any motor has saturated in the positive direction
@@ -493,13 +513,13 @@ classdef MultirotorMixer < matlab.System & matlab.system.mixin.CustomIcon & ...
             
             switch (obj.airmode)
                 case 'roll_pitch'
-                    [ outputs, saturation_status ] = mix_airmode_rp( obj, outputs, roll, pitch, yaw, thrust, saturation_status );
+                    [ outputs, saturation_status ] = mix_airmode_rp( obj, outputs, roll, pitch, yaw, thrust, hor_thrust_x, hor_thrust_y, saturation_status );
                 case 'roll_pitch_yaw'
-                    [ outputs, saturation_status ] = mix_airmode_rpy( obj, outputs, roll, pitch, yaw, thrust, saturation_status );
+                    [ outputs, saturation_status ] = mix_airmode_rpy( obj, outputs, roll, pitch, yaw, thrust, hor_thrust_x, hor_thrust_y, saturation_status );
                 case 'disabled'
-                    [ outputs, saturation_status ] = mix_airmode_disabled( obj, outputs, roll, pitch, yaw, thrust, saturation_status );
+                    [ outputs, saturation_status ] = mix_airmode_disabled( obj, outputs, roll, pitch, yaw, thrust, hor_thrust_x, hor_thrust_y, saturation_status );
                 otherwise % just in case: default to disabled
-                    [ outputs, saturation_status ] = mix_airmode_disabled( obj, outputs, roll, pitch, yaw, thrust, saturation_status );
+                    [ outputs, saturation_status ] = mix_airmode_disabled( obj, outputs, roll, pitch, yaw, thrust, hor_thrust_x, hor_thrust_y, saturation_status );
             end
             
             % App 
