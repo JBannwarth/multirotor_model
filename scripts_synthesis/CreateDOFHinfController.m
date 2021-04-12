@@ -11,12 +11,9 @@
 %   Written: 2020/11/05, J.X.J. Bannwarth
 
 %% Initialization
-clearvars -except ctrlOrder reduceModel
+clearvars -except ctrlOrder
 if ~exist( 'ctrlOrder', 'var' )
     ctrlOrder = -1;
-end
-if ~exist( 'reduceModel', 'var' )
-    reduceModel = false;
 end
 
 project = simulinkproject; projectRoot = project.RootFolder;
