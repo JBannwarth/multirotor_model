@@ -32,8 +32,10 @@ function Motor = MotorTMotorMn1806( nRotors )
     Motor.K_T = Motor.K_E; % Motor torque constant [Nm/A]
 
     %% MOTOR MECHANICAL PROPERTIES
+    mProp = 0.0017; % [kg]
+    dProp = 6 * 0.0254; % [m]
     for i = 1:nRotors
-        Motor.I_R(:,:,i) = diag( [0, 0, 3.2903e-06] );
+        Motor.I_R(:,:,i) = mProp * diag( [0, 0, (1/12) * dProp^2 ] );
     end
     Motor.I_R_ZZ = reshape( Motor.I_R(3,3,:), [1, size(Motor.I_R,3)] );
 end
