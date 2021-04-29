@@ -66,7 +66,7 @@ UMean( UMean < 1e-3 ) = 0;
 
 %% 3) Load model and set mask parameters
 % Load UAV model
-model = 'MultirotorSimPx4';
+model = 'MultirotorSimPx4HorThrust';
 load_system(model);
 
 % Select submodules
@@ -91,6 +91,14 @@ elseif strcmp( uavType, 'octa_x' )
     [Uav, Motor, Aero, Initial] = InitializeParametersOctocopter( canted );
 end
 Simulation = InitializeModel( model, Initial, tEnd );
+
+load( fullfile( projectRoot, 'work', 'HinfGain.mat' ), 'K', 'thrustOp' )
+dt = 1/str2double(get_param( [ model '/mc_pos_control/'],  'loop_update_rate_hz' ));
+Kd = c2d( K, dt, 'Tustin' );
+Ctrl.A = Kd.A;
+Ctrl.B = Kd.B;
+Ctrl.C = Kd.C;
+Ctrl.D = Kd.D;
 
 %% 5) Trim the system - not for this system
 % Usually you would trim the simulation at this point, but the discrete

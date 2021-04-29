@@ -152,10 +152,10 @@ classdef MulticopterPositionControlHorizontal < matlab.System & matlab.system.mi
         lp_filters_d_cutoff_freq      (1,1) = 0; % Filter constants
         
         % Horizontal thrust controller
-        hor_A                         (38,38) = zeros(38, 38);
-        hor_B                         (38, 9) = zeros(38, 9 );
-        hor_C                         (5 ,38) = zeros(5 , 38);
-        hor_D                         (5 , 9) = zeros(5 , 9 );
+        hor_A                         %(38,38) = zeros(38, 38);
+        hor_B                         %(38, 9) = zeros(38, 9 );
+        hor_C                         %(5 ,38) = zeros(5 , 38);
+        hor_D                         %(5 , 9) = zeros(5 , 9 );
         hor_op                        (5 , 1) = zeros(5 , 1 );
     end
     
@@ -261,14 +261,7 @@ classdef MulticopterPositionControlHorizontal < matlab.System & matlab.system.mi
             obj.t_prev = 0;
             
             % Horizontal thrust controller
-            if isStateSpace( obj.controller ) && ( obj.controller.Ts == 0 )
-                % Continuous controller, discretize it
-                Kd = c2d( obj.controller, obj.dt, 'Tustin' );
-                obj.hor_A = Kd.A;
-                obj.hor_B = Kd.B;
-                obj.hor_C = Kd.C;
-                obj.hor_D = Kd.D;
-            elseif isStateSpace( obj.controller ) && ( obj.controller.Ts > 0 )
+             if isstruct(obj.controller)
                 % Discrete controller
                 obj.hor_A = obj.controller.A;
                 obj.hor_B = obj.controller.B;
@@ -282,7 +275,7 @@ classdef MulticopterPositionControlHorizontal < matlab.System & matlab.system.mi
                 obj.hor_D = [-0.000566703594329343,-1.31807111228820e-14,0.00111861246161901,-0.00115618994509731,-2.05855726532676e-14,0.00190305852125420,-0.0304585146399125,-3.09554248553723e-13,0.0520535304634478;1.36495113014267e-15,-0.000169303556048326,-1.81788708638292e-14,4.87618577932987e-15,-0.000377003312024743,-3.08106427492511e-14,1.84888345952650e-13,-0.00448264614699319,-8.89314988837542e-13;0.00185099767370835,7.46740188291604e-15,-0.00697526628535409,0.00379771046344910,2.50469359264994e-15,-0.0118906160185614,0.114857774404993,8.48368440385314e-13,-0.322479436510182;-0.00464927364640490,7.56361920799341e-14,0.00893697460204411,-0.00891330712906049,1.33916038084508e-13,0.0151640513392915,-0.220314724725194,2.23179764599624e-13,0.414892887781448;-7.83048243731214e-14,-0.00188518227957016,-1.18054755322637e-13,-1.24566767833516e-13,-0.00343292923594165,-1.95611591141666e-13,-2.09094764072604e-12,-0.0337105095002455,-5.59245098147310e-12];
             end
             
-            if obj.controller_op == -1
+            if (length(obj.controller_op) == 1) && (obj.controller_op == -1)
                 obj.hor_op = [0.106829259352255;0;-0.548558287675047;0;0];
             else
                 obj.hor_op = obj.controller_op;
@@ -372,7 +365,7 @@ classdef MulticopterPositionControlHorizontal < matlab.System & matlab.system.mi
             obj.user_intention_z  = 1; % Brake
             
             % Horizontal thrust
-            obj.hor_state = zeros( size(obj.hor_A, 1), 1 );
+            obj.hor_state = zeros( 40, 1 );
             obj.pos_err_int = zeros(3,1);
         end
 
@@ -745,7 +738,7 @@ classdef MulticopterPositionControlHorizontal < matlab.System & matlab.system.mi
                     cp = 0;
                 % Horizontal thrust
                 case 'hor_state'
-                    sz = [size(obj.hor_A, 1) 1];
+                    sz = [40 1];
                     dt = 'double';
                     cp = 0;
                 case 'pos_err_int'
@@ -1264,16 +1257,16 @@ classdef MulticopterPositionControlHorizontal < matlab.System & matlab.system.mi
         
                 % default limit for acceleration and manual jerk
                 obj.acc_state_dependent_xy = obj.acceleration_hor_max;
-                obj.manual_jerk_limit_xy            = obj.jerk_hor_max;
+                obj.manual_jerk_limit_xy   = obj.jerk_hor_max;
         
                 % acceleration up must be larger than acceleration down
                 if obj.acceleration_z_max_up < obj.acceleration_z_max_down
-                    obj.acceleration_z_max_up =  obj.acceleration_z_max_down ;
+                    obj.acceleration_z_max_up = obj.acceleration_z_max_down ;
                 end
         
                 % acceleration horizontal max > deceleration hor
                 if obj.acceleration_hor_max < obj.deceleration_hor_slow
-                    obj.acceleration_hor_max =  obj.deceleration_hor_slow ;
+                    obj.acceleration_hor_max = obj.deceleration_hor_slow ;
                 end
         
                 % For z direction we use fixed jerk for now
@@ -3331,13 +3324,13 @@ classdef MulticopterPositionControlHorizontal < matlab.System & matlab.system.mi
                 regulated_output = [ -obj.pos_err_int; -pos_err; obj.vel ];
 
                 % u(t)
-                control_input = obj.hor_C * obj.hor_state + obj.hor_D * regulated_output;
+                control_input = obj.hor_C * obj.hor_state(1:size(obj.hor_A,1)) + obj.hor_D * regulated_output;
 
                 % Add operating point
                 control_input = control_input + obj.hor_op;
 
                 % x(t+1)
-                obj.hor_state = obj.hor_A * obj.hor_state + obj.hor_B * regulated_output;
+                obj.hor_state(1:size(obj.hor_A,1)) = obj.hor_A * obj.hor_state(1:size(obj.hor_A,1)) + obj.hor_B * regulated_output;
 
                 % Extract control variables
                 thrust_sp = control_input(1:3,1);
