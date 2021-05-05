@@ -9,7 +9,7 @@ function out = ExportController( filename, dt )
 %   Written: 2021/04/29, J.X.J. Bannwarth
     arguments
         filename (1,:) char   = fullfile('work', 'HinfGain.mat')
-        dt       (1,1) double = 0.02 % 50 Hz
+        dt       (1,1) double = 1/248 % 248 Hz
     end
     
     %% Load file
@@ -22,10 +22,13 @@ function out = ExportController( filename, dt )
     %% Prepare controller
     % Discretise the controller
     Kd = c2d( K, dt, 'Tustin' );
-    A = Kd.A; B = Kd.B; C = Kd.C; D = Kd.D;
-    m = size(A,1);
-    n = size(B,2);
-    p = size(C,1);
+    % Need to transpose the matrices to get A(:) to work as expected.
+    % A(:) reads down the columns one after the other, but Px4-Matrix
+    % is initialised by reading across rows
+    A = Kd.A'; B = Kd.B'; C = Kd.C'; D = Kd.D';
+    m = size(Kd.A,1);
+    n = size(Kd.B,2);
+    p = size(Kd.C,1);
     
     
     %% Export controller
@@ -40,5 +43,5 @@ function out = ExportController( filename, dt )
             sprintf('float _data_D[%d] {', p*n) sprintf('%.8ff,', D(:)' ) sprintf('};\n') ...
             sprintf('float _data_op[%d] {', p)  sprintf('%.8ff,', thrustOp(:)' ) sprintf('};\n')];
     out = replace( out, ',}', '}' );
-    out = replace( out, {'-0.00000000','0.00000000'}, '0.0' );        
+    out = replace( out, {'-0.00000000','0.00000000'}, '0.0' );
 end
