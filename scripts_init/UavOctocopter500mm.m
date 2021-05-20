@@ -77,7 +77,7 @@ function Uav = UavOctocopter500mm( cantAngle, mass )
 
     %% MASS/INERTIA
     % Mass
-    Uav.M   = 2; % Frame [kg]
+    Uav.M   = 1.72; % Frame [kg]
     if mass ~= -1
         Uav.M = mass;
     end
