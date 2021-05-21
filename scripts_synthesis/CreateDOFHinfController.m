@@ -184,3 +184,27 @@ thrustOp = [ virThrustOp; horThrustOp ];
 
 save( fullfile( projectRoot, 'work', 'HinfGain.mat' ), ...
     'K', 'ULin', 'thrustOp' )
+
+%% Helper function
+PrintTFMatrix( WAct)
+function PrintTFMatrix( W )
+    strOut = '';
+    for ii = 1:size( W, 1 )
+        for jj = 1:size( W, 2 )
+            if length(W.Numerator{ii,jj}) == 1
+                strOut = [strOut sprintf( ' %.2f &', W.Numerator{ii,jj} ) ];
+            else
+                strOut = [strOut sprintf( '\\frac{%.3fs + %.3f}{%.3fs + %.3f} &', ...
+                    W.Numerator{ii,jj}(1), W.Numerator{ii,jj}(2), ...
+                    W.Denominator{ii,jj}(1), W.Denominator{ii,jj}(2) ) ];
+            end
+        end
+        strOut = [strOut sprintf('\\\\\n') ];
+    end
+    strOut = replace( strOut, '1.000', '1' );
+    strOut = replace( strOut, '1.00', '1' );
+    strOut = replace( strOut, '0.00', '0' );
+    strOut = replace( strOut, '1s', 's' );
+    strOut = replace( strOut, '&\\', '\\' );
+    disp( strOut )
+end
