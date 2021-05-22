@@ -8,6 +8,8 @@ project = simulinkproject; projectRoot = project.RootFolder;
 %% Configuration
 load( fullfile( projectRoot, 'work', 'Octocopter_LinMod_Att'), ...
     'linsys', 'op', 'ULin' )
+load( fullfile( projectRoot, 'work', 'HinfGain'), ...
+    'K' )
 
 % Change C/D Matrix to output all states
 sys = ss( linsys.A, linsys.B, eye(size(linsys.A)), ...
@@ -69,6 +71,25 @@ fprintf( 'fC aHx->xDDot = %.2f rad/s = %.2f Hz\n', results(2), results(2)/(2*pi)
 fprintf( 'fC aAy->yDDot = %.2f rad/s = %.2f Hz\n', results(3), results(3)/(2*pi) )
 fprintf( 'fC aHy->yDDot = %.2f rad/s = %.2f Hz\n', results(4), results(4)/(2*pi) )
 fprintf( 'fC aAz->zDDot = %.2f rad/s = %.2f Hz\n', results(5), results(5)/(2*pi) )
+
+%% Look at closed-loop system
+A2 = [ zeros(3,3) eye(3,length(linsys.A)); zeros(length(linsys.A),3), linsys.A ];
+B2 = [zeros(3,5);linsys.B(:,4:8)];
+sys2 = ss( A2, B2, eye(9,length(A2)), zeros(9,5), ...
+    'StateName', [ 'xiInt_x'; 'xiInt_y'; 'xiInt_z'; linsys.StateName], 'InputName', linsys.InputName(4:8), ...
+    'OutputName', [ 'xiInt_x'; 'xiInt_y'; 'xiInt_z'; linsys.StateName(1:6)] );
+cltf = feedback( sys2, K, 'name', +1 );
+
+[p, z] = pzmap( cltf );
+p = sort(p);
+
+% Export
+fidPZCL = fopen( fullfile( projectRoot, 'work', 'output', 'pzmap_cl.csv' ), 'w' );
+fprintf( fidPZCL, 're im\n' );
+for ii = 1:length(p)
+    fprintf( fidPZCL, '%f %f\n', real(p(ii)), imag(p(ii)) );
+end
+fclose( fidPZCL );
 
 %% Helper function
 function [wC] = CutoffFrequency( sys )

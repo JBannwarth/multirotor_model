@@ -104,7 +104,8 @@ k3 = wCorner;    % rad/s
 k4 = wCorner/10; % rad/s
 kZ = 3*2*pi;     % rad/s
 WActAtt  = db2mag(13) * tf( 10*[1 k1], [1,k2] );
-WActAttZ = db2mag(13) * tf( 10*[1 kZ/10], [1, kZ] );
+WActAttZ  = db2mag(13) * tf( 10*[1 k1], [1,k2] );
+% WActAttZ = db2mag(13) * tf( 10*[1 kZ/10], [1, kZ] );
 WActHor  = db2mag(15) * tf(    [1 k3], [1,k4] );
 WAct = [ WActAtt 0       0        0       0       ;
          0       WActAtt 0        0       0       ;
@@ -140,6 +141,32 @@ outputGroup.Y1 = 1:(pHat-nMeas);      % Regulated output
 outputGroup.Y2 = (pHat-nMeas+1):pHat; % Output
 set( P, 'InputGroup' , inputGroup );
 set( P, 'OutputGroup', outputGroup );
+
+%% Export weighting functions
+% Print matrices
+disp( '[WAct]' )
+PrintTFMatrix( WAct );
+disp( '[WDist]' )
+PrintTFMatrix( WDist );
+
+% Get magnitude response
+[magAtt, phaseAtt, w] = bode( WActAtt, {wCorner/100, wCorner*100} );
+[magHor, phaseHor] = bode( WActHor, w );
+magAtt = squeeze( 20*log10(magAtt) );
+phaseAtt = squeeze( phaseAtt );
+magHor = squeeze( 20*log10(magHor) );
+phaseHor = squeeze( phaseHor );
+
+% Plot to verify
+semilogx( w, magAtt, w, magHor )
+axis tight
+
+% Export
+fileOut = fullfile( projectRoot, 'work', 'output', 'bode_weight_act.csv' );
+fid = fopen( fileOut, 'w' );
+fprintf( fid, 'w magA phaseA magH phaseH' );
+fclose( fid );
+writematrix( [w magAtt phaseAtt magHor phaseHor], fileOut, 'WriteMode', 'append', 'Delimiter', ' ' )
 
 %% Create controller
 opts = hinfsynOptions('Display', 'on');
@@ -186,15 +213,18 @@ save( fullfile( projectRoot, 'work', 'HinfGain.mat' ), ...
     'K', 'ULin', 'thrustOp' )
 
 %% Helper function
-PrintTFMatrix( WAct)
+PrintMatrix(K.A)
+PrintMatrix(K.B)
+PrintMatrix(K.C)
+PrintMatrix(K.D)
 function PrintTFMatrix( W )
     strOut = '';
     for ii = 1:size( W, 1 )
         for jj = 1:size( W, 2 )
             if length(W.Numerator{ii,jj}) == 1
-                strOut = [strOut sprintf( ' %.2f &', W.Numerator{ii,jj} ) ];
+                strOut = [strOut sprintf( '%.2f & ', W.Numerator{ii,jj} ) ];
             else
-                strOut = [strOut sprintf( '\\frac{%.3fs + %.3f}{%.3fs + %.3f} &', ...
+                strOut = [strOut sprintf( '\\frac{%.3fs + %.3f}{%.3fs + %.3f} & ', ...
                     W.Numerator{ii,jj}(1), W.Numerator{ii,jj}(2), ...
                     W.Denominator{ii,jj}(1), W.Denominator{ii,jj}(2) ) ];
             end
@@ -204,7 +234,22 @@ function PrintTFMatrix( W )
     strOut = replace( strOut, '1.000', '1' );
     strOut = replace( strOut, '1.00', '1' );
     strOut = replace( strOut, '0.00', '0' );
+    strOut = replace( strOut, '{00s + ', '{' );
     strOut = replace( strOut, '1s', 's' );
     strOut = replace( strOut, '&\\', '\\' );
     disp( strOut )
+end
+
+function PrintMatrix( M )
+    strOut = sprintf('\\begin{bmatrix}\n');
+    for ii = 1:size( M, 1 )
+        strOut = [strOut sprintf('    ')];
+        for jj =1:size( M, 2 )
+            strOut = [strOut sprintf( '%s & ', num2str(round( M(ii,jj), 3, 'significant' ) )) ];
+        end
+        strOut = [strOut sprintf('\\\\\n')];
+    end
+    strOut = [strOut sprintf('\\end{bmatrix}\n')];
+    strOut = replace( strOut, ' & \\', '\\' );
+    disp(strOut)
 end
