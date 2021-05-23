@@ -8,7 +8,7 @@ project = simulinkproject; projectRoot = project.RootFolder;
 %% Configuration
 load( fullfile( projectRoot, 'work', 'Octocopter_LinMod_Att'), ...
     'linsys', 'op', 'ULin' )
-load( fullfile( projectRoot, 'work', 'HinfGain'), ...
+load( fullfile( projectRoot, 'work', 'HinfGainFinal'), ...
     'K' )
 
 % Change C/D Matrix to output all states
@@ -16,6 +16,72 @@ sys = ss( linsys.A, linsys.B, eye(size(linsys.A)), ...
     zeros( size(linsys.A,1), size(linsys.B,2)), ...
     'StateName', linsys.StateName, 'InputName', linsys.InputName, ...
     'OutputName', linsys.StateName );
+
+%% Augment state space model with integrators
+% Use variables instead of hardcoding states
+% Select output states
+xiIdx      = find( startsWith( linsys.StateName, 'xi_' ) );
+xiDotIdx   = find( startsWith( linsys.StateName, 'xiDot_' ) );
+outputIdx = [xiIdx; xiDotIdx];
+
+% Get input indexes - note that there is no function for rearranging the
+% inputs in SS object
+virThrustIdx = find( contains( linsys.InputName, 'T_a' ) );
+horThrustIdx = find( contains( linsys.InputName, 'T_h' ) );
+yawIdx       = find( contains( linsys.InputName, 'yaw' ) ); % Not used
+windIdx      = find( startsWith( linsys.InputName, 'U' ) );
+
+% Separate into control inputs and disturbance inputs
+controlIdx = [virThrustIdx; horThrustIdx];
+distIdx    = windIdx;
+
+% Extract state space matrices
+A  = linsys.A;
+B1 = linsys.B(:, distIdx);
+B2 = linsys.B(:, controlIdx);
+C  = linsys.C(outputIdx, :);
+D21 = linsys.D(outputIdx, distIdx);
+D22  = linsys.D(outputIdx, controlIdx);
+
+% Zero extremely small elements to get accurate answers when doing tests
+% such as ctrb and obsv
+tol = 1e-10;
+A(abs(A) < tol)   = 0;
+B1(abs(B1) < tol) = 0;
+B2(abs(B2) < tol) = 0;
+C(abs(C) < tol)   = 0;
+D22(abs(D22) < tol)   = 0;
+
+% Sizes
+n = size( linsys.A, 1 );
+m1 = length( distIdx );
+m2 = length( controlIdx );
+p = length( outputIdx );
+
+% Add integrator for zero steady state error
+A = [ zeros(n+3, 3), [ eye(3, n); A ] ];
+B1 = [ zeros(3, m1)  ;
+       B1           ];
+B2 = [ zeros(3, m2)  ;
+       B2           ];
+C = [ eye(3, n+3)     ;
+      zeros(p, 3), C ];
+D21 = [ zeros(3, m1)  ;
+        D21          ];
+D22 = [ zeros(3, m2)  ;
+        D22          ];
+D = [D21 D22];
+
+% Create new state space object
+G = ss( A, [B1 B2], C, [D21 D22] );
+G.InputName = linsys.InputName( [distIdx; controlIdx] ) ;
+G.OutputName = [ 'xiInt_x'; 'xiInt_y'; 'xiInt_z';
+                 linsys.OutputName( outputIdx ) ];
+G.StateName = [ 'xiInt_x'; 'xiInt_y'; 'xiInt_z'; linsys.StateName ];
+
+% Input groups
+G.InputGroup.dist = distIdx';
+G.InputGroup.controls = controlIdx';
 
 %% Create pole-zero map
 [p, z] = pzmap( linsys );
@@ -90,6 +156,35 @@ for ii = 1:length(p)
     fprintf( fidPZCL, '%f %f\n', real(p(ii)), imag(p(ii)) );
 end
 fclose( fidPZCL );
+
+%% CL frequency response
+% Get transfer function from wind input to desired acceleration
+FB = ss( [], [], [], eye(5,5), 'InputName', K.OutputName, 'OutputName', K.OutputName );
+T = feedback( series( G, K, 'name' ), FB, 'name', +1 );
+
+% Get magnitude response
+[magAx, phaseAx, w] = bode( T('T_ax', 'U_u') );
+[magHx, phaseHx] = bode( T('T_hx', 'U_u'), w );
+[magAy, phaseAy] = bode( T('T_ay', 'U_v'), w );
+[magHy, phaseHy] = bode( T('T_hy', 'U_v'), w );
+[magAz, phaseAz] = bode( T('T_az', 'U_w'), w );
+
+mags = [squeeze(magAx) squeeze(magHx) squeeze(magAy) squeeze(magHy) squeeze(magAz) ];
+mags = 20*log10(mags);
+phases = [squeeze(phaseAx) squeeze(phaseHx) squeeze(phaseAy) squeeze(phaseHy) squeeze(phaseAz) ];
+
+data = [w, mags, phases ];
+
+% Plot to verify
+semilogx( w, mags(:,1), w, mags(:,2) )
+axis tight
+
+% Export
+fileOut = fullfile( projectRoot, 'work', 'output', 'bode_wind_to_acceleration.csv' );
+fid = fopen( fileOut, 'w' );
+fprintf( fid, 'w magAx magHx magAy magHy magAz phaseAx phaseHx phaseAy phaseHy phaseAz' );
+fclose( fid );
+writematrix( data, fileOut, 'WriteMode', 'append', 'Delimiter', ' ' )
 
 %% Helper function
 function [wC] = CutoffFrequency( sys )
