@@ -89,7 +89,7 @@ function Uav = UavOctocopter500mm( cantAngle, mass )
     Uav.I = diag( [0.024, 0.024, 0.1051] );
 
     % Nominal battery voltage (3S LiPo) [V]
-    Uav.NOMINAL_BATTERY_VOLTAGE = 11.1;   
+    Uav.NOMINAL_BATTERY_VOLTAGE = 11.1;
 
     %% AERODYNAMICS - Outdated
     % Frame drag coefficients (includes reference area)
