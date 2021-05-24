@@ -2,21 +2,34 @@
 %   Written: 2021/03/29, J.X.J. Bannwarth
 
 %% Clean-up
-clearvars;
+clearvars -except filenameOut;
 close all
 
 %% Set-up
 project     = simulinkproject;
 projectRoot = project.RootFolder;
 resultDir   = fullfile( projectRoot, 'data_results', 'poshold_full' );
-flightLen  = 50; % [s] length of flight to analyse
+flightLen  = 150; % [s] length of flight to analyse
+
+if ~exist( 'filenameOut', 'var' )
+    filenameOut = 'turbulent_wind_metrics.csv';
+end
 
 %% Load simulation results
-files = dir( resultDir );
-files = files( ~[files.isdir] );
-
-% Load latest results
-load( fullfile( files(end).folder, files(end).name ), 'simIn', 'simOut' )
+testCases = { 'baseline', 'FPHT' };
+simsIn = cell( length(testCases), 1 );
+simsOut = cell( length(testCases), 1 );
+nFlights = 0;
+for ii = 1:length( testCases )
+    files =  dir( fullfile( resultDir, [ testCases{ii} '*.mat' ] ) );
+    
+    % Load latest
+    load( fullfile( files(end).folder, files(end).name ), 'simIn', 'simOut' )
+    simsIn{ii} = simIn;
+    simsOut{ii} = simOut;
+    nFlights = nFlights + length( simOut );
+end
+clearvars simIn simOut
 
 %% Process data
 % Pre-assign results table
@@ -40,11 +53,12 @@ varDefs = { ...
     'rmsPwm'       , 'double'     , 'us' ;
     'maxPwm'       , 'double'     , 'us' ;
     'minPwm'       , 'double'     , 'us' ;
+    'avgRmsPwm'    , 'double'     , 'us' ;
     'fileName'     , 'string'     , ''   ;
     };
 
 % Create table
-M = table( 'Size', [length(simOut) size(varDefs, 1)], ...
+M = table( 'Size', [nFlights size(varDefs, 1)], ...
     'VariableNames', varDefs(:,1), 'VariableTypes', varDefs(:,2) );
 M.Properties.VariableUnits = varDefs(:,3);
 
@@ -52,7 +66,8 @@ M.Properties.VariableUnits = varDefs(:,3);
 % dimensions
 isTriplet = ~contains( varDefs(:,1), {'Norm', 'qDist', 'Pwm', 'xVal'} ) & ...
     strcmp( varDefs(:,2), 'double' ) ;
-isOctuplet = contains( varDefs(:,1), 'Pwm' );
+isOctuplet = contains( varDefs(:,1), 'Pwm' ) & ...
+    ~strcmp( varDefs(:,1), 'avgRmsPwm' );
 for ii = 1:length( varDefs(:,1) )
     if isTriplet(ii)
         M.(varDefs{ii,1}) = zeros( height(M), 3 );
@@ -61,79 +76,89 @@ for ii = 1:length( varDefs(:,1) )
     end
 end
 
-for ii = 1:length( simOut )
-    data = simOut(ii).logsout;
-    
-    % Isolate x-axis wind speed
-    M.xVal(ii) = mean(simIn(ii).getVariable('windInput')) * [1; 0; 0];
-    M.xLabel(ii) = num2str( M.xVal(ii) );
-    M.identifier(ii) = sprintf( 'baseline_%04.1f', M.xLabel(ii) );
-    M.group(ii) = 'baseline';
-    M.fileName(ii) = files(end).name;
-    
-    % End time
-    tEnd = data.getElement( 'pwm' ).Values.Time(end);
-    tStart = tEnd - flightLen;
-    tResample = tStart:0.1:tEnd;
-    
-    % Get and crop signals
-    thr   = getsampleusingtime( data.getElement( 'thrustDes' ).Values, tStart, tEnd );
-    pwm   = getsampleusingtime( data.getElement( 'pwm' ).Values, tStart, tEnd );
-    omega = getsampleusingtime( data.getElement( 'omega' ).Values, tStart, tEnd );
-    x = getsampleusingtime( data.getElement( 'posTrackingX' ).Values, tStart, tEnd );
-    y = getsampleusingtime( data.getElement( 'posTrackingY' ).Values, tStart, tEnd );
-    z = getsampleusingtime( data.getElement( 'posTrackingZ' ).Values, tStart, tEnd );
-    q = getsampleusingtime( data.getElement( 'qMeasured' ).Values, tStart, tEnd );
-    qDes = getsampleusingtime( data.getElement( 'qDes' ).Values, tStart, tEnd );
-    qDes.Data = squeeze( qDes.Data )';
-    q = resample( q, tResample, 'linear' );
-    qDes = resample( qDes, tResample, 'linear' );
-    
-    % Calculate position error
-    posErr = [ x.Data y.Data z.Data ];
-    posErrNorm = sqrt( sum( posErr.^2, 2 ) );
-    
-    % Calculate attitude error
-    q     = quaternion(q.Data);
-    qDes  = quaternion(qDes.Data);
-    qErr  = conj(q) .* qDes;
-    qDist = dist( q, qDes );
-    attErr = eulerd( qErr, 'ZYX', 'frame' );
-    attErr = attErr(:,[3 2 1]); % Switch to [roll pitch yaw]
-    avgAtt = eulerd( meanrot(q), 'ZYX', 'frame' );
-    avgAtt = avgAtt(:,[3 2 1]); % Switch to [roll pitch yaw]
-    
-    % Get PWM
-    pwm = 1075 + squeeze( pwm.Data )' .* (1950-1075);
-    
-    % Position columns
-    M.avgPosErr(ii,:)   = mean( posErr, 1 );
-    M.avgPosErrNorm(ii) = mean( posErrNorm );
-    M.rmsPosErr(ii,:)   = rms( posErr, 1 );
-    M.rmsPosErrNorm(ii) = rms( posErrNorm );
-    M.maxPosErr(ii,:)   = max( abs(posErr), [], 1 );
-    M.maxPosErrNorm(ii) = max( posErrNorm );
+% Fill table
+idx = 0;
+for ii = 1:length( simsOut )
+    for jj = 1:length( simsOut{ii} )
+        idx = idx+1;
+        data = simsOut{ii}(jj).logsout;
 
-    % Attitude columns
-    M.avgAtt(ii,:)      = avgAtt;
-    M.rmsAttErr(ii,:)   = rms( attErr, 1 );
-    M.maxqDist(ii)      = rad2deg( max( qDist ) );
-    M.maxAttErr(ii,:)   = max( abs(attErr), [], 1 );
-    M.rmsqDist(ii)      = rad2deg( rms( qDist ) );
-    
-    % Actuator usage columns
-    M.avgPwm(ii,:)      = mean( pwm, 1 );
-    M.rmsPwm(ii,:)      = rms( pwm - mean( pwm, 1 ), 1 );
-    M.minPwm(ii,:)      = min( pwm, [], 1 );
-    M.maxPwm(ii,:)      = max( pwm, [], 1 );
-    
-    % Thrust column
-    M.avgThrust(ii,:)   = mean( thr );
+        % Isolate x-axis wind speed
+        M.xVal(idx) = mean(simsIn{ii}(jj).getVariable('windInput')) * [1; 0; 0];
+        M.xLabel(idx) = num2str( M.xVal(idx) );
+        M.identifier(idx) = sprintf( 'baseline_%04.1f', M.xLabel(idx) );
+        M.group(idx) = testCases{ii};
+        M.fileName(idx) = files(end).name;
+
+        % End time
+        tEnd = data.getElement( 'pwm' ).Values.Time(end);
+        tStart = tEnd - flightLen;
+        tResample = tStart:0.1:tEnd;
+
+        % Get and crop signals
+        thr   = getsampleusingtime( data.getElement( 'thrustDes' ).Values, tStart, tEnd );
+        pwm   = getsampleusingtime( data.getElement( 'pwm' ).Values, tStart, tEnd );
+        omega = getsampleusingtime( data.getElement( 'omega' ).Values, tStart, tEnd );
+        x = getsampleusingtime( data.getElement( 'posTrackingX' ).Values, tStart, tEnd );
+        y = getsampleusingtime( data.getElement( 'posTrackingY' ).Values, tStart, tEnd );
+        z = getsampleusingtime( data.getElement( 'posTrackingZ' ).Values, tStart, tEnd );
+        q = getsampleusingtime( data.getElement( 'qMeasured' ).Values, tStart, tEnd );
+        qDes = getsampleusingtime( data.getElement( 'qDes' ).Values, tStart, tEnd );
+        qDes.Data = squeeze( qDes.Data )';
+        q = resample( q, tResample, 'linear' );
+        qDes = resample( qDes, tResample, 'linear' );
+
+        % Calculate position error
+        posErr = [ x.Data y.Data z.Data ];
+        posErrNorm = sqrt( sum( posErr.^2, 2 ) );
+
+        % Calculate attitude error
+        q     = quaternion(q.Data);
+        qDes  = quaternion(qDes.Data);
+        qErr  = conj(q) .* qDes;
+        qDist = dist( q, qDes );
+        attErr = eulerd( qErr, 'ZYX', 'frame' );
+        attErr = attErr(:,[3 2 1]); % Switch to [roll pitch yaw]
+        avgAtt = eulerd( meanrot(q), 'ZYX', 'frame' );
+        avgAtt = avgAtt(:,[3 2 1]); % Switch to [roll pitch yaw]
+
+        % Get PWM
+        pwm = 1075 + squeeze( pwm.Data )' .* (1950-1075);
+
+        % Position columns
+        M.avgPosErr(idx,:)   = mean( posErr, 1 );
+        M.avgPosErrNorm(idx) = mean( posErrNorm );
+        M.rmsPosErr(idx,:)   = rms( posErr, 1 );
+        M.rmsPosErrNorm(idx) = rms( posErrNorm );
+        M.maxPosErr(idx,:)   = max( abs(posErr), [], 1 );
+        M.maxPosErrNorm(idx) = max( posErrNorm );
+
+        % Attitude columns
+        M.avgAtt(idx,:)      = avgAtt;
+        M.rmsAttErr(idx,:)   = rms( attErr, 1 );
+        M.maxqDist(idx)      = rad2deg( max( qDist ) );
+        M.maxAttErr(idx,:)   = max( abs(attErr), [], 1 );
+        M.rmsqDist(idx)      = rad2deg( rms( qDist ) );
+
+        % Actuator usage columns
+        M.avgPwm(idx,:)      = mean( pwm, 1 );
+        M.rmsPwm(idx,:)      = rms( pwm - mean( pwm, 1 ), 1 );
+        M.minPwm(idx,:)      = min( pwm, [], 1 );
+        M.maxPwm(idx,:)      = max( pwm, [], 1 );
+        M.avgRmsPwm(idx)     = mean( M.rmsPwm(idx,:) );
+
+        % Thrust column
+        M.avgThrust(idx,:)   = mean( thr );
+    end
 end
+
+% Export
+writetable( M, fullfile( projectRoot, 'work', 'output', filenameOut ), ...
+    'Delimiter', ' ');
 
 %% Plot results
 xAxisLabel  = 'Wind speed (m/s)';
-groupLegend = { 'Baseline' };
+groupLegend = testCases;
 useIdentifier = false;
 
 % Position metrics
@@ -153,10 +178,7 @@ figure( 'name', 'Hover thrust' )
 tiledlayout( 1, 1, 'TileSpacing', 'compact', 'Padding', 'compact' );
 nexttile(1); hold on; grid on; box on
 markers = 'op^dvh';
-groups = unique( M.group );
-if ~iscell( groups )
-    groups = { groups };
-end
+groups = string(unique( M.group ));
 for ii = 1:length( groups )
     scatter( M(M.group==groups{ii},:).xVal, ...
         M(M.group==groups{ii},:).avgThrust.*100, ...
