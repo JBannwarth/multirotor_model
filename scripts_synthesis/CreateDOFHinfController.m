@@ -103,10 +103,10 @@ k2 = wCorner*10; % rad/s
 k3 = wCorner;    % rad/s
 k4 = wCorner/10; % rad/s
 kZ = 3*2*pi;     % rad/s
-WActAtt  = db2mag(13) * tf( 10*[1 k1], [1,k2] );
-WActAttZ  = db2mag(13) * tf( 10*[1 k1], [1,k2] );
+WActAtt  = db2mag(14) * tf( 10*[1 k1], [1,k2] );
+WActAttZ  = db2mag(14) * tf( 10*[1 k1], [1,k2] );
 % WActAttZ = db2mag(13) * tf( 10*[1 kZ/10], [1, kZ] );
-WActHor  = db2mag(15) * tf(    [1 k3], [1,k4] );
+WActHor  = db2mag(16) * tf(    [1 k3], [1,k4] );
 WAct = [ WActAtt 0       0        0       0       ;
          0       WActAtt 0        0       0       ;
          0       0       WActAttZ 0       0       ;
@@ -178,7 +178,7 @@ if ctrlOrder == -1
     [ K, CLweights, gamma ] = hinfsyn(P, nMeas, nCont, opts);
 else
     % Use HIFOO to create reduced order controller
-    OPTIONS.nrand = 3;
+    OPTIONS.nrand = 5;
     [ K, F, VIOL, LOC ] = hifoo( P, ctrlOrder, [], [], [], OPTIONS );
 end
 
