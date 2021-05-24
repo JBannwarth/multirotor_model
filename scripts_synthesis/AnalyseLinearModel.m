@@ -8,7 +8,7 @@ project = simulinkproject; projectRoot = project.RootFolder;
 %% Configuration
 load( fullfile( projectRoot, 'work', 'Octocopter_LinMod_Att'), ...
     'linsys', 'op', 'ULin' )
-load( fullfile( projectRoot, 'work', 'HinfGainFinal'), ...
+load( fullfile( projectRoot, 'work', 'HinfGain'), ...
     'K' )
 
 % Change C/D Matrix to output all states
@@ -176,7 +176,11 @@ phases = [squeeze(phaseAx) squeeze(phaseHx) squeeze(phaseAy) squeeze(phaseHy) sq
 data = [w, mags, phases ];
 
 % Plot to verify
+figure( 'name', 'Actuator TF' )
+subplot( 2, 1, 1 )
 semilogx( w, mags(:,1), w, mags(:,2) )
+subplot( 2, 1, 2 )
+semilogx( w, phases(:,1), w, phases(:,2) )
 axis tight
 
 % Export
