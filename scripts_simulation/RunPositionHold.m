@@ -16,7 +16,7 @@
 %   Written: 2017, J.X.J. Bannwarth
 
 %% Set-up
-clearvars -except uavType canted;
+clearvars -except uavType canted testCase;
 
 if ~exist( 'uavType', 'var' )
     uavType = 'octa_x';
@@ -24,6 +24,10 @@ end
 
 if ~exist( 'canted', 'var' )
     canted = true;
+end
+
+if ~exist( 'testCase', 'var' )
+    testCase = 'baseline';
 end
 
 %% 1) Prepare I/O
@@ -34,7 +38,7 @@ project = simulinkproject; projectRoot = project.RootFolder;
 % Create folder for results with date (user can rename folder later anyway)
 tStr  = datetime( clock, 'format', 'yyyy-MM-dd_HH-mm-ss' );
 outputFolder = fullfile( projectRoot, 'data_results', 'poshold_full' );
-outputFile = sprintf( '%s_%s', uavType, tStr );
+outputFile = sprintf( '%s_%s_%s', testCase, uavType, tStr );
 
 %% 2) Load wind
 % Load wind profiles
@@ -48,7 +52,7 @@ for ii = 1:length( windFiles )
 end
 
 % Find end time
-tEnd = floor( windInputs{1}.Time(end) ); % End on a round number
+tEnd = 300; %floor( windInputs{1}.Time(end) ); % End on a round number
 
 % Insert zero wind speed at the beginning
 windInputs(2:end+1) = windInputs;
@@ -66,7 +70,11 @@ UMean( UMean < 1e-3 ) = 0;
 
 %% 3) Load model and set mask parameters
 % Load UAV model
-model = 'MultirotorSimPx4HorThrust';
+if strcmp ( testCase, 'FPHT' )
+    model = 'MultirotorSimPx4HorThrust';
+else
+    model = 'MultirotorSimPx4';
+end
 load_system(model);
 
 % Select submodules
@@ -92,13 +100,15 @@ elseif strcmp( uavType, 'octa_x' )
 end
 Simulation = InitializeModel( model, Initial, tEnd );
 
-load( fullfile( projectRoot, 'work', 'HinfGain.mat' ), 'K', 'thrustOp' )
-dt = 1/str2double(get_param( [ model '/mc_pos_control/'],  'loop_update_rate_hz' ));
-Kd = c2d( K, dt, 'Tustin' );
-Ctrl.A = Kd.A;
-Ctrl.B = Kd.B;
-Ctrl.C = Kd.C;
-Ctrl.D = Kd.D;
+if strcmp( testCase, 'FPHT' )
+    load( fullfile( projectRoot, 'work', 'HinfGain.mat' ), 'K', 'thrustOp' )
+    dt = 1/str2double(get_param( [ model '/mc_pos_control/'],  'loop_update_rate_hz' ));
+    Kd = c2d( K, dt, 'Tustin' );
+    Ctrl.A = Kd.A;
+    Ctrl.B = Kd.B;
+    Ctrl.C = Kd.C;
+    Ctrl.D = Kd.D;
+end
 
 %% 5) Trim the system - not for this system
 % Usually you would trim the simulation at this point, but the discrete
