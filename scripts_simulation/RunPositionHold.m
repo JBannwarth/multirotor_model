@@ -23,7 +23,7 @@ if ~exist( 'uavType', 'var' )
 end
 
 if ~exist( 'canted', 'var' )
-    canted = true;
+    canted = 31;
 end
 
 if ~exist( 'testCase', 'var' )

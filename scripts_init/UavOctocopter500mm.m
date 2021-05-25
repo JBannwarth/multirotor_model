@@ -78,7 +78,9 @@ function Uav = UavOctocopter500mm( cantAngle, mass )
     %% MASS/INERTIA
     % Mass
     Uav.M   = 1.72; % Frame [kg]
+    scaling = 1;
     if mass ~= -1
+        scaling = mass/Uav.M;
         Uav.M = mass;
     end
 
@@ -86,7 +88,7 @@ function Uav = UavOctocopter500mm( cantAngle, mass )
     Uav.G   = Uav.M * [0; 0; gravity]; % [N]
 
     % Frame inertia (from trifilar pendulum tests) [kgm^2]
-    Uav.I = diag( [0.024, 0.024, 0.1051] );
+    Uav.I = diag( [0.024, 0.024, 0.1051] ) .* scaling;
 
     % Nominal battery voltage (3S LiPo) [V]
     Uav.NOMINAL_BATTERY_VOLTAGE = 11.1;

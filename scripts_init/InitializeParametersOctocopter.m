@@ -1,7 +1,9 @@
-function [Uav, Motor, Aero, Initial] = InitializeParametersOctocopter( canted )
+function [Uav, Motor, Aero, Initial] = InitializeParametersOctocopter( cantAngle, mass, kScale )
 %INITIALIZEPARAMETERSOCTOCOPTER Initialize parameters for octocopter model
 %   [__] = INITIALIZEPARAMETERSOCTOCOPTER( ) loads planar octo parameters.
-%   [__] = INITIALIZEPARAMETERSOCTOCOPTER( CANTED ) chooses rotor setup.
+%   [__] = INITIALIZEPARAMETERSOCTOCOPTER( CANTANGLE ) specifies the cant angle.
+%   [__] = INITIALIZEPARAMETERSOCTOCOPTER( CANTANGLE, MASS ) specifies the mass.
+%   [__] = INITIALIZEPARAMETERSOCTOCOPTER( CANTANGLE, MASS, KSCALE ) scales the thrust constant.
 %
 %   Input:
 %       - canted: whether the UAV is canted or not.
@@ -11,16 +13,14 @@ function [Uav, Motor, Aero, Initial] = InitializeParametersOctocopter( canted )
 %	Written: 2019/01/09, J.X.J. Bannwarth
 
     arguments
-        canted (1,1) logical = false
+        cantAngle (1,1) double = 0  % No cant
+        mass      (1,1) double = -1 % Default mass
+        kScale    (1,1) double = 1  % No scaling
     end
 
     %% GLOBAL
     % Call the appropriate components
-    if canted
-        Uav = UavOctocopter500mm( 31 );
-    else
-        Uav = UavOctocopter500mm( 0 );
-    end
+    Uav = UavOctocopter500mm( 31, mass );
     Motor = MotorTMotorMn1806( Uav.N_ROTORS );
 
     %% AERO PARAMETERS
@@ -29,7 +29,7 @@ function [Uav, Motor, Aero, Initial] = InitializeParametersOctocopter( canted )
     %% ROTOR/MOTOR DYNAMICS
     % Use measured motor thrust constant - more accurate than using the
     % value extrapolated from the static drag testing
-    Aero.Cz2.coefs(2) = Motor.K / (0.5 .* Uav.RHO_AIR .* Uav.D_PROP^2 .* Uav.A_PROP);
+    Aero.Cz2.coefs(2) = kScale .* Motor.K ./ (0.5 .* Uav.RHO_AIR .* Uav.D_PROP^2 .* Uav.A_PROP);
     
     % Single motor thrust required for hover [N]
     Uav.THRUST_HOVER = ( abs(Uav.G(3)) / 8 ) / cos(Uav.ZETA);
