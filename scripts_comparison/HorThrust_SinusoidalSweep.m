@@ -3,8 +3,11 @@
 %	Last modified: J.X.J. Bannwarth, 2020/04/23
 
 %% First initialization
-close all; clc; clearvars;
-ctrlName = 'FPHTFullGain';
+close all; clc; clearvars -except ctrlName;
+
+if ~exist( 'ctrlName', 'var' )
+    ctrlName = 'FPHTFullGain';
+end
 project = simulinkproject; projectRoot = project.RootFolder;
 
 %% Generate output folder
@@ -16,7 +19,7 @@ if ~exist(outputFolder, 'dir')
 end
 
 %% Load wind data
-ULin = [4 0 0]; % About halfway through the wind tunnel range
+ULin = [5.6 0 0]; % About halfway through the wind tunnel range
 
 %% Set up simulation
 tEnd = 5;
