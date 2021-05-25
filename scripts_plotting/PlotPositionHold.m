@@ -12,7 +12,7 @@ resultDir   = fullfile( projectRoot, 'data_results', 'poshold_full' );
 flightLen  = 150; % [s] length of flight to analyse
 
 if ~exist( 'filenameOut', 'var' )
-    filenameOut = 'turbulent_wind_metrics.csv';
+    filenameOut = 'turbulent_wind';
 end
 
 %% Load simulation results
@@ -77,6 +77,8 @@ for ii = 1:length( varDefs(:,1) )
 end
 
 % Fill table
+deltaT = 0.2;
+dataEx = zeros(150/deltaT + 1, 1+(6+8)*2);
 idx = 0;
 for ii = 1:length( simsOut )
     for jj = 1:length( simsOut{ii} )
@@ -86,7 +88,7 @@ for ii = 1:length( simsOut )
         % Isolate x-axis wind speed
         M.xVal(idx) = mean(simsIn{ii}(jj).getVariable('windInput')) * [1; 0; 0];
         M.xLabel(idx) = num2str( M.xVal(idx) );
-        M.identifier(idx) = sprintf( 'baseline_%04.1f', M.xLabel(idx) );
+        M.identifier(idx) = sprintf( 'baseline_%04.1f', M.xVal(idx) );
         M.group(idx) = testCases{ii};
         M.fileName(idx) = files(end).name;
 
@@ -107,23 +109,23 @@ for ii = 1:length( simsOut )
         qDes.Data = squeeze( qDes.Data )';
         q = resample( q, tResample, 'linear' );
         qDes = resample( qDes, tResample, 'linear' );
-
+        
         % Calculate position error
         posErr = [ x.Data y.Data z.Data ];
         posErrNorm = sqrt( sum( posErr.^2, 2 ) );
 
         % Calculate attitude error
-        q     = quaternion(q.Data);
+        quat     = quaternion(q.Data);
         qDes  = quaternion(qDes.Data);
-        qErr  = conj(q) .* qDes;
-        qDist = dist( q, qDes );
+        qErr  = conj(quat) .* qDes;
+        qDist = dist( quat, qDes );
         attErr = eulerd( qErr, 'ZYX', 'frame' );
         attErr = attErr(:,[3 2 1]); % Switch to [roll pitch yaw]
-        avgAtt = eulerd( meanrot(q), 'ZYX', 'frame' );
+        avgAtt = eulerd( meanrot(quat), 'ZYX', 'frame' );
         avgAtt = avgAtt(:,[3 2 1]); % Switch to [roll pitch yaw]
-
+        
         % Get PWM
-        pwm = 1075 + squeeze( pwm.Data )' .* (1950-1075);
+        pwmTrue = 1075 + squeeze( pwm.Data )' .* (1950-1075);
 
         % Position columns
         M.avgPosErr(idx,:)   = mean( posErr, 1 );
@@ -141,20 +143,41 @@ for ii = 1:length( simsOut )
         M.rmsqDist(idx)      = rad2deg( rms( qDist ) );
 
         % Actuator usage columns
-        M.avgPwm(idx,:)      = mean( pwm, 1 );
-        M.rmsPwm(idx,:)      = rms( pwm - mean( pwm, 1 ), 1 );
-        M.minPwm(idx,:)      = min( pwm, [], 1 );
-        M.maxPwm(idx,:)      = max( pwm, [], 1 );
+        M.avgPwm(idx,:)      = mean( pwmTrue, 1 );
+        M.rmsPwm(idx,:)      = rms( pwmTrue - mean( pwmTrue, 1 ), 1 );
+        M.minPwm(idx,:)      = min( pwmTrue, [], 1 );
+        M.maxPwm(idx,:)      = max( pwmTrue, [], 1 );
         M.avgRmsPwm(idx)     = mean( M.rmsPwm(idx,:) );
 
         % Thrust column
         M.avgThrust(idx,:)   = mean( thr );
+        
+        % Save data
+        tResampleOut = tStart:deltaT:tEnd;
+        if jj == 2
+            q = resample( q, tResampleOut, 'linear' );
+            eul = eulerd( quaternion(q.Data), 'ZYX', 'frame' );
+            eul = eul(:,[3 2 1]);
+            x = resample( x, tResampleOut, 'linear' );
+            y = resample( y, tResampleOut, 'linear' );
+            z = resample( z, tResampleOut, 'linear' );
+            pwm = resample( pwm, tResampleOut, 'linear' );
+            pwmTrue = 1075 + squeeze( pwm.Data )' .* (1950-1075);
+            dataEx(:,1) = tResampleOut';
+            dataEx(:,(2:15)+(ii-1)*14) = [ x.Data y.Data z.Data eul pwmTrue ];
+        end
     end
 end
 
 % Export
-writetable( M, fullfile( projectRoot, 'work', 'output', filenameOut ), ...
+writetable( M, fullfile( projectRoot, 'work', 'output', [filenameOut '_metrics.csv' ] ), ...
     'Delimiter', ' ');
+
+filenameOutEx = fullfile( projectRoot, 'work', 'output', [filenameOut '_example.csv' ] );
+fid = fopen( filenameOutEx, 'w' );
+fprintf( fid, 't xBL yBL zBL rollBL pitchBL yawBL pwm1BL pwm2BL pwm3BL pwm4BL pwm5BL pwm6BL pwm7BL pwm8BL xVT yVT zVT rollVT pitchVT yawVT pwm1VT pwm2VT pwm3VT pwm4VT pwm5VT pwm6VT pwm7VT pwm8VT\n' );
+fclose( fid )
+writematrix( dataEx, filenameOutEx, 'Delimiter', ' ', 'WriteMode', 'append' );
 
 %% Plot results
 xAxisLabel  = 'Wind speed (m/s)';
