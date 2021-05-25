@@ -20,7 +20,7 @@ function [Uav, Motor, Aero, Initial] = InitializeParametersOctocopter( cantAngle
 
     %% GLOBAL
     % Call the appropriate components
-    Uav = UavOctocopter500mm( 31, mass );
+    Uav = UavOctocopter500mm( cantAngle, mass );
     Motor = MotorTMotorMn1806( Uav.N_ROTORS );
 
     %% AERO PARAMETERS
