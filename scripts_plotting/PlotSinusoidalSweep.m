@@ -10,14 +10,11 @@ outSize   = [15 8];
 
 %% Configuration
 inputFolder = fullfile( projectRoot, 'data_results', 'sine_sweep' );
-filesToLoad = { 'SinusoidalSweep_FPHTFullGain_2020-04-26_19-10-59.mat', ...
-                'SinusoidalSweep_baseline_2020-04-26_19-38-45.mat', ...
-                'SinusoidalSweep_MIS_2020-04-26_19-55-42' };
-filesToLoad = { 'SinusoidalSweep_FPHTFullGain_2020-09-01_12-30-42', ...
-                'SinusoidalSweep_baseline_2020-09-01_12-24-25', ...
-                'SinusoidalSweep_FPHTFullGain_2020-09-03_16-12-58' };
-labels = { 'FPHT', 'Baseline', 'MIS', 'FPHT New' };
-labels = {'FPHT', 'Baseline', 'FPHT no aero'};
+filesToLoad = { 'SinusoidalSweep_FPHTFullGain_2021-05-25_22-07-18';
+    'SinusoidalSweep_baseline_2021-05-25_15-14-46' };
+labels = {'FPHT', 'Baseline'};
+debug = false;
+filenameOut = 'bode_actuator_allocation';
 
 %% Load data
 for ii = 1:length( filesToLoad )
@@ -35,8 +32,10 @@ windF = zeros( size( simInputs ) );
 windAmpl  = zeros( size( simInputs ) ); 
 pitchTorqueAmpl = zeros( size( simInputs ) );
 pitchTorqueMean = zeros( size( simInputs ) );
-pitchDesAmpl  = zeros( size( simInputs ) );
-pitchDesMean  = zeros( size( simInputs ) );
+aAxAmpl  = zeros( size( simInputs ) );
+aAxMean  = zeros( size( simInputs ) );
+aHxAmpl  = zeros( size( simInputs ) );
+aHxMean  = zeros( size( simInputs ) );
 horThrustAmpl = zeros( size( simInputs ) );
 horThrustMean = zeros( size( simInputs ) );
 
@@ -48,81 +47,107 @@ for ii = 1:length( filesToLoad )
     for jj = 1:length( simInputs(ii,:) )
         windF(ii,jj) = simInputs{ii,jj}.getVariable('Wind').Freq;
         windAmpl(ii,jj) = simInputs{ii,jj}.getVariable('Wind').Ampl(1);
-        actControls = simOutputs{ii,jj}.get('actControls').Values;
-        horThrust = simOutputs{ii,jj}.get('horThrustDes').Values;
-        qDes = simOutputs{ii,jj}.get('qDes').Values;
-        eulDes = QuatToEuler(qDes.Data);
-        pitchDes = eulDes(:,2);
         
-%         figure('Name', sprintf( 'F = %.2f Hz', windF(ii,jj) ))
-%         hold on; grid on; box on
-%         title( sprintf( 'F = %.2f Hz', windF(ii,jj) ) )
-%         plot( qDes.Time, pitchDes );
+        aH = simOutputs{ii,jj}.get('TH').Values;
+        aA = simOutputs{ii,jj}.get('Td').Values;
+        
+        if debug
+            figure('Name', sprintf( 'F = %.2f Hz', windF(ii,jj) ))
+            hold on; grid on; box on
+            title( sprintf( 'F = %.2f Hz', windF(ii,jj) ) )
+            plot( aA.Time, aA.Data(:,1) );
+        end
 
-        % Find mean and magnitude for desired pitch
+        % Find mean and magnitude for desired attitude acceleration in x
         range = 3/4;
         % Guesses
-        yOffset = mean(pitchDes( floor(end*range):end));
-        yMin = min( pitchDes( floor(end*range):end) );
-        yMax = max( pitchDes( floor(end*range):end) );
+        yOffset = mean( aA.Data( floor(end*range):end, 1 ) );
+        yMin = min( aA.Data( floor(end*range):end, 1 ) );
+        yMax = max( aA.Data( floor(end*range):end, 1 ) );
         
-        % Estimate frequency by finding number of peaks
-%         nPeaks = sum( diff( (movmean(pitchDes,10)-mean(pitchDes))>0 ) > 0 );
-%         fEst = 2*pi*nPeaks / ( qDes.Time(end) - qDes.Time(1) );
+        mdl = fit( aA.Time( floor(end*range):end ), aA.Data( floor(end*range):end,1), ft, ...
+            'startpoint', [0, windF(ii,jj), (yMax-yMin)/2, yOffset] );
         
-        mdl = fit( qDes.Time( floor(end*range):end), pitchDes( floor(end*range):end), ft, ...
-            'startpoint', [0, windF(ii,jj), yMax-yMin, yOffset] );
-%         plot( qDes.Time, mdl.yoff+sin((qDes.Time-mdl.shift)*mdl.xscale)*mdl.yscale);
-        pitchDesAmpl(ii,jj) = abs(mdl.yscale);
-        pitchDesMean(ii,jj) = mdl.yoff;
+        if (mdl.yscale < (yMax-yMin)/2 )
+            % We know yscale is at least as large as the observed
+            % difference
+            mdl.yscale = (yMax-yMin)/2;
+        end
         
-        % Find mean and magnitude for pitch control
+        if debug
+            plot( aA.Time, mdl.yoff+sin((aA.Time-mdl.shift)*mdl.xscale)*mdl.yscale );
+        end
+        aAxAmpl(ii,jj) = abs(mdl.yscale);
+        aAxMean(ii,jj) = mdl.yoff;
+
+        % Find mean and magnitude for desired attitude acceleration in z
+        range = 3/4;
         % Guesses
-        yOffset = mean(actControls.Data(floor(end*range):end,2));
-        yMin = min( actControls.Data( floor(end*range):end,2) );
-        yMax = max( actControls.Data( floor(end*range):end,2) );
-        mdl = fit( actControls.Time(floor(end*range):end), actControls.Data(floor(end*range):end,2), ft, ...
-            'startpoint', [0, windF(ii,jj), yMax-yMin, yOffset] );
-%         plot( actControls.Time, mdl.yoff+sin((actControls.Time-mdl.shift)*mdl.xscale)*mdl.yscale);
-        pitchTorqueAmpl(ii,jj) = abs(mdl.yscale);
-        pitchTorqueMean(ii,jj) = mdl.yoff;
+        yOffset = mean( aA.Data( floor(end*range):end, 3 ) );
+        yMin = min( aA.Data( floor(end*range):end, 3 ) );
+        yMax = max( aA.Data( floor(end*range):end, 3 ) );
         
-        % Find mean and magnitude for horizontal thrust
-        % Guesses
-        yOffset = mean(horThrust.Data(floor(end*range):end,1));
-        yMin = min( horThrust.Data( floor(end*range):end,1) );
-        yMax = max( horThrust.Data( floor(end*range):end,1) );
+        mdl = fit( aA.Time( floor(end*range):end ), aA.Data( floor(end*range):end,3), ft, ...
+            'startpoint', [0, windF(ii,jj), (yMax-yMin)/2, yOffset] );
         
-        mdl = fit( horThrust.Time(floor(end*range):end), horThrust.Data(floor(end*range):end,1), ft, ...
-            'startpoint', [0, windF(ii,jj), yMax-yMin, yOffset] );
-%         plot( horThrust.Time, mdl.yoff+sin((horThrust.Time-mdl.shift)*mdl.xscale)*mdl.yscale);
-        horThrustAmpl(ii,jj) = abs(mdl.yscale);
-        horThrustMean(ii,jj) = mdl.yoff;
+        if (mdl.yscale < (yMax-yMin)/2 )
+            % We know yscale is at least as large as the observed
+            % difference
+            mdl.yscale = (yMax-yMin)/2;
+        end
+        
+        aAzAmpl(ii,jj) = abs(mdl.yscale);
+        aAzMean(ii,jj) = mdl.yoff;
+        
+        % Find mean and magnitude for desired horizontal thrust
+        % acceleration
+        if length(aH.Time) > 1
+            % Guesses
+            yOffset = mean( aH.Data(floor(end*range):end, 1 ) );
+            yMin = min( aH.Data( floor(end*range):end, 1 ) );
+            yMax = max( aH.Data( floor(end*range):end, 1 ) );
+            mdl = fit( aH.Time(floor(end*range):end), aH.Data(floor(end*range):end,2), ft, ...
+                'startpoint', [0, windF(ii,jj), yMax-yMin, yOffset] );
+            aHxAmpl(ii,jj) = abs(mdl.yscale);
+            aHxMean(ii,jj) = mdl.yoff;
+        else
+            aHxAmpl(ii,jj) = nan;
+            aHxMean(ii,jj) = nan;
+        end
     end
     disp('Done')
 end
 
 %% Plot response
 figure( 'Name', 'Frequency response' ); hold on; grid on; box on;
-pitchTorquedB = 20*log10( pitchTorqueAmpl./windAmpl );
-pitchDesdB = 20*log10( pitchDesAmpl./windAmpl );
-horThrustdB = 20*log10( horThrustAmpl./windAmpl );
+aAxdB = 20*log10( aAxAmpl./windAmpl );
+aHxdB = 20*log10( aHxAmpl./windAmpl );
+aAzdB = 20*log10( aAzAmpl./windAmpl );
 
 colours = get(gca,'colororder');
 for ii = 1:length( filesToLoad )
-    plot( windF(ii,:)./(2*pi), pitchTorquedB(ii,:), 'Color', colours(ii,:) )
+    plot( windF(ii,:), aAxdB(ii,:), 'Color', colours(ii,:) )
 end
 for ii = 1:length( filesToLoad )
-    plot( windF(ii,:)./(2*pi), pitchDesdB(ii,:), '-.', 'Color', colours(ii,:) )
+    plot( windF(ii,:), aHxdB(ii,:), '-.', 'Color', colours(ii,:) )
 end
 for ii = 1:length( filesToLoad )
-    plot( windF(ii,:)./(2*pi), horThrustdB(ii,:), '--', 'Color', colours(ii,:) )
+    plot( windF(ii,:), aAzdB(ii,:), ':', 'Color', colours(ii,:) )
 end
 legend( labels, 'Location', 'Best' )
 set( gca,'xscale','log' )
 
-xlabel( 'Wind frequency (Hz)' )
+xlabel( 'Wind frequency (rad/s)' )
 ylabel( 'Gain (dB)' )
-title( 'Solid: pitch torque, dash-dotted: des pitch, dashed: horizontal thrust' )
+title( 'Solid: $a_{A,x}$, dash-dotted: $a_{H,x}$, dotted: $a_{A,z}$' )
 
 FormatFigure( outSize , fontSize );
+
+% Export data
+header = {'w', 'aAxVT', 'aAzVT', 'aHxVT', 'aAxBL', 'aAzBL',};
+data = [ windF(1,:)' aAxdB(1,:)' aAzdB(1,:)' aHxdB(1,:)' aAxdB(2,:)' aAzdB(2,:)' ];
+fileOut = fullfile( projectRoot, 'work', 'output', [filenameOut '.csv' ] );
+fid = fopen( fileOut, 'w' );
+fprintf( fid, char(join( header, ' ' )) );
+fclose( fid )
+writematrix( data, fileOut, 'Delimiter', ' ', 'WriteMode', 'append' );
