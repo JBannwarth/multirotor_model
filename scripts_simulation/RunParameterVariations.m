@@ -113,7 +113,7 @@ set_param( model, 'LoadExternalInput', 'off' );
 
 %% 6) Parameter variations
 mass = cellfun( @(x)(x*1.72), { 0.7; 1.0; 1.3 }, 'UniformOutput', false );
-cant = cellfun( @(x)(x*31), {0.8; 1.0; 1.2}, 'UniformOutput', false );
+cant = cellfun( @(x)(x*31), {0.9; 1.0; 1.1}, 'UniformOutput', false );
 kScale = {0.8; 1.0; 1.2};
 param = struct( 'mass', mass, 'cant', cant, 'kScale', kScale );
 
@@ -129,7 +129,7 @@ for ii = 1:3
 
         paramLog.kScale = 1;
         switch toVary
-            case 'canted'
+            case 'cant'
                 [Uav, Motor, Aero, Initial] = InitializeParametersOctocopter( param(ii).cant );
             case 'mass'
                 [Uav, Motor, Aero, Initial] = InitializeParametersOctocopter( canted, param(ii).mass );
@@ -171,4 +171,4 @@ simOut = sim( simIn );
 if ~isfolder( outputFolder )
     mkdir( outputFolder )
 end
-save( fullfile( outputFolder, outputFile ), 'simIn', 'simOut' )
+save( fullfile( outputFolder, outputFile ), 'simIn', 'simOut', '-v7.3' )
