@@ -10,7 +10,7 @@ The main simulation model is `MultirotorSimPx4`, in the `models` folder. It impl
 
 In order to make the model better encapsulated, the drag and thrust models are loaded from separate simulink files, also stored in the `models` folder.
 Likewise, the quaternion blocks and PX4-related blocks are loaded from Simulink libraries stored in the `libraries` folder.
-Simulink does have inbuilt quaternion blocks in the Aerospace toolbox. However, that toolbox was not available on the default MATLAB installation at the University of Auckland at the time of this model's creation. Hence, the creation of this custom library was written.
+Simulink does have inbuilt quaternion blocks in the Aerospace toolbox. However, that toolbox was not available on the default MATLAB installation at the University of Auckland at the time of this model's creation. Hence, the this custom library was written.
 
 Before using any of the models, make sure to open the Simulink Project file, `MultirotorModel.prj`. It will add all the necessary folders to the path.
 
@@ -44,10 +44,10 @@ Simulation = InitializeModel( model, Initial, tEnd );
 ```
 
 ```matlab
-%% For canted rotor octocopter
+%% For canted rotor octocopter with 31 degree cant
 model = 'MultirotorSimPx4';
 load_system(model);
-[Uav, Motor, Aero, Initial] = InitializeParametersOctocopter( true );
+[Uav, Motor, Aero, Initial] = InitializeParametersOctocopter( 31 );
 Simulation = InitializeModel( model, Initial, tEnd );
 ```
 
