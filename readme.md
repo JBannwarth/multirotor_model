@@ -1,6 +1,12 @@
 # Multirotor Simulation Model
 Created:      J.X.J. Bannwarth, 2016/06/30
-Last updated: J.X.J. Bannwarth, 2021/03/25
+Last updated: J.X.J. Bannwarth, 2024/12/11 (added citation information and made the repository public)
+
+## How to Cite
+
+If you find this repository useful in your own work, please cite my PhD thesis:
+
+- Bannwarth, Jérémie Xavier Joseph. “Aerodynamic Modelling and Wind Disturbance Rejection of Multirotor Unmanned Aerial Vehicles.” PhD Thesis, University of Auckland, 2022. https://hdl.handle.net/2292/58817.
 
 ## Introduction
 
