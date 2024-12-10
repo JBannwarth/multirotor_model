@@ -20,6 +20,10 @@ Simulink does have inbuilt quaternion blocks in the Aerospace toolbox. However, 
 
 Before using any of the models, make sure to open the Simulink Project file, `MultirotorModel.prj`. It will add all the necessary folders to the path.
 
+## How to Set-up
+
+Download the HIFOO and HANSO libraries from [this link](https://cs.nyu.edu/~overton/software/hifoo/software/) and place them in the `libraries` folder.
+
 ## How to Run
 
 To run a position hold simulation, run the following command to first open the `RunPositionHold` script and examine its contents.
